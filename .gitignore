@@ -1,6 +1,38 @@
+# IDE
 *.iml
+.idea/
+.vscode/
 
-.idea
+# OS
 .DS_Store
+Thumbs.db
 
-.venv
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+
+# Environment Variables
+.env
+
+# Data (large dataset files)
+data/*
+!data/ims/
+data/ims/*
+!data/ims/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+
+.claude
