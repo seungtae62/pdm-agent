@@ -1,0 +1,174 @@
+<mxfile host="app.diagrams.net" modified="2026-02-19" type="device">
+  <diagram name="System Architecture" id="system-arch">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ============ EDGE SYSTEM (좌측) ============ -->
+        <mxCell id="edge_group" value="Edge System" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;rounded=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="200" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_sensor" value="진동 센서 데이터 수집&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;PCB 353B33, 20kHz&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="edge_group">
+          <mxGeometry x="20" y="40" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_feature" value="특징량 추출&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;RMS, Kurtosis, FFT&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="edge_group">
+          <mxGeometry x="20" y="95" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_anomaly" value="이상감지 모델" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="edge_group">
+          <mxGeometry x="20" y="150" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rul" value="ML RUL 예측 모델" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="edge_group">
+          <mxGeometry x="20" y="200" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Edge 내부 화살표 -->
+        <mxCell id="ee1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;" edge="1" source="edge_sensor" target="edge_feature" parent="edge_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ee2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;" edge="1" source="edge_feature" target="edge_anomaly" parent="edge_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ee3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;" edge="1" source="edge_feature" target="edge_rul" parent="edge_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ EVENT PAYLOAD (Edge → Agent 연결) ============ -->
+        <mxCell id="payload_arrow" value="Event Payload&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;(JSON)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=12;fontStyle=1;strokeWidth=2;strokeColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="edge_group" target="agent_group" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ PDM AGENT (중앙) ============ -->
+        <mxCell id="agent_group" value="PdM Agent (LangGraph)" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1;rounded=1;shadow=1;swimlaneLine=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="130" width="260" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_load" value="load_memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="agent_group">
+          <mxGeometry x="55" y="40" width="150" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_reasoning" value="reasoning&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;(ReAct 5-Step Thought)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;strokeWidth=2;" vertex="1" parent="agent_group">
+          <mxGeometry x="40" y="100" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_tool" value="tool_executor&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;(MCP Client)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="agent_group">
+          <mxGeometry x="55" y="175" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_parse" value="parse_diagnosis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="agent_group">
+          <mxGeometry x="55" y="240" width="150" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_report" value="generate_report&lt;br&gt;generate_work_order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="agent_group">
+          <mxGeometry x="55" y="295" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_save" value="save_memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="agent_group">
+          <mxGeometry x="55" y="355" width="150" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Agent 내부 화살표 -->
+        <mxCell id="ae1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;" edge="1" source="agent_load" target="agent_reasoning" parent="agent_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;" edge="1" source="agent_reasoning" target="agent_tool" parent="agent_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;" edge="1" source="agent_reasoning" target="agent_parse" parent="agent_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;" edge="1" source="agent_parse" target="agent_report" parent="agent_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;" edge="1" source="agent_report" target="agent_save" parent="agent_group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ OPENAI API (상단) ============ -->
+        <mxCell id="openai" value="OpenAI API&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;GPT-4o&lt;/font&gt;" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="10" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <!-- Agent → OpenAI -->
+        <mxCell id="conn_openai" value="LLM 추론 요청" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;strokeColor=#666666;dashed=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" source="agent_group" target="openai" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ MCP SERVERS (우측) ============ -->
+
+        <!-- MCP RAG Server -->
+        <mxCell id="mcp_rag" value="MCP RAG Server&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;rag_server.py&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="170" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <!-- MCP Notification Server -->
+        <mxCell id="mcp_notify" value="MCP Notification Server&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;notification_server.py&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="400" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Agent → MCP RAG -->
+        <mxCell id="conn_rag" value="MCP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;fontStyle=1;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="agent_group" target="mcp_rag" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- Agent → MCP Notify -->
+        <mxCell id="conn_notify" value="MCP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;fontStyle=1;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="agent_group" target="mcp_notify" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ QDRANT (우측 상단) ============ -->
+        <mxCell id="qdrant" value="Qdrant (Vector DB)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;shadow=1;size=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="110" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="qdrant_c1" value="maintenance_history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="195" width="160" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="qdrant_c2" value="equipment_manual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="230" width="160" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="qdrant_c3" value="analysis_history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="265" width="160" height="28" as="geometry"/>
+        </mxCell>
+        <!-- MCP RAG → Qdrant -->
+        <mxCell id="conn_qdrant" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="mcp_rag" target="qdrant" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ POSTGRESQL (하단 중앙) ============ -->
+        <mxCell id="postgres" value="PostgreSQL&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;Long-term Memory&lt;br&gt;pdm_agent_memory&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;shadow=1;size=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="580" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <!-- Agent → PostgreSQL -->
+        <mxCell id="conn_pg" value="Memory&lt;br&gt;조회 / 저장" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;strokeColor=#82b366;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="agent_group" target="postgres" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STREAMLIT UI (좌측 하단) ============ -->
+        <mxCell id="streamlit" value="Streamlit UI&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;정비 담당자 인터페이스&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="600" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <!-- Streamlit → Agent -->
+        <mxCell id="conn_ui" value="대화형 상호작용&lt;br&gt;분석 결과 조회" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;strokeColor=#82b366;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="streamlit" target="agent_group" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ LANGSMITH (우측 하단) ============ -->
+        <mxCell id="langsmith" value="LangSmith&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;Tracing / Monitoring&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="580" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <!-- Agent → LangSmith -->
+        <mxCell id="conn_langsmith" value="트레이싱" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;strokeColor=#666666;dashed=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="agent_group" target="langsmith" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ EMBEDDING (Qdrant 옆) ============ -->
+        <mxCell id="embedding" value="OpenAI Embedding&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;text-embedding-3-small&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="320" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <!-- Embedding → Qdrant 점선 -->
+        <mxCell id="conn_embed" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;dashed=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" source="embedding" target="qdrant_c3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ 알림 시스템 (우측 하단) ============ -->
+        <mxCell id="notification" value="정비 담당자 알림&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666;&quot;&gt;(Slack / Email / SMS)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="400" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- MCP Notify → 알림 시스템 -->
+        <mxCell id="conn_notif_out" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="mcp_notify" target="notification" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
