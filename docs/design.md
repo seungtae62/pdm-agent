@@ -1,5 +1,45 @@
 # PdM Agent - 상세 설계 문서
 
+## 구현 순서
+
+### Phase 1: Edge 파이프라인
+1-1. NASA-IMS 데이터 전처리 (특징량 추출)
+1-2. 이상감지 모델 구현 (통계 기반 또는 간단한 Autoencoder)
+1-3. ML RUL 예측 모델 구현
+1-4. 이벤트 페이로드 생성기 구현
+
+### Phase 2: RAG 구축
+2-1. 합성 PDF 문서 19건 생성 (템플릿 기반)
+2-2. Qdrant Collection 3개 구성 (maintenance_history, equipment_manual, analysis_history) 및 문서 적재
+2-3. MCP Server 구현 (RAG Tool 호출용)
+2-4. 검색 품질 검증
+
+### Phase 3: PdM Agent 핵심 구현
+3-1. LangGraph StateGraph 구현 (기본 골격)
+3-2. 시스템 프롬프트 탑재 및 기본 추론 검증 (Tool 없이)
+3-3. MCP Client 연동 (RAG Tool + 알림 Tool)
+3-4. Memory 구현 (PostgreSQL)
+3-5. Deep Research 로직 (다회 RAG 탐색 분기)
+3-6. 작업지시서 생성 기능 구현
+3-7. Prompt Optimization 구현 (대화형 상호작용용)
+
+### Phase 4: 시나리오 시뮬레이션 및 KPI 측정
+4-1. 시나리오 1~3 시뮬레이션 실행 (점진적 열화 3시점 + 급속 열화 + 대화형 상호작용)
+4-2. KPI 측정 (고장 유형 진단 정확도, 추론 근거 설명 품질, Tool 호출 효율성)
+4-3. 결과 분석 및 프롬프트 튜닝
+4-4. 분석 리포트 및 작업지시서 생성 기능 검증
+
+### Phase 5: Streamlit 데모 UI
+5-1. 분석 결과 대시보드 (결함 유형, 단계, 위험도, RUL 시각화)
+5-2. 정비 권고 검토 화면
+5-3. 대화형 상호작용 인터페이스 (정비 담당자 질의응답)
+5-4. 분석 리포트 / 작업지시서 다운로드
+
+### 향후 확장
+- Critic Agent, Human-in-the-Loop, Structured Output, Self-Correction
+
+---
+
 ## LangGraph StateGraph 설계
 
 ### State 스키마
@@ -36,37 +76,40 @@ class PdMAgentState(TypedDict):
     #   "reasoning_summary": str
     # }
 
-    # Tool 호출 관련
+    # Tool 호출 관련 (MCP 기반)
     tool_calls_count: int
     deep_research_activated: bool
 
-    # 리포트
+    # 리포트 및 작업지시서
     report: str
+    work_order: str
 
     # 워크플로우 제어
     should_continue: bool
-    next_action: str  # continue_reasoning / call_tool / generate_report / end
+    next_action: str  # continue_reasoning / call_tool / generate_report / generate_work_order / end
 ```
 
 ### Node 구성
 
 1. **load_memory**: event_payload에서 설비/베어링 ID 추출 → PostgreSQL에서 이전 판단 이력 조회 → memory_context 저장
 2. **reasoning**: 시스템 프롬프트 + event_payload + memory_context + messages → GPT-4o 추론 → next_action 결정
-3. **tool_executor**: reasoning에서 Tool 호출 결정 시 해당 Tool 실행 → 결과를 messages에 추가 → tool_calls_count 증가
+3. **tool_executor**: reasoning에서 Tool 호출 결정 시 MCP Client를 통해 해당 Tool 실행 → 결과를 messages에 추가 → tool_calls_count 증가
 4. **parse_diagnosis**: ReAct 루프 완료 후 LLM 응답에서 diagnosis_result를 구조화된 형태로 파싱
 5. **generate_report**: diagnosis_result + messages + memory_context → 분석 리포트 생성
-6. **save_memory**: diagnosis_result를 PostgreSQL에 저장
+6. **generate_work_order**: diagnosis_result + 분석 리포트 기반 → 정비 절차, 자원, 일정을 포함한 작업지시서 생성
+7. **save_memory**: diagnosis_result를 PostgreSQL에 저장 + analysis_history VDB에 벡터 적재
 
 ### Edge 구성 (노드 간 전이)
 
 ```
 START → load_memory → reasoning → (조건부 분기)
-                                    ├─ next_action == "call_tool" → tool_executor → reasoning
+                                    ├─ next_action == "call_tool" → tool_executor (MCP) → reasoning
                                     ├─ next_action == "continue_reasoning" → reasoning
-                                    └─ next_action == "generate_report" → parse_diagnosis → generate_report → save_memory → END
+                                    └─ next_action == "generate_report" → parse_diagnosis → generate_report → generate_work_order → save_memory → END
 ```
 
 안전장치: tool_calls_count > 10이면 강제로 parse_diagnosis로 전이하여 무한 루프 방지.
+참고: generate_work_order는 Warning/Critical 위험도에서만 실행. Normal/Watch에서는 건너뜀.
 
 ---
 
@@ -88,7 +131,22 @@ START → load_memory → reasoning → (조건부 분기)
 - 문서 수: 7건 (PDF)
 - 청크 전략: 사양서/가이드/절차서는 문서당 1청크, FMEA는 고장 모드별 분할 (4청크)
 
+**Collection 3: analysis_history**
+- vector_size: 1536
+- distance: Cosine
+- payload_index: equipment_id, bearing_id, fault_type, risk_level
+- 문서: 에이전트 과거 판단 결과 (save_memory 시 자동 적재)
+- 청크 전략: 판단 결과 1건 = 1청크 (reasoning_summary + diagnosis_result 임베딩)
+- 용도: 과거 유사 분석 사례의 의미적 검색 (PostgreSQL Memory의 SQL 조회와 상호 보완)
+
 검색 설정: top-k = 3 (기본값)
+
+### MCP Server 구성
+
+RAG 검색 및 알림 Tool은 MCP Server로 구현하여, LangGraph Agent가 MCP Client로 호출한다.
+
+- **rag_server**: search_maintenance_history, search_equipment_manual, search_analysis_history 3개 Tool 제공
+- **notification_server**: notify_maintenance_staff Tool 제공
 
 ### 합성 PDF 문서 목록
 
@@ -368,25 +426,50 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 
 ## 시나리오 시뮬레이션
 
-### 시나리오 1: 점진적 열화 (Test Set 1, Bearing 3 내륜)
-- 5일차(정상) → 15일차(초기 열화) → 25일차(결함 진행) → 33일차(고장 임박)
-- 검증 KPI: 고장 유형 진단 정확도, RUL 추정 오차, 사전 경고 리드타임
+### 시나리오 1: 점진적 열화 감지 및 추적 (Test Set 1, Bearing 3 내륜)
 
-### 시나리오 2: 급속 열화 (Test Set 2, Bearing 1 외륜)
-- 2일차(정상) → 4일차(이상 감지) → 6일차(급속 열화)
-- 검증 KPI: 급속 열화 대응, RUL 추정 오차, 에이전트 응답 시간
+각 시점 개별 분석으로 3개 서브 시나리오 구성:
 
-### 시나리오 3: 복합 이상 (Test Set 1, Bearing 3 + 4 동시)
-- 20일차 이후 두 베어링 동시 이상
-- 검증 KPI: 복합 상황 진단 정확도, 정비 권고 실행 적합성
+**SC-001 (시나리오 1-A): 정상 구간 (5일차)**
+- anomaly_detected = false, Memory 이력 없음
+- 에이전트 Thought 1에서 정상 판정 후 조기 종료
+- Memory에 정상 판정 이력 저장
 
-### 시나리오 4: 오탐 처리 (Test Set 1, Bearing 1 자가 치유)
-- 이상 감지 → 정상 복귀 → 판단 수정
-- 검증 KPI: 오탐률, Self-Correction 능력
+**SC-002 (시나리오 1-B): 의심 전이 구간 (15일차)**
+- anomaly_detected = true, Memory에 SC-001 이력 존재
+- Thought 1~5 전체 추론: BPFI 상승 → 내륜 결함 초기 → Kurtosis 상승 시작 → 열화 속도 정상 → Watch 판정
+- 모니터링 강화 권고
 
-### 시나리오 5: Cold Start
-- 과거 이력 없는 상태에서 이상 감지
-- 검증 KPI: Cold Start 진단 품질, 불확실성 표현 적절성
+**SC-003 (시나리오 1-C): 결함 진행 구간 (25일차)**
+- anomaly_detected = true, Memory에 SC-001 + SC-002 이력 존재
+- Thought 1~5 전체 추론 + Deep Research 발동
+- search_maintenance_history로 유사 내륜 결함 사례 심층 탐색
+- Warning 판정, 분석 리포트 + 작업지시서 생성
+
+### 시나리오 2: 급속 열화 대응 (Test Set 2, Bearing 1 외륜)
+
+**SC-004: 급속 열화 (약 7일간 급속 진행)**
+- anomaly_detected = true, acceleration_detected = true
+- BPFO 지배적 상승, Kurtosis 감소 + RMS 급상승 (4단계 말기 패턴)
+- Deep Research 필수 발동: 급속 열화 조건 검색 → 과거 유사 사례 탐색 → 원인 추론
+- Critical 판정, 보수적 RUL 해석, 긴급 리포트 + 작업지시서 생성
+- 외부 요인(과부하, 윤활 부족, 오염, 설치 불량) 개입 가능성 명시
+
+### 시나리오 3: 대화형 상호작용 (정비 담당자 질의)
+
+**SC-005: 정비 담당자 질의응답**
+- SC-003 또는 SC-004 분석 완료 후, 정비 담당자가 후속 질문
+- Memory에서 분석 맥락 로드 → 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거) 주입
+- Prompt Optimization 적용: 분석 맥락 구조화, 대화 이력 압축, 슬라이딩 윈도우
+- 새로운 정보 반영 시 분석 결과 동적 보완 및 Memory 업데이트
+
+### Prompt Optimization 전략
+
+| 전략 | 설명 | 적용 시점 |
+|------|------|-----------|
+| 분석 맥락 구조화 | Memory에서 전체 추론 체인 대신, 핵심 필드(결함 유형, 단계, 위험도, 핵심 근거)만 추출하여 컨텍스트에 주입 | 대화 세션 시작 시 |
+| 대화 이력 압축 | 이전 턴 질문-응답 쌍을 핵심 결론 중심으로 요약 | 매 턴 누적 시 |
+| 슬라이딩 윈도우 | 최근 2~3턴은 원문 유지, 이전 턴은 요약으로 대체하여 컨텍스트 윈도우 효율적 활용 | 대화 3턴 이상 시 |
 
 ---
 
@@ -396,18 +479,6 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 
 | 지표 | 목표 | 측정 방법 |
 |------|------|-----------|
-| 고장 유형 진단 정확도 | 85% 이상 | 진단 유형과 실제 고장 유형 일치율 |
-| RUL 추정 오차 | 평균 절대 오차 20% 이내 | 에이전트 RUL 평가 vs 실제 고장 시점 |
-| 다관점 분석 일관성 | 75% 이상 | 동일 이벤트에 대한 반복 분석 일치율 |
-| 오탐률 (False Positive) | 15% 이하 | 정비 필요 판단 중 실제 불필요 비율 |
-| 미탐률 (False Negative) | 5% 이하 | 실제 결함 중 에이전트 미감지 비율 |
-| 에이전트 응답 시간 | 60초 이내 | 이벤트 수신~최종 권고 생성 소요 시간 |
-| 추론 근거 설명 품질 | 4점/5점 이상 | 전문가 정성 평가 |
-
-### 보전 업무 성과 KPI
-
-| 지표 | 목표 | 측정 방법 |
-|------|------|-----------|
-| 비계획 정지 감소율 | 40% 이상 감소 | 에이전트 사용 vs 미사용 비교 |
-| 사전 경고 리드타임 | 72시간 이전 | 최초 경고 시점 ~ 실제 고장 시점 |
-| 정비 권고 실행 적합성 | 80% 이상 | 전문가의 현실적 실행 가능성 평가 |
+| 고장 유형 진단 정확도 | 85% 이상 | 에이전트가 진단한 고장 유형(외륜, 내륜, 전동체 등)과 NASA-IMS 실제 고장 유형의 일치율 |
+| 추론 근거 설명 품질 | 4점/5점 이상 | 전문가 정성 평가 - 추론 근거의 논리성, 도메인 지식 활용도, 불확실성 표현 적절성 |
+| Tool 호출 효율성 | 정성 평가 | 불필요한 Tool 호출 없이 상황에 적절한 Tool만 호출했는지 평가 (정상 시 Tool 미호출, 심각 시 Deep Research 발동 등) |
