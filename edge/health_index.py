@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from edge.config import HI_BASELINE_SNAPSHOT_COUNT, HI_FEATURE_KEYS, HI_WEIGHTS
+from edge.config import HI_BASELINE_SNAPSHOT_COUNT, HI_CLAMP_MAX, HI_FEATURE_KEYS, HI_WEIGHTS
 
 
 @dataclass(frozen=True)
@@ -67,21 +67,37 @@ def compute_baseline(
 
 
 def normalize_hi(
-    value: float, baseline_min: float, baseline_max: float
+    value: float,
+    baseline_min: float,
+    baseline_max: float,
+    clamp_max: float | None = None,
 ) -> float:
     """Min-Max 정규화.
 
     0=baseline_min, 1=baseline_max, >1=열화 진행.
-    하한 0 클램핑, 상한 클램핑 없음.
+    하한 0 클램핑, 상한 clamp_max 클램핑.
 
     min==max 퇴화 케이스:
         baseline 값과 같으면 0.0, 초과하면 상대 편차.
+
+    Args:
+        value: 정규화할 값.
+        baseline_min: 베이스라인 최소값.
+        baseline_max: 베이스라인 최대값.
+        clamp_max: 상한 클램핑 값. None이면 config 기본값 사용.
     """
+    if clamp_max is None:
+        clamp_max = HI_CLAMP_MAX
+
     if baseline_min == baseline_max:
         if baseline_max == 0:
-            return 0.0 if value <= 0 else float(value)
-        return max(0.0, (value - baseline_max) / baseline_max)
-    return max(0.0, (value - baseline_min) / (baseline_max - baseline_min))
+            raw = 0.0 if value <= 0 else float(value)
+        else:
+            raw = max(0.0, (value - baseline_max) / baseline_max)
+    else:
+        raw = max(0.0, (value - baseline_min) / (baseline_max - baseline_min))
+
+    return min(raw, clamp_max)
 
 
 def compute_health_indices(

@@ -104,6 +104,31 @@ class TestNormalizeHI:
         assert result == pytest.approx(2.0)
         assert result > 1.0
 
+    def test_clamp_max_default(self):
+        """극단값은 HI_CLAMP_MAX(10.0)로 클램핑."""
+        result = normalize_hi(1000.0, 10.0, 20.0)
+        assert result == pytest.approx(10.0)
+
+    def test_clamp_max_custom(self):
+        """커스텀 clamp_max 적용."""
+        result = normalize_hi(1000.0, 10.0, 20.0, clamp_max=5.0)
+        assert result == pytest.approx(5.0)
+
+    def test_clamp_max_not_applied_within_range(self):
+        """클램핑 범위 내 값은 영향 없음."""
+        result = normalize_hi(15.0, 10.0, 20.0)
+        assert result == pytest.approx(0.5)
+
+    def test_degenerate_clamp_max(self):
+        """min==max 퇴화 케이스에서도 클램핑 적용."""
+        result = normalize_hi(100.0, 5.0, 5.0)
+        assert result == pytest.approx(10.0)  # (100-5)/5 = 19 → clamped to 10
+
+    def test_degenerate_zero_baseline_clamp(self):
+        """min==max==0에서 극단값 클램핑."""
+        result = normalize_hi(100.0, 0.0, 0.0)
+        assert result == pytest.approx(10.0)
+
     def test_degenerate_equal_to_baseline(self):
         """min==max이고 값이 같으면 0.0."""
         assert normalize_hi(5.0, 5.0, 5.0) == 0.0

@@ -29,6 +29,9 @@ SIDEBAND_AMPLITUDE_RATIO = 0.3
 # Health Index 설정
 HI_BASELINE_SNAPSHOT_COUNT: int = 20
 
+# 개별 HI 상한 클램핑 (베이스라인 대비 N배 이상 이탈은 동일하게 최대 취급)
+HI_CLAMP_MAX: float = 10.0
+
 HI_FEATURE_KEYS: dict[str, str] = {
     "hi_rms": "rms",
     "hi_kurtosis": "kurtosis",
