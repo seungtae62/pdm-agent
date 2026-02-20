@@ -50,3 +50,31 @@ HI_WEIGHTS: dict[str, float] = {
     "hi_peak_frequency": 0.10,
     "hi_fft_energy": 0.20,
 }
+
+# ---------------------------------------------------------------------------
+# Anomaly Detection 설정
+# ---------------------------------------------------------------------------
+
+# HI → anomaly score 매핑 breakpoints (구간별 선형 보간)
+ANOMALY_HI_BREAKPOINTS: list[tuple[float, float]] = [
+    (1.0, 0.0),    # 베이스라인 범위 내 → 정상
+    (2.0, 0.65),   # 2배 이탈 → 이상 판정 경계
+    (3.5, 0.90),   # 3.5배 이탈 → critical 경계
+    (5.0, 1.0),    # 5배 이탈 → 최대
+]
+
+# 개별 HI 스파이크 감지 임계값
+ANOMALY_SPIKE_THRESHOLD: float = 2.0
+
+# 이상 판정 임계값
+ANOMALY_THRESHOLD: float = 0.65
+
+# anomaly_score → health_state 분류 기준 (score 미만이면 해당 상태)
+ANOMALY_HEALTH_STATE_TIERS: list[tuple[float, str]] = [
+    (0.65, "normal"),
+    (0.80, "watch"),
+    (0.90, "warning"),
+]
+
+# 모델 식별자
+ANOMALY_MODEL_ID: str = "rule_v1"
