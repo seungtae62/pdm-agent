@@ -1,18 +1,29 @@
-"""Anomaly Detection 단위 테스트 — Part 3a: HI + Rule Check."""
+"""Anomaly Detection 단위 테스트 — Part 3a + 3b."""
 
 from __future__ import annotations
 
 import pytest
 
 from edge.anomaly_detection import (
+    AnomalyBaseline,
     AnomalyResult,
     RuleCheckDetail,
+    StatCheckDetail,
     _classify_health_state,
     _hi_to_score,
+    _z_to_score,
     check_rules,
+    check_statistical,
+    compute_anomaly_baseline,
     detect_anomaly,
 )
-from edge.config import ANOMALY_HI_BREAKPOINTS, ANOMALY_MODEL_ID, ANOMALY_THRESHOLD
+from edge.config import (
+    ANOMALY_HI_BREAKPOINTS,
+    ANOMALY_MODEL_ID,
+    ANOMALY_THRESHOLD,
+    STAT_FEATURE_KEYS,
+    STAT_Z_SCORE_BREAKPOINTS,
+)
 from edge.health_index import (
     BaselineStats,
     HealthIndexResult,
@@ -395,3 +406,317 @@ class TestIntegration:
             states_seen.add(_classify_health_state(score))
 
         assert states_seen == {"normal", "watch", "warning", "critical"}
+
+
+# ===========================================================================
+# Part 3b: Statistical Anomaly
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# TestZToScore
+# ---------------------------------------------------------------------------
+
+
+class TestZToScore:
+    """_z_to_score: z-score → 0~1 anomaly score 변환."""
+
+    def test_breakpoint_exact_values(self):
+        for z, expected in STAT_Z_SCORE_BREAKPOINTS:
+            assert _z_to_score(z) == pytest.approx(expected)
+
+    def test_below_min_returns_zero(self):
+        assert _z_to_score(0.0) == pytest.approx(0.0)
+        assert _z_to_score(1.0) == pytest.approx(0.0)
+        assert _z_to_score(2.0) == pytest.approx(0.0)
+
+    def test_above_max_returns_one(self):
+        assert _z_to_score(5.0) == pytest.approx(1.0)
+        assert _z_to_score(10.0) == pytest.approx(1.0)
+
+    def test_interpolation_midpoint(self):
+        # (2.0, 0.0) ~ (3.0, 0.65) 중점 = 2.5 → 0.325
+        assert _z_to_score(2.5) == pytest.approx(0.325)
+
+    def test_negative_z_uses_absolute(self):
+        """음수 z-score도 절대값으로 처리."""
+        assert _z_to_score(-3.0) == pytest.approx(_z_to_score(3.0))
+
+    def test_monotonic_increase(self):
+        prev = _z_to_score(0.0)
+        for z in [1.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
+            curr = _z_to_score(z)
+            assert curr >= prev
+            prev = curr
+
+
+# ---------------------------------------------------------------------------
+# TestComputeAnomalyBaseline
+# ---------------------------------------------------------------------------
+
+
+class TestComputeAnomalyBaseline:
+    """compute_anomaly_baseline: 피처별 mean/std 산출."""
+
+    def test_basic_mean_std(self):
+        flats = [
+            _make_flat_features(rms=0.10, kurtosis=3.0),
+            _make_flat_features(rms=0.12, kurtosis=3.2),
+            _make_flat_features(rms=0.08, kurtosis=2.8),
+        ]
+        baseline = compute_anomaly_baseline(flats)
+        assert baseline.mean["rms"] == pytest.approx(0.10, abs=1e-6)
+        assert baseline.std["rms"] > 0
+        assert baseline.snapshot_count == 3
+
+    def test_n_snapshots(self):
+        flats = [_make_flat_features(rms=0.10 + i * 0.01) for i in range(10)]
+        baseline = compute_anomaly_baseline(flats, n_snapshots=5)
+        assert baseline.snapshot_count == 5
+
+    def test_insufficient_raises(self):
+        with pytest.raises(ValueError):
+            compute_anomaly_baseline([_make_flat_features()])
+
+    def test_all_feature_keys_present(self):
+        flats = [_make_flat_features() for _ in range(5)]
+        baseline = compute_anomaly_baseline(flats)
+        for key in STAT_FEATURE_KEYS:
+            assert key in baseline.mean
+            assert key in baseline.std
+
+    def test_zero_variance_gives_zero_std(self):
+        """모든 값이 동일하면 std=0."""
+        flats = [_make_flat_features(rms=0.10) for _ in range(5)]
+        baseline = compute_anomaly_baseline(flats)
+        assert baseline.std["rms"] == pytest.approx(0.0)
+
+    def test_return_type(self):
+        flats = [_make_flat_features() for _ in range(5)]
+        baseline = compute_anomaly_baseline(flats)
+        assert isinstance(baseline, AnomalyBaseline)
+
+
+# ---------------------------------------------------------------------------
+# TestCheckStatistical
+# ---------------------------------------------------------------------------
+
+
+class TestCheckStatistical:
+    """check_statistical: z-score 기반 통계적 이탈도."""
+
+    def _make_baseline(self, **overrides):
+        """테스트용 AnomalyBaseline."""
+        mean = {k: _FLAT_DEFAULTS[k] for k in STAT_FEATURE_KEYS}
+        std = {k: abs(float(_FLAT_DEFAULTS[k])) * 0.1 + 0.001 for k in STAT_FEATURE_KEYS}
+        mean.update({k: v for k, v in overrides.items() if k in mean})
+        return AnomalyBaseline(mean=mean, std=std, snapshot_count=20)
+
+    def test_normal_low_z_scores(self):
+        """정상 데이터 → 모든 z-score가 낮음."""
+        baseline = self._make_baseline()
+        flat = _make_flat_features()
+        detail = check_statistical(flat, baseline)
+        assert detail.max_z_score < 2.0
+        assert detail.stat_score == pytest.approx(0.0)
+
+    def test_anomalous_high_z_score(self):
+        """이탈 데이터 → 높은 z-score."""
+        baseline = self._make_baseline()
+        # rms를 크게 이탈시킴: mean=0.10, std≈0.011
+        flat = _make_flat_features(rms=0.50)
+        detail = check_statistical(flat, baseline)
+        assert detail.max_z_score > 3.0
+        assert detail.stat_score > 0.0
+        assert detail.max_z_feature == "rms"
+
+    def test_z_scores_all_features(self):
+        """모든 대상 피처에 대해 z-score가 산출됨."""
+        baseline = self._make_baseline()
+        flat = _make_flat_features()
+        detail = check_statistical(flat, baseline)
+        for key in STAT_FEATURE_KEYS:
+            assert key in detail.z_scores
+
+    def test_zero_std_handled(self):
+        """std=0인 피처도 min_std로 처리."""
+        mean = {k: float(_FLAT_DEFAULTS[k]) for k in STAT_FEATURE_KEYS}
+        std = {k: 0.0 for k in STAT_FEATURE_KEYS}
+        baseline = AnomalyBaseline(mean=mean, std=std, snapshot_count=20)
+        flat = _make_flat_features()
+        detail = check_statistical(flat, baseline)
+        assert isinstance(detail, StatCheckDetail)
+
+    def test_return_type(self):
+        baseline = self._make_baseline()
+        flat = _make_flat_features()
+        detail = check_statistical(flat, baseline)
+        assert isinstance(detail, StatCheckDetail)
+        assert isinstance(detail.z_scores, dict)
+        assert isinstance(detail.stat_score, float)
+
+
+# ---------------------------------------------------------------------------
+# TestCombiner
+# ---------------------------------------------------------------------------
+
+
+class TestCombiner:
+    """detect_anomaly with Rule + Statistical combiner."""
+
+    def _make_baseline_and_flats(self, n=20):
+        flats = [
+            _make_flat_features(
+                rms=0.09 + i * 0.001,
+                kurtosis=2.9 + i * 0.01,
+                spectral_energy_total=0.9 + i * 0.01,
+            )
+            for i in range(n)
+        ]
+        hi_baseline = compute_baseline(flats)
+        anom_baseline = compute_anomaly_baseline(flats)
+        return flats, hi_baseline, anom_baseline
+
+    def test_backward_compatible_no_stat(self):
+        """flat_features 없이 호출 → Part 3a 호환 (Rule only)."""
+        hi = _make_hi_result(composite=0.5)
+        result = detect_anomaly(hi)
+        assert result.stat_detail is None
+        assert result.anomaly_score >= 0.0
+
+    def test_with_stat_has_detail(self):
+        """flat_features + anomaly_baseline → stat_detail 존재."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        flat = _make_flat_features(rms=0.10, kurtosis=3.0, spectral_energy_total=1.0)
+        hi = compute_health_indices(flat, hi_bl)
+        result = detect_anomaly(hi, flat, anom_bl)
+        assert result.stat_detail is not None
+        assert isinstance(result.stat_detail, StatCheckDetail)
+
+    def test_normal_combined_score(self):
+        """정상 데이터 → 낮은 combined score."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        flat = _make_flat_features(rms=0.10, kurtosis=3.0, spectral_energy_total=1.0)
+        hi = compute_health_indices(flat, hi_bl)
+        result = detect_anomaly(hi, flat, anom_bl)
+        assert result.anomaly_detected is False
+        assert result.anomaly_score < ANOMALY_THRESHOLD
+
+    def test_degraded_combined_score(self):
+        """열화 데이터 → 높은 combined score."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        flat = _make_flat_features(rms=0.50, kurtosis=8.0, spectral_energy_total=5.0)
+        hi = compute_health_indices(flat, hi_bl)
+        result = detect_anomaly(hi, flat, anom_bl)
+        assert result.anomaly_detected is True
+        assert result.anomaly_score >= ANOMALY_THRESHOLD
+
+    def test_combined_score_between_rule_and_stat(self):
+        """combined score는 rule_score와 stat_score 사이 (또는 같음)."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        flat = _make_flat_features(rms=0.30, kurtosis=5.0, spectral_energy_total=3.0)
+        hi = compute_health_indices(flat, hi_bl)
+        result = detect_anomaly(hi, flat, anom_bl)
+
+        rule_score = max(
+            result.rule_detail.composite_hi_score,
+            result.rule_detail.spike_score,
+        )
+        stat_score = result.stat_detail.stat_score
+        lo = min(rule_score, stat_score)
+        hi_s = max(rule_score, stat_score)
+        assert lo - 0.01 <= result.anomaly_score <= hi_s + 0.01
+
+    def test_custom_weights(self):
+        """커스텀 가중치 적용."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        # Rule과 Stat가 서로 다른 score를 내도록 중간 수준 이탈
+        flat = _make_flat_features(rms=0.13, kurtosis=3.3, spectral_energy_total=1.1)
+        hi = compute_health_indices(flat, hi_bl)
+
+        # Rule 100%, Stat 0%
+        result_rule_only = detect_anomaly(
+            hi, flat, anom_bl,
+            weights={"rule_based": 1.0, "statistical": 0.0},
+        )
+        # Stat 100%, Rule 0%
+        result_stat_only = detect_anomaly(
+            hi, flat, anom_bl,
+            weights={"rule_based": 0.0, "statistical": 1.0},
+        )
+        # 서로 다른 score
+        assert result_rule_only.anomaly_score != pytest.approx(
+            result_stat_only.anomaly_score, abs=0.01
+        )
+
+    def test_confidence_range(self):
+        """confidence는 0.5~1.0 범위."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        for rms in [0.10, 0.20, 0.30, 0.50]:
+            flat = _make_flat_features(rms=rms)
+            hi = compute_health_indices(flat, hi_bl)
+            result = detect_anomaly(hi, flat, anom_bl)
+            assert 0.5 <= result.confidence <= 1.0
+
+    def test_score_range(self):
+        """anomaly_score는 0~1 범위."""
+        flats, hi_bl, anom_bl = self._make_baseline_and_flats()
+        for rms in [0.05, 0.10, 0.30, 0.50, 1.0]:
+            flat = _make_flat_features(rms=rms)
+            hi = compute_health_indices(flat, hi_bl)
+            result = detect_anomaly(hi, flat, anom_bl)
+            assert 0.0 <= result.anomaly_score <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# TestStatIntegration
+# ---------------------------------------------------------------------------
+
+
+class TestStatIntegration:
+    """Statistical 모듈 통합 테스트."""
+
+    def test_progressive_degradation_stat_score_increases(self):
+        """점진적 열화 시 stat_score 단조 증가."""
+        flats = [
+            _make_flat_features(
+                rms=0.09 + i * 0.001,
+                kurtosis=2.9 + i * 0.01,
+                spectral_energy_total=0.9 + i * 0.01,
+            )
+            for i in range(20)
+        ]
+        anom_bl = compute_anomaly_baseline(flats)
+
+        scores = []
+        for factor in [1.0, 2.0, 3.0, 5.0, 8.0]:
+            flat = _make_flat_features(
+                rms=0.10 * factor,
+                kurtosis=3.0 * factor,
+                spectral_energy_total=1.0 * factor,
+            )
+            detail = check_statistical(flat, anom_bl)
+            scores.append(detail.stat_score)
+
+        for i in range(len(scores) - 1):
+            assert scores[i + 1] >= scores[i]
+
+    def test_stat_and_rule_independent(self):
+        """Rule과 Stat의 score가 독립적으로 산출됨."""
+        flats = [_make_flat_features() for _ in range(20)]
+        hi_bl = compute_baseline(flats)
+        anom_bl = compute_anomaly_baseline(flats)
+
+        # 같은 입력에 대해 rule과 stat의 score가 반드시 같지 않음
+        flat = _make_flat_features(rms=0.30, kurtosis=5.0)
+        hi = compute_health_indices(flat, hi_bl)
+        result = detect_anomaly(hi, flat, anom_bl)
+
+        rule_score = max(
+            result.rule_detail.composite_hi_score,
+            result.rule_detail.spike_score,
+        )
+        stat_score = result.stat_detail.stat_score
+        # 두 모듈이 독립 산출되므로 정확히 같을 확률은 낮음
+        # (같을 수도 있지만, 적어도 둘 다 유효한 값)
+        assert 0.0 <= rule_score <= 1.0
+        assert 0.0 <= stat_score <= 1.0

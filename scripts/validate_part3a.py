@@ -19,7 +19,7 @@ import numpy as np
 # 프로젝트 루트를 path에 추가
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from edge.anomaly_detection import detect_anomaly, _hi_to_score
+from edge.anomaly_detection import compute_anomaly_baseline, detect_anomaly, _hi_to_score
 from edge.config import HI_BASELINE_SNAPSHOT_COUNT, HI_FEATURE_KEYS, ANOMALY_HI_BREAKPOINTS
 from edge.feature_pipeline import extract_snapshot_features, flatten_features
 from edge.health_index import compute_baseline, compute_health_indices
@@ -93,13 +93,14 @@ def analyze_test_set(
 
     # 베이스라인 산출
     baseline = compute_baseline(flat_features_list, HI_BASELINE_SNAPSHOT_COUNT)
-    print(f"  베이스라인: {baseline.snapshot_count}개 스냅샷 사용")
+    anom_baseline = compute_anomaly_baseline(flat_features_list, HI_BASELINE_SNAPSHOT_COUNT)
+    print(f"  베이스라인: {baseline.snapshot_count}개 스냅샷 사용 (HI + Statistical)")
 
-    # HI + Anomaly Detection
+    # HI + Anomaly Detection (Rule + Statistical)
     results = []
     for i, flat in enumerate(flat_features_list):
         hi = compute_health_indices(flat, baseline)
-        anomaly = detect_anomaly(hi)
+        anomaly = detect_anomaly(hi, flat, anom_baseline)
         results.append({
             "idx": i,
             "timestamp": timestamps[i],
@@ -110,6 +111,7 @@ def analyze_test_set(
             "health_state": anomaly.health_state,
             "confidence": anomaly.confidence,
             "rule_detail": anomaly.rule_detail,
+            "stat_detail": anomaly.stat_detail,
         })
 
     # 분석

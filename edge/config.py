@@ -84,3 +84,44 @@ ANOMALY_HEALTH_STATE_TIERS: list[tuple[float, str]] = [
 
 # 모델 식별자
 ANOMALY_MODEL_ID: str = "rule_v1"
+
+# ---------------------------------------------------------------------------
+# Statistical Anomaly (Part 3b)
+# ---------------------------------------------------------------------------
+
+# z-score → anomaly score 매핑 breakpoints (구간별 선형 보간)
+STAT_Z_SCORE_BREAKPOINTS: list[tuple[float, float]] = [
+    (2.0, 0.0),     # z≤2 → 정상 (95% 신뢰구간 이내)
+    (3.0, 0.65),    # z=3 → 이상 판정 경계 (99.7%)
+    (4.0, 0.90),    # z=4 → critical 경계
+    (5.0, 1.0),     # z≥5 → 최대
+]
+
+# z-score 산출 대상 피처 (수치형만, bool/int 제외)
+STAT_FEATURE_KEYS: list[str] = [
+    "rms",
+    "peak",
+    "peak_to_peak",
+    "crest_factor",
+    "kurtosis",
+    "skewness",
+    "standard_deviation",
+    "shape_factor",
+    "bpfo_amplitude",
+    "bpfi_amplitude",
+    "bsf_amplitude",
+    "ftf_amplitude",
+    "spectral_energy_total",
+    "spectral_energy_high_freq_band",
+    "dominant_frequency_hz",
+]
+
+# Combiner 가중치 (Rule : Statistical)
+# Part 3c에서 model_based 추가 시 재배분
+COMBINER_WEIGHTS: dict[str, float] = {
+    "rule_based": 0.5,
+    "statistical": 0.5,
+}
+
+# 최소 std (0 나누기 방지)
+STAT_MIN_STD: float = 1e-10
