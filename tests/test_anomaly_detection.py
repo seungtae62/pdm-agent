@@ -34,7 +34,6 @@ def _make_hi_result(
         "hi_rms": 0.5,
         "hi_kurtosis": 0.5,
         "hi_crest_factor": 0.5,
-        "hi_peak_frequency": 0.5,
         "hi_fft_energy": 0.5,
     }
     individual.update(individual_overrides)

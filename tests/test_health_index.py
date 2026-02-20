@@ -62,14 +62,12 @@ def _make_baseline(
         "hi_rms": 0.08,
         "hi_kurtosis": 2.8,
         "hi_crest_factor": 1.8,
-        "hi_peak_frequency": 30.0,
         "hi_fft_energy": 0.8,
     }
     max_vals = {
         "hi_rms": 0.12,
         "hi_kurtosis": 3.2,
         "hi_crest_factor": 2.2,
-        "hi_peak_frequency": 36.0,
         "hi_fft_energy": 1.2,
     }
     if min_overrides:
@@ -216,7 +214,6 @@ class TestComputeHealthIndices:
             rms=baseline.min_values["hi_rms"],
             kurtosis=baseline.min_values["hi_kurtosis"],
             crest_factor=baseline.min_values["hi_crest_factor"],
-            dominant_frequency_hz=baseline.min_values["hi_peak_frequency"],
             spectral_energy_total=baseline.min_values["hi_fft_energy"],
         )
         result = compute_health_indices(flat, baseline)
@@ -231,7 +228,6 @@ class TestComputeHealthIndices:
             rms=baseline.max_values["hi_rms"],
             kurtosis=baseline.max_values["hi_kurtosis"],
             crest_factor=baseline.max_values["hi_crest_factor"],
-            dominant_frequency_hz=baseline.max_values["hi_peak_frequency"],
             spectral_energy_total=baseline.max_values["hi_fft_energy"],
         )
         result = compute_health_indices(flat, baseline)
@@ -250,7 +246,6 @@ class TestComputeHealthIndices:
             rms=rms_exceed,
             kurtosis=baseline.min_values["hi_kurtosis"],
             crest_factor=baseline.min_values["hi_crest_factor"],
-            dominant_frequency_hz=baseline.min_values["hi_peak_frequency"],
             spectral_energy_total=baseline.min_values["hi_fft_energy"],
         )
         result = compute_health_indices(flat, baseline)
@@ -264,16 +259,14 @@ class TestComputeHealthIndices:
             rms=baseline.max_values["hi_rms"],
             kurtosis=baseline.max_values["hi_kurtosis"],
             crest_factor=baseline.min_values["hi_crest_factor"],
-            dominant_frequency_hz=baseline.min_values["hi_peak_frequency"],
             spectral_energy_total=baseline.max_values["hi_fft_energy"],
         )
         result = compute_health_indices(flat, baseline)
-        # hi_rms=1, hi_kurtosis=1, hi_crest_factor=0, hi_peak_frequency=0, hi_fft_energy=1
+        # hi_rms=1, hi_kurtosis=1, hi_crest_factor=0, hi_fft_energy=1
         expected = (
             HI_WEIGHTS["hi_rms"] * 1.0
             + HI_WEIGHTS["hi_kurtosis"] * 1.0
             + HI_WEIGHTS["hi_crest_factor"] * 0.0
-            + HI_WEIGHTS["hi_peak_frequency"] * 0.0
             + HI_WEIGHTS["hi_fft_energy"] * 1.0
         )
         assert result.composite == pytest.approx(expected)
@@ -285,10 +278,9 @@ class TestComputeHealthIndices:
             rms=baseline.max_values["hi_rms"],
             kurtosis=baseline.max_values["hi_kurtosis"],
             crest_factor=baseline.max_values["hi_crest_factor"],
-            dominant_frequency_hz=baseline.max_values["hi_peak_frequency"],
             spectral_energy_total=baseline.max_values["hi_fft_energy"],
         )
-        custom_weights = {k: 0.20 for k in HI_WEIGHTS}
+        custom_weights = {k: 0.25 for k in HI_WEIGHTS}
         result = compute_health_indices(flat, baseline, weights=custom_weights)
         # all HI = 1.0, equal weights of 0.20 each → composite = 1.0
         assert result.composite == pytest.approx(1.0)

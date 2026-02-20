@@ -36,21 +36,24 @@ HI_FEATURE_KEYS: dict[str, str] = {
     "hi_rms": "rms",
     "hi_kurtosis": "kurtosis",
     "hi_crest_factor": "crest_factor",
-    "hi_peak_frequency": "dominant_frequency_hz",
     "hi_fft_energy": "spectral_energy_total",
 }
 
 # 가중치 근거 (P-F curve 기반):
-#   RMS(0.30)          — 전 P-F 구간에서 단조 증가. 가장 범용적인 열화 지표
-#   Kurtosis(0.25)     — 초기~중기 감지 탁월. 4단계에서 감소 가능하나 RMS/FFT Energy가 보상
+#   RMS(0.35)          — 전 P-F 구간에서 단조 증가. 가장 범용적인 열화 지표
+#   Kurtosis(0.30)     — 초기~중기 감지 탁월. 4단계에서 감소 가능하나 RMS/FFT Energy가 보상
 #   FFT Energy(0.20)   — 광대역 에너지 증가 포착. RMS 보완
 #   Crest Factor(0.15) — 초중기 전이 지표. 비단조적이므로 낮은 가중치
-#   Peak Freq(0.10)    — 결함 주파수로의 이동 감지. 가변성이 크므로 최저 가중치
+#
+# NOTE: hi_peak_frequency(dominant_frequency_hz) 제외.
+#   지배 주파수는 본질적으로 이산적(특정 주파수에 고정)이라
+#   Min-Max 정규화 기반 HI 산출에 부적합. 베이스라인 spread가 0에 가까워
+#   정상 상태에서도 극단적 HI 값을 생성함.
+#   주파수 영역 결함 정보는 Edge → Agent 페이로드의 결함 주파수 진폭으로 전달.
 HI_WEIGHTS: dict[str, float] = {
-    "hi_rms": 0.30,
-    "hi_kurtosis": 0.25,
+    "hi_rms": 0.35,
+    "hi_kurtosis": 0.30,
     "hi_crest_factor": 0.15,
-    "hi_peak_frequency": 0.10,
     "hi_fft_energy": 0.20,
 }
 

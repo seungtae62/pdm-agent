@@ -20,7 +20,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from edge.anomaly_detection import detect_anomaly, _hi_to_score
-from edge.config import HI_BASELINE_SNAPSHOT_COUNT, ANOMALY_HI_BREAKPOINTS
+from edge.config import HI_BASELINE_SNAPSHOT_COUNT, HI_FEATURE_KEYS, ANOMALY_HI_BREAKPOINTS
 from edge.feature_pipeline import extract_snapshot_features, flatten_features
 from edge.health_index import compute_baseline, compute_health_indices
 from edge.loader import (
@@ -161,7 +161,7 @@ def analyze_test_set(
 
     # 개별 HI 스파이크 분석
     print(f"\n  --- 개별 HI 최대값 ---")
-    hi_keys = ["hi_rms", "hi_kurtosis", "hi_crest_factor", "hi_peak_frequency", "hi_fft_energy"]
+    hi_keys = list(HI_FEATURE_KEYS.keys())
     for key in hi_keys:
         vals = [r["individual_hi"][key] for r in results]
         print(f"  {key:20s}: min={min(vals):.3f}  max={max(vals):.3f}  "
