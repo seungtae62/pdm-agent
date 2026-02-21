@@ -116,12 +116,48 @@ STAT_FEATURE_KEYS: list[str] = [
     "dominant_frequency_hz",
 ]
 
-# Combiner 가중치 (Rule : Statistical)
-# Part 3c에서 model_based 추가 시 재배분
+# Combiner 가중치 (Rule : Statistical : Model)
 COMBINER_WEIGHTS: dict[str, float] = {
-    "rule_based": 0.5,
-    "statistical": 0.5,
+    "rule_based": 0.4,
+    "statistical": 0.3,
+    "model_based": 0.3,
 }
 
 # 최소 std (0 나누기 방지)
 STAT_MIN_STD: float = 1e-10
+
+# ---------------------------------------------------------------------------
+# Autoencoder (Part 3c)
+# ---------------------------------------------------------------------------
+
+# Autoencoder 입력 피처 (STAT_FEATURE_KEYS와 동일)
+MODEL_FEATURE_KEYS: list[str] = STAT_FEATURE_KEYS.copy()
+
+# AE 전용 베이스라인 스냅샷 수 (HI의 20개와 분리)
+# Neural network은 통계 기반 모듈보다 더 많은 정상 데이터가 필요.
+MODEL_BASELINE_SNAPSHOT_COUNT: int = 100
+
+# 잠재 공간 차원 (피처 15개 → 4차원: 높은 압축률로 일반화 유도)
+MODEL_LATENT_DIM: int = 4
+
+# 학습 하이퍼파라미터
+MODEL_TRAIN_EPOCHS: int = 300
+MODEL_LEARNING_RATE: float = 1e-3
+MODEL_WEIGHT_DECAY: float = 1e-4  # L2 regularization
+
+# 입력 정규화 후 클램핑 범위 (극단적 z-score 차단)
+MODEL_INPUT_CLAMP: float = 5.0
+
+# Early stopping: patience 에폭 동안 loss 개선 없으면 중단
+MODEL_EARLY_STOPPING_PATIENCE: int = 30
+MODEL_EARLY_STOPPING_MIN_DELTA: float = 1e-6
+
+# reconstruction MSE → anomaly score 매핑 breakpoints
+# 정규화+클램핑된 피처 공간 기준.
+# ratio = recon_error / threshold, threshold = normal_recon_mean + 3 × normal_recon_std
+MODEL_RECON_BREAKPOINTS: list[tuple[float, float]] = [
+    (0.5, 0.0),    # threshold의 50% 이하 → 정상
+    (1.0, 0.65),   # threshold 도달 → 이상 판정 경계
+    (2.0, 0.90),   # threshold의 2배 → critical 경계
+    (3.0, 1.0),    # threshold의 3배 이상 → 최대
+]

@@ -1,13 +1,13 @@
-"""Anomaly Detection 모듈 — Part 3a + 3b.
+"""Anomaly Detection 모듈 — Part 3a + 3b + 3c.
 
 3개의 독립적인 감지 모듈이 flat_features를 입력으로 병렬 실행되며,
 Combiner가 결과를 결합하여 최종 anomaly_score를 산출한다.
 
 [A] HI + Rule Check (Part 3a): HI 값에 규칙 기반 임계값 검사
 [B] Statistical (Part 3b): flat_features의 z-score 기반 통계적 이탈도
-[C] Autoencoder (Part 3c): 미구현
+[C] Autoencoder (Part 3c): reconstruction error 기반 이상 감지
 
-Part 3b에서는 anomaly_score = w_rule × rule + w_stat × stat.
+anomaly_score = w_rule × rule + w_stat × stat + w_model × model
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from edge.autoencoder import AutoencoderBaseline, compute_reconstruction_error
 from edge.config import (
     ANOMALY_HI_BREAKPOINTS,
     ANOMALY_HEALTH_STATE_TIERS,
@@ -22,6 +23,7 @@ from edge.config import (
     ANOMALY_SPIKE_THRESHOLD,
     ANOMALY_THRESHOLD,
     COMBINER_WEIGHTS,
+    MODEL_RECON_BREAKPOINTS,
     STAT_FEATURE_KEYS,
     STAT_MIN_STD,
     STAT_Z_SCORE_BREAKPOINTS,
@@ -66,6 +68,14 @@ class StatCheckDetail:
 
 
 @dataclass(frozen=True)
+class ModelCheckDetail:
+    """Autoencoder Check 세부 결과."""
+
+    reconstruction_error: float
+    score: float
+
+
+@dataclass(frozen=True)
 class AnomalyResult:
     """이상 감지 최종 결과."""
 
@@ -77,7 +87,7 @@ class AnomalyResult:
     confidence: float
     rule_detail: RuleCheckDetail
     stat_detail: StatCheckDetail | None = None
-    # Part 3c에서 model_detail 추가 예정
+    model_detail: ModelCheckDetail | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +142,37 @@ def _z_to_score(
     if breakpoints is None:
         breakpoints = STAT_Z_SCORE_BREAKPOINTS
     return _piecewise_linear(abs(z_value), breakpoints)
+
+
+def _recon_to_score(
+    recon_error: float,
+    normal_mean: float,
+    normal_std: float,
+    breakpoints: list[tuple[float, float]] | None = None,
+) -> float:
+    """Reconstruction error를 0~1 anomaly score로 변환.
+
+    threshold = normal_mean + 3 × normal_std로 정규화 후
+    breakpoints에 따라 매핑한다.
+
+    Args:
+        recon_error: 현재 스냅샷의 reconstruction MSE.
+        normal_mean: 정상 데이터 MSE 평균.
+        normal_std: 정상 데이터 MSE 표준편차.
+        breakpoints: (ratio, score) 쌍. ratio = error/threshold.
+
+    Returns:
+        0.0~1.0 범위의 score.
+    """
+    if breakpoints is None:
+        breakpoints = MODEL_RECON_BREAKPOINTS
+
+    threshold = normal_mean + 3.0 * max(normal_std, 1e-10)
+    if threshold <= 0:
+        threshold = 1e-10
+
+    ratio = recon_error / threshold
+    return _piecewise_linear(ratio, breakpoints)
 
 
 # ---------------------------------------------------------------------------
@@ -292,34 +333,38 @@ def detect_anomaly(
     hi_result: HealthIndexResult,
     flat_features: dict | None = None,
     anomaly_baseline: AnomalyBaseline | None = None,
+    autoencoder_baseline: AutoencoderBaseline | None = None,
     *,
     threshold: float | None = None,
     weights: dict[str, float] | None = None,
 ) -> AnomalyResult:
     """이상 감지 메인 진입점.
 
-    Part 3b: Rule + Statistical 두 모듈을 가중합산하여
+    3개 모듈(Rule/Statistical/Autoencoder)을 가중합산하여
     최종 anomaly_score를 산출한다.
 
-    flat_features와 anomaly_baseline이 모두 제공되면 Statistical 모듈 실행.
-    하나라도 None이면 Rule만 사용 (Part 3a 호환).
+    제공되는 baseline에 따라 활성화되는 모듈이 결정된다:
+    - Rule: 항상 실행
+    - Statistical: flat_features + anomaly_baseline 제공 시
+    - Autoencoder: flat_features + autoencoder_baseline 제공 시
 
     Args:
         hi_result: compute_health_indices() 결과.
         flat_features: 현재 스냅샷의 flatten_features() 결과.
         anomaly_baseline: compute_anomaly_baseline() 결과.
+        autoencoder_baseline: train_autoencoder() 결과.
         threshold: 이상 판정 임계값. None이면 config 기본값.
         weights: Combiner 가중치. None이면 config 기본값.
 
     Returns:
-        AnomalyResult with rule_detail and optional stat_detail.
+        AnomalyResult with rule_detail, optional stat_detail/model_detail.
     """
     if threshold is None:
         threshold = ANOMALY_THRESHOLD
     if weights is None:
         weights = COMBINER_WEIGHTS
 
-    # [A] Rule Check
+    # [A] Rule Check — 항상 실행
     rule_detail = check_rules(hi_result)
     rule_score = max(rule_detail.composite_hi_score, rule_detail.spike_score)
 
@@ -329,20 +374,45 @@ def detect_anomaly(
 
     if use_stat:
         stat_detail = check_statistical(flat_features, anomaly_baseline)
-        stat_score = stat_detail.stat_score
 
-        # Combiner: 가중합산
-        w_rule = weights.get("rule_based", 0.5)
-        w_stat = weights.get("statistical", 0.5)
-        total_w = w_rule + w_stat
-        anomaly_score = (w_rule * rule_score + w_stat * stat_score) / total_w
+    # [C] Autoencoder (optional)
+    model_detail: ModelCheckDetail | None = None
+    use_model = flat_features is not None and autoencoder_baseline is not None
 
-        # Confidence: Rule↔Stat 일치도
-        score_diff = abs(rule_score - stat_score)
-        confidence = 0.5 + 0.5 * (1.0 - min(score_diff, 1.0))
+    if use_model:
+        recon_error = compute_reconstruction_error(flat_features, autoencoder_baseline)
+        model_score = _recon_to_score(
+            recon_error,
+            autoencoder_baseline.normal_recon_mean,
+            autoencoder_baseline.normal_recon_std,
+        )
+        model_detail = ModelCheckDetail(
+            reconstruction_error=recon_error,
+            score=model_score,
+        )
+
+    # Combiner: 활성 모듈만 가중합산
+    scores: list[tuple[str, float]] = [("rule_based", rule_score)]
+    if stat_detail is not None:
+        scores.append(("statistical", stat_detail.stat_score))
+    if model_detail is not None:
+        scores.append(("model_based", model_detail.score))
+
+    weighted_sum = 0.0
+    total_w = 0.0
+    for key, score in scores:
+        w = weights.get(key, 0.0)
+        weighted_sum += w * score
+        total_w += w
+
+    anomaly_score = weighted_sum / total_w if total_w > 0 else rule_score
+
+    # Confidence: 활성 모듈 간 score 일치도
+    all_scores = [s for _, s in scores]
+    if len(all_scores) >= 2:
+        max_diff = max(all_scores) - min(all_scores)
+        confidence = 0.5 + 0.5 * (1.0 - min(max_diff, 1.0))
     else:
-        # Part 3a 호환: Rule만 사용
-        anomaly_score = rule_score
         score_diff = abs(rule_detail.composite_hi_score - rule_detail.spike_score)
         confidence = 0.5 + 0.5 * (1.0 - min(score_diff, 1.0))
 
@@ -358,4 +428,5 @@ def detect_anomaly(
         confidence=confidence,
         rule_detail=rule_detail,
         stat_detail=stat_detail,
+        model_detail=model_detail,
     )
