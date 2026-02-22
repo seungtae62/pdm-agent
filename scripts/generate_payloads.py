@@ -8,10 +8,10 @@ Usage:
     python scripts/generate_payloads.py --output-dir /path/to/output
 
 시나리오:
-    SC-001: Test1-Brg3, 5일차 (정상)
-    SC-002: Test1-Brg3, 15일차 (초기 열화)
-    SC-003: Test1-Brg3, 25일차 (결함 진행)
-    SC-004: Test2-Brg1, 4일차 (급속 열화)
+    SC-001: Test1-Brg3, 10일차 (정상)
+    SC-002: Test1-Brg3, 31일차 (초기 열화)
+    SC-003: Test1-Brg3, 33일차 (결함 진행)
+    SC-004: Test2-Brg1, 5일차 (급속 열화)
 """
 
 from __future__ import annotations
@@ -63,38 +63,54 @@ class ScenarioConfig:
     output_filename: str
 
 
+# ---------------------------------------------------------------------------
+# 베이스라인 구간 정의 (테스트셋별)
+# ---------------------------------------------------------------------------
+# IMS 데이터는 수집 간격이 불균일하고, 초기 run-in 구간에서 특성 변화가 있다.
+# 테스트셋별로 "안정된 정상 운전" 구간을 고정 베이스라인으로 사용한다.
+#
+# 1st_test: day 0에 156개 집중 후 day 1~6 공백. day 7~10이 안정적 정상.
+# 2nd_test: day 0~2 구간이 정상 (7일 만에 고장, 급속 열화).
+# 3rd_test: day 0~5 구간이 정상.
+
+BASELINE_PERIOD: dict[str, tuple[int, int]] = {
+    "1st_test": (7, 11),   # day 7~11 (약 356 snapshots)
+    "2nd_test": (0, 2),    # day 0~2 (약 289 snapshots)
+    "3rd_test": (0, 5),    # day 0~5
+}
+
 SCENARIOS: list[ScenarioConfig] = [
     ScenarioConfig(
         scenario_id="SC-001",
         test_set_id="1st_test",
         bearing_id="BRG-003",
-        target_day=5,
-        description="정상 구간 (5일차)",
-        output_filename="scenario1_day05.json",
+        target_day=10,
+        description="정상 구간 (10일차)",
+        output_filename="scenario1_day10.json",
     ),
     ScenarioConfig(
         scenario_id="SC-002",
         test_set_id="1st_test",
         bearing_id="BRG-003",
-        target_day=15,
-        description="초기 열화 (15일차)",
-        output_filename="scenario1_day15.json",
+        target_day=31,
+        description="초기 열화 (31일차)",
+        output_filename="scenario1_day31.json",
     ),
     ScenarioConfig(
         scenario_id="SC-003",
         test_set_id="1st_test",
         bearing_id="BRG-003",
-        target_day=25,
-        description="결함 진행 (25일차)",
-        output_filename="scenario1_day25.json",
+        target_day=33,
+        description="결함 진행 (33일차)",
+        output_filename="scenario1_day33.json",
     ),
     ScenarioConfig(
         scenario_id="SC-004",
         test_set_id="2nd_test",
         bearing_id="BRG-001",
-        target_day=4,
-        description="급속 열화 (4일차)",
-        output_filename="scenario2_day04.json",
+        target_day=5,
+        description="급속 열화 (5일차)",
+        output_filename="scenario2_day05.json",
     ),
 ]
 
@@ -126,6 +142,46 @@ def find_snapshot_at_day(
             best_idx = i
 
     return best_idx
+
+
+def select_baseline_indices(
+    snapshots: list[tuple[datetime, Path]],
+    baseline_period: tuple[int, int],
+    n_baseline: int,
+) -> list[int]:
+    """고정 정상 구간에서 베이스라인 스냅샷 인덱스를 균등 분산 선택.
+
+    Args:
+        snapshots: 전체 스냅샷 목록.
+        baseline_period: (start_day, end_day) 정상 운전 구간.
+        n_baseline: 필요한 베이스라인 스냅샷 수.
+
+    Returns:
+        선택된 인덱스 리스트 (정렬됨).
+    """
+    start_ts = snapshots[0][0]
+    period_start = start_ts + timedelta(days=baseline_period[0])
+    period_end = start_ts + timedelta(days=baseline_period[1])
+
+    # 구간 내 스냅샷 인덱스 수집
+    candidates = [
+        i for i, (ts, _) in enumerate(snapshots)
+        if period_start <= ts <= period_end
+    ]
+
+    if not candidates:
+        raise ValueError(
+            f"베이스라인 구간 day {baseline_period[0]}~{baseline_period[1]}에 "
+            f"스냅샷이 없음"
+        )
+
+    if len(candidates) <= n_baseline:
+        return candidates
+
+    # 균등 간격 샘플링
+    step = len(candidates) / n_baseline
+    selected = [candidates[int(i * step)] for i in range(n_baseline)]
+    return sorted(set(selected))
 
 
 def extract_features_batch(
@@ -188,16 +244,23 @@ def generate_scenario_payload(
     )
 
     # 2. 베이스라인 스냅샷 특징량 추출
-    # AE가 가장 많이 필요 (100개), 나머지는 20개
-    n_baseline = min(MODEL_BASELINE_SNAPSHOT_COUNT, target_idx)
+    # 테스트셋별 고정 정상 구간에서 베이스라인을 구성한다.
+    baseline_period = BASELINE_PERIOD[scenario.test_set_id]
+    baseline_indices = select_baseline_indices(
+        snapshots, baseline_period, MODEL_BASELINE_SNAPSHOT_COUNT
+    )
+    n_baseline = len(baseline_indices)
+
     if n_baseline < HI_BASELINE_SNAPSHOT_COUNT:
         logger.warning(
             f"  [{scenario.scenario_id}] 베이스라인 스냅샷 부족: "
             f"{n_baseline} < {HI_BASELINE_SNAPSHOT_COUNT}"
         )
 
-    baseline_indices = list(range(n_baseline))
-    logger.info(f"  [{scenario.scenario_id}] 베이스라인 {n_baseline}개 추출 중...")
+    logger.info(
+        f"  [{scenario.scenario_id}] 베이스라인 {n_baseline}개 추출 중... "
+        f"(day {baseline_period[0]}~{baseline_period[1]} 구간)"
+    )
 
     baseline_batch = extract_features_batch(
         snapshots, channel_indices, channels_per_file, baseline_indices
