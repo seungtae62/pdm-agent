@@ -20,23 +20,17 @@ import argparse
 import logging
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-
-import numpy as np
 
 # 프로젝트 루트를 path에 추가
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from edge.anomaly_detection import (
-    AnomalyBaseline,
-    compute_anomaly_baseline,
-    detect_anomaly,
-)
+from edge.anomaly_detection import compute_anomaly_baseline, detect_anomaly
 from edge.autoencoder import train_autoencoder
 from edge.config import HI_BASELINE_SNAPSHOT_COUNT, MODEL_BASELINE_SNAPSHOT_COUNT
 from edge.feature_pipeline import extract_snapshot_features, flatten_features
-from edge.health_index import BaselineStats, compute_baseline, compute_health_indices
+from edge.health_index import compute_baseline, compute_health_indices
 from edge.loader import get_test_set_info, list_snapshots, load_snapshot
 from edge.metadata import get_channel_indices
 from edge.payload_generator import build_event_payload, save_payload
@@ -120,7 +114,7 @@ def find_snapshot_at_day(
     가장 가까운 스냅샷의 인덱스를 반환한다.
     """
     start_ts = snapshots[0][0]
-    target_ts = start_ts + __import__("datetime").timedelta(days=target_day)
+    target_ts = start_ts + timedelta(days=target_day)
 
     best_idx = 0
     best_diff = abs((snapshots[0][0] - target_ts).total_seconds())

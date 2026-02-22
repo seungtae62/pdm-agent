@@ -7,12 +7,11 @@ Cloud 에이전트용 이벤트 페이로드 JSON으로 조립한다.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from edge.anomaly_detection import AnomalyResult
-from edge.feature_pipeline import extract_snapshot_features
-from edge.metadata import get_channel_indices, get_edge_node_id, get_equipment_meta
+from edge.metadata import get_edge_node_id, get_equipment_meta
 
 
 def build_event_payload(
