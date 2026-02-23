@@ -140,3 +140,77 @@ class TestRAGServer:
         mock_openai.embeddings.create.assert_called_once()
         call_kwargs = mock_openai.embeddings.create.call_args
         assert call_kwargs.kwargs["input"] == "test query"
+
+    def test_empty_search_results(self, mock_rag_server):
+        """빈 검색 결과 처리."""
+        server, mock_qdrant, _ = mock_rag_server
+        mock_qdrant.search.return_value = []
+
+        results = server.search_maintenance_history(query="존재하지 않는 쿼리")
+        assert results == []
+
+    def test_embed_uses_configured_model(self, mock_rag_server):
+        """_embed가 config의 embedding_model을 사용하는지 확인."""
+        server, _, mock_openai = mock_rag_server
+        server.config.embedding_model = "text-embedding-3-large"
+        server.search_maintenance_history(query="test")
+
+        call_kwargs = mock_openai.embeddings.create.call_args
+        assert call_kwargs.kwargs["model"] == "text-embedding-3-large"
+
+    def test_config_from_env(self):
+        """from_env()가 환경변수를 올바르게 읽는지 확인."""
+        env = {
+            "QDRANT_HOST": "remote-host",
+            "QDRANT_PORT": "7777",
+            "EMBEDDING_MODEL": "custom-model",
+            "PDM_RAG_TOP_K": "10",
+        }
+        with patch.dict("os.environ", env):
+            config = RAGServerConfig.from_env()
+
+        assert config.qdrant_host == "remote-host"
+        assert config.qdrant_port == 7777
+        assert config.embedding_model == "custom-model"
+        assert config.top_k == 10
+
+    def test_custom_top_k_override(self, mock_rag_server):
+        """쿼리별 top_k 오버라이드."""
+        server, mock_qdrant, _ = mock_rag_server
+        server.search_maintenance_history(query="test", top_k=7)
+
+        call_kwargs = mock_qdrant.search.call_args
+        assert call_kwargs.kwargs["limit"] == 7
+
+
+# ---------------------------------------------------------------------------
+# NotificationServer - 추가 테스트
+# ---------------------------------------------------------------------------
+
+
+class TestNotificationServerExtended:
+    @pytest.mark.parametrize("risk_level", ["watch", "warning", "critical"])
+    def test_risk_levels(self, risk_level):
+        """다양한 위험도 레벨 처리."""
+        server = NotificationServer()
+        result = server.notify_maintenance_staff(
+            message="테스트 알림",
+            risk_level=risk_level,
+            equipment_id="EQ-001",
+        )
+        assert result.success is True
+        assert risk_level in result.message
+
+    def test_timestamp_iso_format(self):
+        """타임스탬프가 ISO 형식인지 확인."""
+        server = NotificationServer()
+        result = server.notify_maintenance_staff(
+            message="test",
+            risk_level="normal",
+            equipment_id="EQ-001",
+        )
+        # ISO format 파싱 가능해야 함
+        from datetime import datetime
+
+        parsed = datetime.fromisoformat(result.timestamp)
+        assert isinstance(parsed, datetime)

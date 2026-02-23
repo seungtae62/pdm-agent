@@ -94,16 +94,23 @@ def _extract_json(text: str) -> dict | None:
         except json.JSONDecodeError:
             continue
 
-    # 2. { ... } 패턴 (가장 큰 것)
-    brace_pattern = r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}"
-    matches = re.findall(brace_pattern, text, re.DOTALL)
-
-    for match in sorted(matches, key=len, reverse=True):
-        try:
-            parsed = json.loads(match)
-            if isinstance(parsed, dict) and "fault_type" in parsed:
-                return parsed
-        except json.JSONDecodeError:
-            continue
+    # 2. { ... } 패턴 — 균형 잡힌 중괄호 매칭 (다중 중첩 지원)
+    for i, ch in enumerate(text):
+        if ch == '{':
+            depth = 0
+            for j in range(i, len(text)):
+                if text[j] == '{':
+                    depth += 1
+                elif text[j] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        candidate = text[i:j + 1]
+                        try:
+                            parsed = json.loads(candidate)
+                            if isinstance(parsed, dict) and "fault_type" in parsed:
+                                return parsed
+                        except json.JSONDecodeError:
+                            pass
+                        break
 
     return None
