@@ -32,7 +32,12 @@ from edge.config import HI_BASELINE_SNAPSHOT_COUNT, MODEL_BASELINE_SNAPSHOT_COUN
 from edge.feature_pipeline import extract_snapshot_features, flatten_features
 from edge.health_index import compute_baseline, compute_health_indices
 from edge.loader import get_test_set_info, list_snapshots, load_snapshot
-from edge.metadata import get_channel_indices
+from edge.metadata import (
+    get_channel_indices,
+    get_edge_node_id,
+    get_equipment_id,
+    get_sensor_channels,
+)
 from edge.payload_generator import build_event_payload, save_payload
 
 logging.basicConfig(
@@ -312,16 +317,18 @@ def generate_scenario_payload(
         f"state={anomaly_result.health_state}"
     )
 
-    # 6. 페이로드 조립
-    operation_start = snapshots[0][0]
+    # 6. 페이로드 조립 (타임스탬프는 실행 시점 now() 사용)
     payload = build_event_payload(
-        test_set_id=scenario.test_set_id,
+        equipment_id=get_equipment_id(scenario.test_set_id),
         bearing_id=scenario.bearing_id,
-        snapshot_timestamp=target_ts,
-        operation_start_date=operation_start,
+        edge_node_id=get_edge_node_id(scenario.test_set_id),
+        timestamp=datetime.now(),
         features=target_features,
         anomaly_result=anomaly_result,
         event_seq=1,
+        sensor_channels=get_sensor_channels(
+            scenario.test_set_id, scenario.bearing_id
+        ),
     )
 
     return payload

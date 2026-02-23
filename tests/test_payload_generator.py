@@ -7,7 +7,13 @@ from datetime import datetime
 import pytest
 
 from edge.anomaly_detection import AnomalyResult, RuleCheckDetail
-from edge.metadata import get_channel_indices, get_edge_node_id, get_equipment_meta
+from edge.metadata import (
+    get_bearing_id,
+    get_channel_indices,
+    get_edge_node_id,
+    get_equipment_id,
+    get_sensor_channels,
+)
 from edge.payload_generator import build_event_payload, _round_dict
 
 
@@ -19,31 +25,29 @@ from edge.payload_generator import build_event_payload, _round_dict
 class TestMetadata:
     """메타데이터 모듈 테스트."""
 
-    def test_get_equipment_meta_1st_test_brg003(self):
-        meta = get_equipment_meta("1st_test", "BRG-003")
-        assert meta["equipment_id"] == "IMS-TESTRIG-01"
-        assert meta["bearing"]["bearing_id"] == "BRG-003"
-        assert meta["bearing"]["model"] == "Rexnord ZA-2115"
-        assert meta["sensor_config"]["sensor_count"] == 8
-        assert meta["sensor_config"]["channels"] == ["ch0", "ch1"]
-
-    def test_get_equipment_meta_2nd_test_brg001(self):
-        meta = get_equipment_meta("2nd_test", "BRG-001")
-        assert meta["equipment_id"] == "IMS-TESTRIG-02"
-        assert meta["bearing"]["bearing_id"] == "BRG-001"
-        assert meta["sensor_config"]["channels"] == ["ch0"]
-
-    def test_get_equipment_meta_invalid(self):
-        with pytest.raises(KeyError):
-            get_equipment_meta("1st_test", "BRG-999")
+    def test_get_equipment_id(self):
+        assert get_equipment_id("1st_test") == "IMS-TESTRIG-01"
+        assert get_equipment_id("2nd_test") == "IMS-TESTRIG-02"
 
     def test_get_edge_node_id(self):
         assert get_edge_node_id("1st_test") == "EDGE-001"
         assert get_edge_node_id("2nd_test") == "EDGE-002"
 
+    def test_get_bearing_id(self):
+        assert get_bearing_id("1st_test", "BRG-003") == "BRG-003"
+        assert get_bearing_id("2nd_test", "BRG-001") == "BRG-001"
+
+    def test_get_bearing_id_invalid(self):
+        with pytest.raises(KeyError):
+            get_bearing_id("1st_test", "BRG-999")
+
     def test_get_channel_indices(self):
         assert get_channel_indices("1st_test", "BRG-003") == [4, 5]
         assert get_channel_indices("2nd_test", "BRG-001") == [0]
+
+    def test_get_sensor_channels(self):
+        assert get_sensor_channels("1st_test", "BRG-003") == ["ch0", "ch1"]
+        assert get_sensor_channels("2nd_test", "BRG-001") == ["ch0"]
 
 
 # ---------------------------------------------------------------------------
@@ -94,26 +98,28 @@ class TestBuildEventPayload:
     """build_event_payload 테스트."""
 
     def test_basic_structure(self):
+        now = datetime(2026, 2, 23, 12, 0, 0)
         payload = build_event_payload(
-            test_set_id="1st_test",
+            equipment_id="IMS-TESTRIG-01",
             bearing_id="BRG-003",
-            snapshot_timestamp=datetime(2003, 10, 27, 12, 0, 0),
-            operation_start_date=datetime(2003, 10, 22, 0, 0, 0),
+            edge_node_id="EDGE-001",
+            timestamp=now,
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(detected=False),
+            sensor_channels=["ch0", "ch1"],
         )
 
-        # 최상위 필드
-        assert payload["event_id"].startswith("EVT-20031027-")
+        # 최상위 필드 — ID만 포함, 상세 메타데이터 없음
+        assert payload["event_id"].startswith("EVT-20260223-")
         assert payload["event_type"] == "periodic_monitoring"
         assert payload["edge_node_id"] == "EDGE-001"
+        assert payload["equipment_id"] == "IMS-TESTRIG-01"
+        assert payload["bearing_id"] == "BRG-003"
+        assert payload["sensor_channels"] == ["ch0", "ch1"]
 
-        # equipment_meta
-        meta = payload["equipment_meta"]
-        assert meta["equipment_id"] == "IMS-TESTRIG-01"
-        assert meta["operation_days_elapsed"] == 5
-        assert meta["total_running_hours"] > 0
-        assert meta["bearing"]["model"] == "Rexnord ZA-2115"
+        # 상세 메타데이터가 없는지 확인
+        assert "equipment_meta" not in payload
+        assert "bearing" not in payload.get("equipment_meta", {})
 
         # anomaly_detection_result
         anom = payload["anomaly_detection_result"]
@@ -132,10 +138,10 @@ class TestBuildEventPayload:
 
     def test_anomaly_alert_type(self):
         payload = build_event_payload(
-            test_set_id="2nd_test",
+            equipment_id="IMS-TESTRIG-02",
             bearing_id="BRG-001",
-            snapshot_timestamp=datetime(2004, 2, 16, 12, 0, 0),
-            operation_start_date=datetime(2004, 2, 12, 0, 0, 0),
+            edge_node_id="EDGE-002",
+            timestamp=datetime(2026, 2, 23, 12, 0, 0),
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(detected=True),
         )
@@ -143,17 +149,19 @@ class TestBuildEventPayload:
         assert payload["event_type"] == "anomaly_alert"
         assert payload["anomaly_detection_result"]["anomaly_detected"] is True
 
-    def test_operation_days_calculation(self):
+    def test_timestamp_uses_provided_value(self):
+        now = datetime(2026, 2, 23, 15, 30, 0)
         payload = build_event_payload(
-            test_set_id="1st_test",
+            equipment_id="IMS-TESTRIG-01",
             bearing_id="BRG-003",
-            snapshot_timestamp=datetime(2003, 11, 16, 12, 0, 0),
-            operation_start_date=datetime(2003, 10, 22, 0, 0, 0),
+            edge_node_id="EDGE-001",
+            timestamp=now,
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(),
         )
 
-        assert payload["equipment_meta"]["operation_days_elapsed"] == 25
+        assert payload["timestamp"] == "2026-02-23T15:30:00"
+        assert payload["event_id"] == "EVT-20260223-0001"
 
 
 class TestRoundDict:
