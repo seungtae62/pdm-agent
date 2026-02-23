@@ -24,9 +24,7 @@ venv/
 
 # Data (large dataset files)
 data/*
-!data/ims/
-data/ims/*
-!data/ims/.gitkeep
+!data/정비이력_비용분석_ISO14224_연계_v7
 
 # Jupyter
 .ipynb_checkpoints/
