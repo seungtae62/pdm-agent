@@ -34,4 +34,5 @@ data/*
 *.log
 logs/
 
-.claude
+.claudefonts/
+FORMAT_REVIEW.md

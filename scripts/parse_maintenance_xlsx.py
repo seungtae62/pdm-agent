@@ -342,11 +342,11 @@ class MaintenancePDF(FPDF):
         pass
 
     def section_title(self, title: str) -> None:
-        self._check_space(20)  # Section title + at least one field
-        self.set_font("NotoSansKR", "B", 11)
+        self._check_space(15)  # Section title + at least one field
+        self.set_font("NotoSansKR", "B", 10)
         self.set_fill_color(230, 230, 230)
-        self.cell(self.content_w, 8, f"  {title}", ln=True, fill=True)
-        self.ln(2)
+        self.cell(self.content_w, 7, f"  {title}", ln=True, fill=True)
+        self.ln(1)
 
     def _check_space(self, min_h: float = 12.0) -> None:
         """Add a new page if remaining space is less than min_h."""
@@ -460,16 +460,20 @@ class MaintenancePDF(FPDF):
 
 
 def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
-    """Generate a single-page PDF for the work order instruction."""
+    """Generate a compact single-page PDF for the work order instruction."""
     inst = record["instruction"]
 
     pdf = MaintenancePDF()
+    # Compact settings for single-page fit
+    pdf.LINE_H = 4.5
+    pdf.LABEL_W = 40
+    pdf.set_auto_page_break(auto=True, margin=8)
 
     pdf.add_page()
-    pdf.set_font("NotoSansKR", "B", 14)
-    pdf.cell(0, 10, "공장설비 보전작업 작업지시서", ln=True, align="C")
+    pdf.set_font("NotoSansKR", "B", 12)
+    pdf.cell(0, 8, "공장설비 보전작업 작업지시서", ln=True, align="C")
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(4)
+    pdf.ln(2)
 
     pdf.section_title("기본 정보")
     pdf.field("작업지시 번호", inst.get("wo_number", ""))
@@ -481,18 +485,18 @@ def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
     pdf.field("완료 예정일", inst.get("due_date", ""))
     pdf.field("작업 담당자", inst.get("assignee", ""))
 
-    pdf.ln(2)
+    pdf.ln(1)
     pdf.section_title("작업 내용")
     pdf.field("작업 내용 요약", inst.get("summary", ""))
     pdf.field("안전사항", inst.get("safety", ""))
 
     if inst.get("checklist"):
-        pdf.ln(2)
+        pdf.ln(1)
         pdf.section_title("작업 상세 체크리스트")
         pdf.items_list(inst["checklist"])
 
     if inst.get("materials"):
-        pdf.ln(2)
+        pdf.ln(1)
         pdf.section_title("필요 자재")
         widths = [28.0, 32.0, 32.0, 14.0, 14.0, 70.0]
         headers = ["코드", "자재명", "규격", "수량", "단위", "비고"]
@@ -500,7 +504,7 @@ def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
         pdf.small_table(headers, rows, widths)
 
     if inst.get("tools"):
-        pdf.ln(2)
+        pdf.ln(1)
         pdf.section_title("필요 공구 및 장비")
         widths = [28.0, 32.0, 38.0, 14.0, 14.0, 64.0]
         headers = ["코드", "명칭", "규격", "수량", "단위", "비고"]
@@ -508,11 +512,11 @@ def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
         pdf.small_table(headers, rows, widths)
 
     if inst.get("post_checks"):
-        pdf.ln(2)
+        pdf.ln(1)
         pdf.section_title("작업 후 확인사항")
         pdf.items_list(inst["post_checks"])
 
-    pdf.ln(2)
+    pdf.ln(1)
     pdf.section_title("승인 및 결과")
     pdf.field("작업 승인자", inst.get("approver", ""))
     pdf.field("작업 완료일시", inst.get("completion_date", ""))
