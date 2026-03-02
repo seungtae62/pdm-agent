@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(done)",
+      "Bash(git rm:*)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(/c/Users/seung/personal/00-projects/pdm-agent/venv/Scripts/python.exe:*)",
+      "Bash(C:/Users/seung/personal/00-projects/pdm-agent/venv/Scripts/python.exe:*)",
+      "Bash(C:/Users/seung/personal/00-projects/pdm-agent/venv/Scripts/pip.exe install:*)",
+      "Bash(where:*)",
+      "Bash(winget:*)",
+      "Bash(fi)",
+      "Bash(head:*)",
+      "Bash(python -c:*)",
+      "Bash(python scripts/download_ims_dataset.py:*)",
+      "Bash(git fetch:*)"
+    ]
+  }
+}

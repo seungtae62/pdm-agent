@@ -19,7 +19,7 @@
 3-2. 시스템 프롬프트 탑재 및 기본 추론 검증 (Tool 없이)
 3-3. MCP Client 연동 (RAG Tool + 알림 Tool)
 3-4. Memory 구현 (PostgreSQL)
-3-5. Deep Research 로직 (다회 RAG 탐색 분기)
+3-5. Deep Research 로직 (내부 RAG + 외부 검색 기반 분석적 조사)
 3-6. 작업지시서 생성 기능 구현
 3-7. Prompt Optimization 구현 (대화형 상호작용용)
 
@@ -121,7 +121,7 @@ START → load_memory → reasoning → (조건부 분기)
 - vector_size: 1536
 - distance: Cosine
 - payload_index: equipment_id, bearing_id, fault_type
-- 문서 수: 12건 (PDF)
+- 문서 수: 80건 (PDF) — 완료보고서 40건 + 작업지시서 40건
 - 청크 전략: PDF 1건 = 1청크 (문서 길이가 짧으므로 분할 불필요)
 
 **Collection 2: equipment_manual**
@@ -146,11 +146,12 @@ START → load_memory → reasoning → (조건부 분기)
 RAG 검색 및 알림 Tool은 MCP Server로 구현하여, LangGraph Agent가 MCP Client로 호출한다.
 
 - **rag_server**: search_maintenance_history, search_equipment_manual, search_analysis_history 3개 Tool 제공
+- **web_search_server**: search_web Tool 제공 (외부 인터넷 검색, Deep Research에서만 사용)
 - **notification_server**: notify_maintenance_staff Tool 제공
 
 ### 합성 PDF 문서 목록
 
-**maintenance_history (12건):**
+**maintenance_history (80건 — 완료보고서 40건 + 작업지시서 40건, 아래는 대표 샘플 12건):**
 
 | 파일명 | 내용 | 유형 |
 |--------|------|------|
@@ -442,8 +443,8 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 
 **SC-003 (시나리오 1-C): 결함 진행 구간 (25일차)**
 - anomaly_detected = true, Memory에 SC-001 + SC-002 이력 존재
-- Thought 1~5 전체 추론 + Deep Research 발동
-- search_maintenance_history로 유사 내륜 결함 사례 심층 탐색
+- Thought 1~5 전체 추론 + 일반 RAG 활용 (정보 조회 목적)
+- search_maintenance_history로 유사 내륜 결함 사례 참조, search_equipment_manual로 정비 절차 확인
 - Warning 판정, 분석 리포트 + 작업지시서 생성
 
 ### 시나리오 2: 급속 열화 대응 (Test Set 2, Bearing 1 외륜)
@@ -451,7 +452,7 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 **SC-004: 급속 열화 (약 7일간 급속 진행)**
 - anomaly_detected = true, acceleration_detected = true
 - BPFO 지배적 상승, Kurtosis 감소 + RMS 급상승 (4단계 말기 패턴)
-- Deep Research 필수 발동: 급속 열화 조건 검색 → 과거 유사 사례 탐색 → 원인 추론
+- 일반 RAG 활용: 급속 열화 조건 검색, 과거 유사 사례 참조 (1~2회 호출)
 - Critical 판정, 보수적 RUL 해석, 긴급 리포트 + 작업지시서 생성
 - 외부 요인(과부하, 윤활 부족, 오염, 설치 불량) 개입 가능성 명시
 
@@ -462,6 +463,7 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 - Memory에서 분석 맥락 로드 → 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거) 주입
 - Prompt Optimization 적용: 분석 맥락 구조화, 대화 이력 압축, 슬라이딩 윈도우
 - 새로운 정보 반영 시 분석 결과 동적 보완 및 Memory 업데이트
+- **Deep Research 발동**: 사용자가 "근본 원인 분석해줘" 등 분석적 질문 시, 내부 RAG + 외부 웹 검색(search_web)을 조합한 심층 조사 수행. 외부 자료는 "외부 참고 (검증 필요)" 표기
 
 ### Prompt Optimization 전략
 
@@ -481,4 +483,4 @@ Edge에서 Cloud 에이전트로 전송하는 JSON 구조. 5개 섹션으로 구
 |------|------|-----------|
 | 고장 유형 진단 정확도 | 85% 이상 | 에이전트가 진단한 고장 유형(외륜, 내륜, 전동체 등)과 NASA-IMS 실제 고장 유형의 일치율 |
 | 추론 근거 설명 품질 | 4점/5점 이상 | 전문가 정성 평가 - 추론 근거의 논리성, 도메인 지식 활용도, 불확실성 표현 적절성 |
-| Tool 호출 효율성 | 정성 평가 | 불필요한 Tool 호출 없이 상황에 적절한 Tool만 호출했는지 평가 (정상 시 Tool 미호출, 심각 시 Deep Research 발동 등) |
+| Tool 호출 효율성 | 정성 평가 | 불필요한 Tool 호출 없이 상황에 적절한 Tool만 호출했는지 평가 (이벤트 분석 시 최소 RAG 활용, 대화형에서 사용자 요청 시 Deep Research 발동 등) |

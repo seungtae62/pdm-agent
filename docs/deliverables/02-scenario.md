@@ -89,7 +89,7 @@
 
 * 상황 : 설비에서 수집된 센서 데이터가 결함 진행 구간으로 명확한 이상 상태 감지
 
-* 목표 : 에이전트가 ReAct 전체 추론 수행 후, Deep Research를 통해 과거 유사 사례를 심층 탐색하고, 정비 권고 및 분석 리포트를 생성
+* 목표 : 에이전트가 ReAct 전체 추론 수행 후, 일반 RAG 검색을 통해 유사 사례를 참조하고, 정비 권고 및 분석 리포트를 생성
 
 * 데이터셋: Dataset #1, Bearing 3 - 내륜 결함 (25일차 결함 진행 구간)
 
@@ -111,10 +111,10 @@
 | 4  | -           | ReAct Thought 1: anomaly_detected = true 확인. 주파수 영역에서 BPFI 진폭 상승 식별, 고주파 진동 출현, 1X 간격 사이드 밴드 확인. 내륜 결함 진행 확인.                                                     | ReAct + 도메인 지식          | 결함 유형 재확인                 |
 | 5  | -           | ReAct Thought 2: Kurtosis 상승 + RMS 상승 확인. Memory의 15일차 대비 진행 확인.                                                                                                  | ReAct + 도메인 지식 + Memory | 10일단 2단계 > 3단계 상승 확인      |
 | 6  | -           | ReAct Thought 3: Edge 추세 데이터 해석. 열화 속도가 정상 범위 내인지 확인.                                                                                                             | ReAct + 도메인 지식          | 열화 속도 평가                  |
-| 7  | -           | ReAct Thought 3: 정비 권고의 구체성을 높이기 위해 Deep Research 발동. search_maintenance_history로 유사 내륜 결함 사례 검색 > 결과 해석 > search_analysis_history로 과거 유사 분석 판단 이력 검색 > 해당 사례 고장까지 소요 시간 검색 > search_equipment_manual 정비 절차 확인 | Deep Research           | 검색 > 해석 > 후속 질문 > 재검색 루프  |
+| 7  | -           | ReAct Thought 3: 정비 권고의 구체성을 높이기 위해 일반 RAG 활용. search_maintenance_history로 유사 내륜 결함 사례 검색, search_equipment_manual로 정비 절차 확인 | ReAct + RAG           | 정보 조회 목적의 선택적 RAG 호출 (1~2회)  |
 | 8  | -           | ReAct Thought 4: RUL 예측값과 에이전트 판정 대조. Memory의 이전 RUL 추이 참조하여 분석 수행 후 가속 열화 판단.                                                                                    | ReAct + Memory          | RUL 예측 평가                 |
-| 9  | -           | ReAct Thought 5: 위험도 Warning 판정. Deep Research 결과를 반영한 정비 권고 생성 (권고 조치, 시기, 근거)                                                                                   | ReAct                   | 종합 판단                     |
-| 10 | -           | 분석 리포트 생성: 추론 체인 + Memory 이력 + Deep Research 결과를 정형화된 리포트로 작성 작업지시서 생성: 분석 리포트를 기반으로 현재 가진 Resouce를 기반으로 작업지시서 생성                                                 | File Generation         | Warning > 리포트 생성          |
+| 9  | -           | ReAct Thought 5: 위험도 Warning 판정. RAG 검색 결과를 반영한 정비 권고 생성 (권고 조치, 시기, 근거)                                                                                   | ReAct                   | 종합 판단                     |
+| 10 | -           | 분석 리포트 생성: 추론 체인 + Memory 이력 + RAG 검색 결과를 정형화된 리포트로 작성 작업지시서 생성: 분석 리포트를 기반으로 현재 가진 Resource를 기반으로 작업지시서 생성                                                 | File Generation         | Warning > 리포트 생성          |
 | 11 | -           | Memory에 판단 결과 저장 (내륜 결함 3단계, RUL 평가, 권고 내용)                                                                                                                       | Memory (장기)             |                           |
 | 12 | 대시보드 알림 확인  | 분석 결과 UI 표시: 결함 유형, 단계, 상세 근거, RUL 평가                                                                                                                             |                         |                           |
 | 13 | 분석 리포트 다운로드 | 분석 리포트 파일 생성 및 제공                                                                                                                                                 |                         |                           |
@@ -130,13 +130,13 @@
 
     * RUL 평가: ML 모델 예측 N시간, 에이전트 판정과 일관성 확인
 
-    * Deep Research 결과: 과거 유사 사례에서 3단계 진입 후 약 Y일 내 기능 고장 발생 이력 존재. 정비 절차 참조.
+    * RAG 검색 결과: 과거 유사 사례에서 3단계 진입 후 약 Y일 내 기능 고장 발생 이력 존재. 정비 절차 참조.
 
     * 위험도: Warning
 
     * Memory에 5일차, 15일차 대비 위험도 증가 및 현재 단계 확인
 
-    * 분석 리포트: 구조화된 Deep Research 리포트 발행
+    * 분석 리포트: 구조화된 분석 리포트 발행
 
     * 작업 지시서: 구조화된 작업지시서 파일 생성
 
@@ -152,7 +152,7 @@
 
 * 상황 : 설비에서 수집된 센서 데이터가 짧은 기간 내 급속 열화 패턴을 보이며, 비정상적 가속 열화 감지
 
-* 목표 : 에이전트가 ReAct 전체 추론 + Deep Research 필수 수행을 통해 급속 열화 원인을 심층 탐색하고, Critical 긴급 정비 권고 및 리포트 생성.
+* 목표 : 에이전트가 도메인 지식 기반 즉시 판정 + 일반 RAG로 유사 사례 참조 후, Critical 긴급 정비 권고 및 리포트 생성.
 
 * 위험도 : Critical
 
@@ -175,14 +175,14 @@
 | 3  | -             | Memory에서 해당 설비 이전 판단 이력 조회                                                                                                                                                                       | Memory (장기)             | 이전 정상/Watch 이력 확인 > 급속 변화 맥락 파악                       |
 | 4  | -             | ReAct Thought 1: BPFO 진폭 지배적 상승, 사이드밴드 미약. 외륜 결함으로 판별                                                                                                                                            | ReAct + 도메인 지식          | 결함 유형 식별                                              |
 | 5  | -             | ReAct Thought 2: RMS 급상승, Kurtosis 감소 경향. 도메인 지식 기준 "Kurtosis 감소 + RMS 급상승 = 말기 단계" 패턴 확인. Memory 대비 급속 진행 확인                                                                                    | ReAct + 도메인 지식 + Memory | "수일 내 1단계 > 4단계 급속 진행"                                |
-| 6  | -             | ReAct Thought 3: acceleration_detected = true 열화 속도가 일반적 대비 비정상적으로 빠름. Deep Research 필수 발동                                                                                                       | ReAct + 도메인 지식          | 비정상 가속 > Deep Research 트리거                            |
-| 7  | -             | Deep Research: search_equipment_manual로 "외륜 결함 급속 열화 조건" 검색 > 결과 해석 (고하중 조건에서 외륜 결함 급속 진행 가능성 확인) > 후속 질문 생성 > search_maintenance_history로 "유사 급속 열화 사례" 검색 > search_analysis_history로 과거 유사 분석 판단 이력 검색 > 과거 사례의 원인 및 결과 분석 > 필요시 추가 쿼리로 재검색 | Deep Research           | 검색 > 해석 > 후속질문 > 재검색 반복 루프                            |
+| 6  | -             | ReAct Thought 3: acceleration_detected = true 열화 속도가 일반적 대비 비정상적으로 빠름. 비정상 가속 감지, 일반 RAG로 유사 급속 열화 사례 조회                                                                                                       | ReAct + 도메인 지식          | 비정상 가속 감지                            |
+| 7  | -             | 일반 RAG 활용: search_equipment_manual로 "외륜 결함 급속 열화 조건" 검색, search_maintenance_history로 "유사 급속 열화 사례" 검색 (1~2회 호출) | ReAct + RAG           | 정보 조회 목적의 선택적 RAG 호출                            |
 | 8  | -             | ReAct Thought 4: ML RUL 예측값 확인. 가속 열화 상황이므로 신뢰구간 하한(보수적 추정)을 기준으로 판단. Memory의 이전 RUL 대비 급격한 감소 확인                                                                                                | ReAct + Memory          | 보수적 RUL 해석                                            |
-| 9  | -             | ReAct Thought 5: 위험도 Critical 판정. Deep Research 결과를 반영한 긴급 정비 권고 생성. 외부 요인(과부하, 윤활 부족, 오염, 설치 불량) 개입 가능성 명시. 인간에게 운전 조건 변경 여부 추가 확인 요청                                                           | ReAct                   | 종합 판단                                                 |
-| 10 | -             | 분석 리포트 생성: 추론 체인 + Memory 이력 + Deep Research 결과 + 보수적 RUL 해석을 포함한 긴급 리포트 작성                                                                                                                      | File Generation         | Critical > 긴급 리포트                                     |
+| 9  | -             | ReAct Thought 5: 위험도 Critical 판정. RAG 검색 결과를 반영한 긴급 정비 권고 생성. 외부 요인(과부하, 윤활 부족, 오염, 설치 불량) 개입 가능성 명시. 인간에게 운전 조건 변경 여부 추가 확인 요청                                                           | ReAct                   | 종합 판단                                                 |
+| 10 | -             | 분석 리포트 생성: 추론 체인 + Memory 이력 + RAG 검색 결과 + 보수적 RUL 해석을 포함한 긴급 리포트 작성                                                                                                                      | File Generation         | Critical > 긴급 리포트                                     |
 | 11 | -             | Memory에 이번 판단 결과 저장 (외륜 결함 4단계, Critical, 급속 열화, 권고 내용)                                                                                                                                          | Memory (장기)             |                                                       |
 | 12 | 긴급 알림 수신      | 분석 결과 UI 표시: 결함 유형, 단계, 상세 근거, 보수적 RUL 해석, 긴급 권고, 2차 손상 가능성, 불확실성 고지                                                                                                                             | -                       |                                                       |
-| 13 | 에이전트 추론 과정 확인 | 각 Thought 단계별 추론 내용 및 Deep Research 탐색 과정 UI 표시                                                                                                                                                  | -                       |                                                       |
+| 13 | 에이전트 추론 과정 확인 | 각 Thought 단계별 추론 내용 및 RAG 검색 과정 UI 표시                                                                                                                                                  | -                       |                                                       |
 | 14 | 분석 리포트 다운로드   | 분석 리포트 파일 생성 및 제공                                                                                                                                                                                |                         |                                                       |
 | 15 | 작업 지시서 다운로드   | 작업 지시서 파일 생성 및 제공                                                                                                                                                                                |                         |                                                       |
 
@@ -194,7 +194,7 @@
 
     * 열화 속도: 비정상적 가속 열화. 수일 내 급속 진행으로 일반적 대비 극히 빠름
 
-    * Deep Research 결과: 고하중 조건에서 외륜 결함 급속 진행 가능성 확인. 과거 유사 사례에서 급속 열화 시 Y일 내 기능 고장 발생
+    * RAG 검색 결과: 고하중 조건에서 외륜 결함 급속 진행 가능성 확인. 과거 유사 사례에서 급속 열화 시 Y일 내 기능 고장 발생
 
     * RUL 평가: ML 모델 예측 N시간, 가속 열화로 인해 신뢰구간 하한(보수적) 기준 M시간으로 판단
 
@@ -236,6 +236,9 @@
 | 1      | "정비를 3일 유예할 수 있는가?" | Memory에서 현재 분석 맥락 로드. 전체 분석 결과가 아닌 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거)을 컨텍스트에 주입   | Memory + Prompt Optimization | 전체 추론 체인이 아닌 압축된 맥락 사용 |
 | 2      | -                   | RUL 예측값과 열화 속도를 기반으로 유예 가능 여부 판단. 유예 시 위험도 변화 및 예상 시나리오 설명                         | ReAct + 도메인 지식               |                        |
 | 3      | (대화 N턴 이상 지속 시)     | Prompt Optimization 자동 수행: 전체 대화 이력을 "분석 맥락 요약 + 최근 2~3턴 원문"으로 재구성하여 컨텍스트 윈도우 내 유지 | Prompt Optimization          | 슬라이딩 윈도우 + 요약 병행       |
+| 4      | "이 결함의 근본 원인을 더 자세히 분석해줘" | Deep Research 발동: 내부 RAG + 외부 웹 검색으로 근본 원인 심층 탐색 | Deep Research | 사용자 요청에 의한 Deep Research |
+| 5      | -                   | 내부 RAG: 유사 사례, 결함 메커니즘 확인 / 외부: 관련 논문·기술 리포트 검색 | RAG + Web Search | 내부 우선, 외부 보완 |
+| 6      | -                   | 종합 분석 결과 응답. 외부 자료는 "외부 참고 (검증 필요)" 표기 | ReAct | 소스 구분 명시 |
 
 * Prompt Optimization 전략
 
