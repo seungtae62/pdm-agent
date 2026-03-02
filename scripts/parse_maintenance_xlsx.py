@@ -317,58 +317,145 @@ def parse_tool_list() -> list[dict[str, Any]]:
 # PDF Generation
 # ──────────────────────────────────────────────
 class MaintenancePDF(FPDF):
-    """Custom PDF with Korean font support."""
+    """Custom PDF with Korean font support and proper text wrapping."""
+
+    LABEL_W = 45  # Label column width
+    LINE_H = 5.5  # Default line height
+    PAGE_W = 210  # A4 width
+    MARGIN = 10  # Left/right margin
 
     def __init__(self) -> None:
         super().__init__()
         self.add_font("NotoSansKR", "", FONT_PATH)
         self.add_font("NotoSansKR", "B", FONT_PATH)
         self.set_auto_page_break(auto=True, margin=15)
+        self.set_left_margin(self.MARGIN)
+        self.set_right_margin(self.MARGIN)
+
+    @property
+    def content_w(self) -> float:
+        """Usable content width."""
+        return self.PAGE_W - self.l_margin - self.r_margin
 
     def header(self) -> None:
         pass
 
     def section_title(self, title: str) -> None:
+        self._check_space(20)  # Section title + at least one field
         self.set_font("NotoSansKR", "B", 11)
         self.set_fill_color(230, 230, 230)
-        self.cell(0, 8, f"  {title}", ln=True, fill=True)
+        self.cell(self.content_w, 8, f"  {title}", ln=True, fill=True)
         self.ln(2)
 
+    def _check_space(self, min_h: float = 12.0) -> None:
+        """Add a new page if remaining space is less than min_h."""
+        if self.get_y() + min_h > self.h - self.b_margin:
+            self.add_page()
+
     def field(self, label: str, value: str) -> None:
-        self.set_font("NotoSansKR", "B", 9)
-        x_start = self.get_x()
-        self.cell(48, 6, label)
+        """Render a label-value pair with proper wrapping for long values."""
+        value = value or "-"
+
+        # Estimate height needed (prevent label/value split across pages)
         self.set_font("NotoSansKR", "", 9)
-        w = self.w - self.r_margin - self.get_x()
-        if w < 20:
-            self.ln()
-            self.cell(48, 6, "")
-            w = self.w - self.r_margin - self.get_x()
-        self.multi_cell(w, 6, value or "-")
+        val_w = self.content_w - self.LABEL_W
+        # Rough estimate: fpdf2 get_string_width for multi-line
+        lines = max(1, len(value) / max(val_w / 2.5, 1))
+        est_h = max(self.LINE_H, lines * self.LINE_H)
+        self._check_space(min(est_h + 2, 40))  # Cap at 40mm to avoid infinite page adds
+
+        y_before = self.get_y()
+        x0 = self.l_margin
+
+        # Temporarily disable auto page break for this field
+        self.set_auto_page_break(auto=False)
+
+        # Label (bold, fixed width)
+        self.set_font("NotoSansKR", "B", 9)
+        self.set_xy(x0, y_before)
+        self.cell(self.LABEL_W, self.LINE_H, label)
+
+        # Value (regular, wrapping in remaining width)
+        self.set_font("NotoSansKR", "", 9)
+        self.set_xy(x0 + self.LABEL_W, y_before)
+        self.multi_cell(val_w, self.LINE_H, value)
+
+        # Re-enable auto page break
+        self.set_auto_page_break(auto=True, margin=15)
+
+        # Ensure cursor is below both label and value
+        y_after = self.get_y()
+        if y_after < y_before + self.LINE_H:
+            self.set_y(y_before + self.LINE_H)
 
     def items_list(self, items: list[str]) -> None:
+        """Render a bullet list with full-width wrapping."""
         self.set_font("NotoSansKR", "", 9)
+        indent = 5
         for item in items:
-            self.set_x(self.l_margin + 5)
-            w = self.w - self.r_margin - self.get_x()
-            self.multi_cell(w, 5, f"- {item}")
+            self._check_space(self.LINE_H * 2)
+            self.set_x(self.l_margin + indent)
+            w = self.content_w - indent
+            self.multi_cell(w, self.LINE_H, f"• {item}")
+            self.ln(0.5)
 
     def small_table(
         self,
         headers: list[str],
         rows: list[list[str]],
-        col_widths: list[int],
+        col_widths: list[float],
     ) -> None:
+        """Render a table with wrapped cell content."""
+        row_h = 6
+
+        # Header
         self.set_font("NotoSansKR", "B", 8)
         for i, h in enumerate(headers):
-            self.cell(col_widths[i], 6, h, border=1, align="C")
+            self.cell(col_widths[i], row_h, h, border=1, align="C")
         self.ln()
+
+        # Data rows — measure multi_cell height, then render
         self.set_font("NotoSansKR", "", 8)
         for row_data in rows:
-            max_h = 6
+            # Calculate max height needed for this row
+            max_lines = 1
             for i, val in enumerate(row_data):
-                self.cell(col_widths[i], max_h, val[:30], border=1)
-            self.ln()
+                # Estimate lines needed
+                char_w = col_widths[i] / 4.5  # rough chars per line at font 8
+                lines = max(1, len(val) / max(char_w, 1))
+                max_lines = max(max_lines, lines)
+            cell_h = max(row_h, int(max_lines) * row_h)
+
+            # Check page break
+            if self.get_y() + cell_h > self.h - self.b_margin:
+                self.add_page()
+                # Re-print header
+                self.set_font("NotoSansKR", "B", 8)
+                for i, h in enumerate(headers):
+                    self.cell(col_widths[i], row_h, h, border=1, align="C")
+                self.ln()
+                self.set_font("NotoSansKR", "", 8)
+
+            y0 = self.get_y()
+            x0 = self.l_margin
+            actual_max_y = y0
+
+            for i, val in enumerate(row_data):
+                self.set_xy(x0, y0)
+                self.multi_cell(col_widths[i], row_h, val, border=0)
+                actual_max_y = max(actual_max_y, self.get_y())
+                x0 += col_widths[i]
+
+            # Draw borders for each cell at the actual height
+            actual_h = actual_max_y - y0
+            if actual_h < row_h:
+                actual_h = row_h
+            x0 = self.l_margin
+            for i in range(len(row_data)):
+                self.rect(x0, y0, col_widths[i], actual_h)
+                x0 += col_widths[i]
+
+            self.set_y(y0 + actual_h)
 
 
 def generate_wo_pdf(record: dict[str, Any], out_path: Path) -> None:
@@ -408,7 +495,7 @@ def generate_wo_pdf(record: dict[str, Any], out_path: Path) -> None:
     if inst.get("materials"):
         pdf.ln(2)
         pdf.section_title("필요 자재")
-        widths = [25, 35, 35, 15, 15, 55]
+        widths = [28.0, 32.0, 32.0, 14.0, 14.0, 70.0]
         headers = ["코드", "자재명", "규격", "수량", "단위", "비고"]
         rows = [[m["code"], m["name"], m["spec"], m["qty"], m["unit"], m["note"]] for m in inst["materials"]]
         pdf.small_table(headers, rows, widths)
@@ -416,7 +503,7 @@ def generate_wo_pdf(record: dict[str, Any], out_path: Path) -> None:
     if inst.get("tools"):
         pdf.ln(2)
         pdf.section_title("필요 공구 및 장비")
-        widths = [25, 35, 35, 15, 15, 55]
+        widths = [28.0, 32.0, 38.0, 14.0, 14.0, 64.0]
         headers = ["코드", "명칭", "규격", "수량", "단위", "비고"]
         rows = [[t["code"], t["name"], t["spec"], t["qty"], t["unit"], t["note"]] for t in inst["tools"]]
         pdf.small_table(headers, rows, widths)
@@ -485,26 +572,18 @@ def generate_tool_list_pdf(tools: list[dict[str, Any]], out_path: Path) -> None:
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(6)
 
-    widths = [22, 28, 38, 12, 12, 16, 32, 25]
+    widths = [22.0, 28.0, 40.0, 12.0, 12.0, 16.0, 36.0, 24.0]
     headers = ["품목코드", "품명", "규격/모델", "수량", "단위", "리드타임", "벤더", "단가(KRW)"]
-
-    pdf.set_font("NotoSansKR", "B", 7)
-    for i, h in enumerate(headers):
-        pdf.cell(widths[i], 7, h, border=1, align="C")
-    pdf.ln()
-
-    pdf.set_font("NotoSansKR", "", 7)
+    rows: list[list[str]] = []
     for t in tools:
         price = f"{t['unit_price_krw']:,}" if t.get("unit_price_krw") else ""
-        row = [
+        rows.append([
             t["code"], t["name"], t["spec"],
             str(t.get("qty", "")), t["unit"],
             str(t.get("lead_time_days", "")),
             t["vendor"], price,
-        ]
-        for i, val in enumerate(row):
-            pdf.cell(widths[i], 6, val[:25], border=1)
-        pdf.ln()
+        ])
+    pdf.small_table(headers, rows, widths)
 
     pdf.output(str(out_path))
 
