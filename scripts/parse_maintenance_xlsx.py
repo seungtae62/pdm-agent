@@ -460,20 +460,23 @@ class MaintenancePDF(FPDF):
 
 
 def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
-    """Generate a compact single-page PDF for the work order instruction."""
+    """Generate a single-page PDF for the work order instruction.
+
+    Uses the same visual style as completion reports but with slightly
+    reduced line height (5.0 vs 5.5) and tighter section spacing to
+    fit all content on one page.
+    """
     inst = record["instruction"]
 
     pdf = MaintenancePDF()
-    # Compact settings for single-page fit
-    pdf.LINE_H = 4.5
-    pdf.LABEL_W = 40
-    pdf.set_auto_page_break(auto=True, margin=8)
+    pdf.LINE_H = 5.0  # Slightly tighter than completion (5.5)
+    pdf.set_auto_page_break(auto=True, margin=10)
 
     pdf.add_page()
-    pdf.set_font("NotoSansKR", "B", 12)
-    pdf.cell(0, 8, "공장설비 보전작업 작업지시서", ln=True, align="C")
+    pdf.set_font("NotoSansKR", "B", 14)
+    pdf.cell(0, 10, "공장설비 보전작업 작업지시서", ln=True, align="C")
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(2)
+    pdf.ln(3)
 
     pdf.section_title("기본 정보")
     pdf.field("작업지시 번호", inst.get("wo_number", ""))
