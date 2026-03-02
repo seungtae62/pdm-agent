@@ -27,8 +27,9 @@ from fpdf import FPDF
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data" / "정비이력_비용분석_ISO14224_연계_v7"
 JSON_OUT = BASE_DIR / "data" / "parsed_maintenance_records.json"
-PDF_OUT_DIR = BASE_DIR / "knowledge_base" / "maintenance_history"
-EQUIP_PDF_DIR = BASE_DIR / "knowledge_base" / "equipment_manual"
+PDF_COMPLETION_DIR = BASE_DIR / "data" / "knowledge_base" / "maintenance_history" / "completion_reports"
+PDF_INSTRUCTION_DIR = BASE_DIR / "data" / "knowledge_base" / "maintenance_history" / "work_orders"
+EQUIP_PDF_DIR = BASE_DIR / "data" / "knowledge_base" / "equipment_manual"
 FONT_PATH = str(BASE_DIR / "fonts" / "NotoSansKR.ttf")
 
 
@@ -458,14 +459,12 @@ class MaintenancePDF(FPDF):
             self.set_y(y0 + actual_h)
 
 
-def generate_wo_pdf(record: dict[str, Any], out_path: Path) -> None:
-    """Generate a 2-page PDF for one work order."""
+def generate_instruction_pdf(record: dict[str, Any], out_path: Path) -> None:
+    """Generate a single-page PDF for the work order instruction."""
     inst = record["instruction"]
-    comp = record["completion"]
 
     pdf = MaintenancePDF()
 
-    # ── Page 1: 작업지시서 ──
     pdf.add_page()
     pdf.set_font("NotoSansKR", "B", 14)
     pdf.cell(0, 10, "공장설비 보전작업 작업지시서", ln=True, align="C")
@@ -522,7 +521,15 @@ def generate_wo_pdf(record: dict[str, Any], out_path: Path) -> None:
     if inst.get("attachments"):
         pdf.field("첨부파일", ", ".join(inst["attachments"]))
 
-    # ── Page 2: 완료보고서 ──
+    pdf.output(str(out_path))
+
+
+def generate_completion_pdf(record: dict[str, Any], out_path: Path) -> None:
+    """Generate a single-page PDF for the completion report."""
+    comp = record["completion"]
+
+    pdf = MaintenancePDF()
+
     pdf.add_page()
     pdf.set_font("NotoSansKR", "B", 14)
     pdf.cell(0, 10, "공장설비 보전작업 완료 보고서", ln=True, align="C")
@@ -611,7 +618,8 @@ def main() -> None:
     print(f"JSON saved: {JSON_OUT}")
 
     # Generate PDFs
-    PDF_OUT_DIR.mkdir(parents=True, exist_ok=True)
+    PDF_COMPLETION_DIR.mkdir(parents=True, exist_ok=True)
+    PDF_INSTRUCTION_DIR.mkdir(parents=True, exist_ok=True)
     EQUIP_PDF_DIR.mkdir(parents=True, exist_ok=True)
 
     pdf_count = 0
@@ -620,13 +628,19 @@ def main() -> None:
         wo = inst.get("wo_number", "")
         location = inst.get("location", "")
         line, product = extract_line_product(location)
-        # WO-20250113-001 → WO-20250113-001_A_AX-01.pdf
-        pdf_name = f"{wo}_{line}_{product}.pdf"
-        out_path = PDF_OUT_DIR / pdf_name
-        generate_wo_pdf(rec, out_path)
-        pdf_count += 1
+        base_name = f"{wo}_{line}_{product}"
 
-    print(f"Generated {pdf_count} work order PDFs in {PDF_OUT_DIR}")
+        # Instruction PDF
+        instruction_path = PDF_INSTRUCTION_DIR / f"{base_name}_instruction.pdf"
+        generate_instruction_pdf(rec, instruction_path)
+
+        # Completion PDF
+        completion_path = PDF_COMPLETION_DIR / f"{base_name}_completion.pdf"
+        generate_completion_pdf(rec, completion_path)
+
+        pdf_count += 2
+
+    print(f"Generated {pdf_count} PDFs ({pdf_count // 2} instructions + {pdf_count // 2} completions)")
 
     # Tool list PDF
     tool_pdf_path = EQUIP_PDF_DIR / "TOOL_LIST_V1.pdf"

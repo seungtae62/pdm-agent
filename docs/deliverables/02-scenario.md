@@ -140,6 +140,12 @@
 
     * 작업 지시서: 구조화된 작업지시서 파일 생성
 
+    * 기대 RAG 검색 결과
+
+        * search_maintenance_history: WO-20250521-024 (내륜 스폴링 BPFI, 라인A) 또는 WO-20250625-027 (내륜 스폴링 BPFI, 라인D)
+        * search_equipment_manual: EM-003 (내륜 결함 가이드)
+        * search_equipment_manual: EM-006 (베어링 교체 정비 절차서)
+
 **시나리오 2: 급속 열화 대응**
 
 * ID : [SC-004]
@@ -199,6 +205,13 @@
     * 긴급 분석 리포트: 구조화된 긴급 정비 리포트 파일 생성
 
     * 작업 지시서: 구조화된 작업지시서 파일 생성
+
+    * 기대 RAG 검색 결과
+
+        * search_maintenance_history: WO-20250607-026 (외륜 피팅 BPFO, 라인C) 또는 WO-20250527-025 / WO-20251007-036
+        * search_maintenance_history (급속 열화 원인): WO-20250506-022 (과하중) 또는 WO-20250217-009 (윤활 부족) 또는 WO-20250412-017 (오염)
+        * search_equipment_manual: EM-002 (외륜 결함 가이드)
+        * search_equipment_manual: EM-001 (급속 열화 위험 조건)
 
 **시나리오 3: 대화형 상호 작용 - 정비 담당자 질의**
 
