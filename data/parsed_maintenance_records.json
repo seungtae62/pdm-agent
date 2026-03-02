@@ -1,0 +1,4588 @@
+{
+  "generated_at": "2026-03-02T02:38:51.954121",
+  "total_records": 40,
+  "records": [
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_01_20250113_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250113-001",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-01-13",
+        "scheduled_date": "2025-01-13 09:00",
+        "due_date": "2025-01-13 10:00",
+        "assignee": "최가영",
+        "summary": "Overgreasing causing churning losses → Remove excess grease and set proper quantity",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-13 10:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250113-001",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-01-13 09:00",
+        "end_time": "2025-01-13 10:00",
+        "personnel": "최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Overgreasing causing churning losses / 과윤활로 인한 차닝 손실",
+          "Detection: Temperature rises with no fault frequencies, RMS moderate / 결함 주파수 없이 온도 상승, RMS 중간 수준",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_02_20250114_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250114-002",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-01-14",
+        "scheduled_date": "2025-01-14 09:00",
+        "due_date": "2025-01-14 11:30",
+        "assignee": "김민수, 박지현",
+        "summary": "Roller wear due to inadequate lubrication → Grease purge and refill",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-14 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250114-002",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-01-14 09:00",
+        "end_time": "2025-01-14 11:30",
+        "personnel": "김민수, 박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Roller wear due to inadequate lubrication / 윤활 불량으로 인한 롤러 마모",
+          "Detection: RMS increased (6.2→9.8 mm/s), rising broadband energy / RMS 상승(6.2→9.8 mm/s), 광대역 에너지 증가",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_03_20250116_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250116-003",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-01-16",
+        "scheduled_date": "2025-01-16 09:00",
+        "due_date": "2025-01-16 11:30",
+        "assignee": "김민수",
+        "summary": "Rotor unbalance affecting bearing load → Balance rotor and verify alignment",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-16 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250116-003",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-01-16 09:00",
+        "end_time": "2025-01-16 11:30",
+        "personnel": "김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Rotor unbalance affecting bearing load / 로터 언밸런스로 인한 베어링 과하중",
+          "Detection: Dominant 1× rotational peak, phase consistent / 지배적인 1× 회전 피크, 위상 일관",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_04_20250117_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250117-004",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-01-17",
+        "scheduled_date": "2025-01-17 09:00",
+        "due_date": "2025-01-17 11:30",
+        "assignee": "박지현",
+        "summary": "Incorrect seal type (clearance vs lip) → Change to M Heavy Contact Lip Seal",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-17 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "M-SEAL-HEAVY",
+            "name": "M Heavy Contact Lip Seal",
+            "spec": "M Heavy Contact Lip Seal",
+            "qty": "2",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250117-004",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-01-17 09:00",
+        "end_time": "2025-01-17 11:30",
+        "personnel": "박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Incorrect seal type (clearance vs lip) / 부적절한 씰 타입(클리어런스 vs 립)",
+          "Detection: Ingress indicators, temperature drift, oil leak traces / 오염 지표, 온도 드리프트, 윤활 누유 흔적",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_05_20250120_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250120-005",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-01-20",
+        "scheduled_date": "2025-01-20 09:00",
+        "due_date": "2025-01-20 11:00",
+        "assignee": "김민수",
+        "summary": "Seal damage → contamination ingress → Replace seal kit ZS6 and relubricate",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-20 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZS6-SEAL",
+            "name": "Seal Kit ZS6",
+            "spec": "Seal Kit ZS6",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250120-005",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-01-20 09:00",
+        "end_time": "2025-01-20 11:00",
+        "personnel": "김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Seal damage → contamination ingress / 씰 파손 → 오염 유입",
+          "Detection: Field inspection confirmed seal damage and contamination / 현장 점검으로 씰 손상 및 오염 확인",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Infrared thermography"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_06_20250128_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250128-006",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-01-28",
+        "scheduled_date": "2025-01-28 09:00",
+        "due_date": "2025-01-28 11:30",
+        "assignee": "박지헌",
+        "summary": "Housing base crack → Replace housing and reinstall base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-01-28 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "HOUSING-ZA2115",
+            "name": "Housing ZA2115",
+            "spec": "Housing ZA2115",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250128-006",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-01-28 09:00",
+        "end_time": "2025-01-28 11:30",
+        "personnel": "박지헌",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Housing base crack / 하우징 베이스 크랙",
+          "Detection: Visual inspection found base cracking / 육안 점검으로 베이스 크랙 확인",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Visual inspection"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 하우징 교체: 베이스 평탄도 확인, 수평도 보정 후 고정",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_07_20250205_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250205-007",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-02-05",
+        "scheduled_date": "2025-02-05 09:00",
+        "due_date": "2025-02-05 10:30",
+        "assignee": "이현우",
+        "summary": "Inner ring looseness on shaft → Install microlock kit and retorque",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-05 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ML2-MICROLOCK",
+            "name": "Microlock Kit ML2",
+            "spec": "Microlock Kit ML2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250205-007",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-02-05 09:00",
+        "end_time": "2025-02-05 10:30",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Inner ring looseness on shaft / 내륜 샤프트 루즈니스",
+          "Detection: Field check found inner ring movement on shaft / 현장 점검으로 내륜 샤프트 유격 확인",
+          "ISO14224 Code: 02-SPO",
+          "검출 방법(Detection Method): Field inspection (general)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_08_20250214_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250214-008",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-02-14",
+        "scheduled_date": "2025-02-14 09:00",
+        "due_date": "2025-02-14 12:30",
+        "assignee": "박지현",
+        "summary": "Cage wear (BSF) → Replace bearing and clean housing",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-14 12:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250214-008",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-02-14 09:00",
+        "end_time": "2025-02-14 12:30",
+        "personnel": "박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Cage wear (BSF) / 케이지 마모(BSF)",
+          "Detection: BSF 2× and 3× harmonics prominent / BSF 2×, 3× 하모닉 두드러짐",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_09_20250217_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250217-009",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-02-17",
+        "scheduled_date": "2025-02-17 09:00",
+        "due_date": "2025-02-17 10:30",
+        "assignee": "박지현",
+        "summary": "Grease channeling (starvation) → Re-grease with proper method/time",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-17 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250217-009",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-02-17 09:00",
+        "end_time": "2025-02-17 10:30",
+        "personnel": "박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Grease channeling (starvation) / 그리스 채널링(윤활 부족)",
+          "Detection: High-frequency peaks, temperature stable, RMS ↑ / 고주파 피크, 온도 안정, RMS 상승",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_10_20250219_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250219-010",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-02-19",
+        "scheduled_date": "2025-02-19 09:00",
+        "due_date": "2025-02-19 12:00",
+        "assignee": "최가영",
+        "summary": "Grease channeling (starvation) → Re-grease with proper method/time",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-19 12:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250219-010",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-02-19 09:00",
+        "end_time": "2025-02-19 12:00",
+        "personnel": "최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Grease channeling (starvation) / 그리스 채널링(윤활 부족)",
+          "Detection: On-site lubrication check confirmed starvation / 현장 윤활 점검으로 윤활 부족 확인",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Infrared thermography",
+          "검출 방법(Detection Method): Lubrication audit / grease sampling (lab analysis)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_11_20250222_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250222-011",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-02-22",
+        "scheduled_date": "2025-02-22 09:00",
+        "due_date": "2025-02-22 11:00",
+        "assignee": "김민수",
+        "summary": "Misalignment (angular/parallel) → Realign and secure base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-22 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "BASE-BOLT-16MM",
+            "name": "Base Bolt 16mm",
+            "spec": "Base Bolt 16mm",
+            "qty": "8",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250222-011",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-02-22 09:00",
+        "end_time": "2025-02-22 11:00",
+        "personnel": "김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Misalignment (angular/parallel) / 미스얼라인먼트(각도/평행)",
+          "Detection: 1× rotational frequency axial peak, phase difference / 1× 회전수 축방향 피크, 위상 차",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베이스 볼트 토크 확인 및 재조임: 규정 토크 58 N·m 적용",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_12_20250227_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250227-012",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-02-27",
+        "scheduled_date": "2025-02-27 09:00",
+        "due_date": "2025-02-27 11:00",
+        "assignee": "김민수",
+        "summary": "FTF (cage) defect → Inspect cage and replace if needed",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-02-27 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250227-012",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-02-27 09:00",
+        "end_time": "2025-02-27 11:00",
+        "personnel": "김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: FTF (cage) defect / FTF(케이지) 결함",
+          "Detection: FTF fundamental and 2×, 3× harmonics observed / FTF 기본 및 2×, 3× 하모닉 관측",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_13_20250305_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250305-013",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-03-05",
+        "scheduled_date": "2025-03-05 09:00",
+        "due_date": "2025-03-05 11:00",
+        "assignee": "문서현",
+        "summary": "Incorrect seal type (clearance vs lip) → Change to M Heavy Contact Lip Seal",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-03-05 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "M-SEAL-HEAVY",
+            "name": "M Heavy Contact Lip Seal",
+            "spec": "M Heavy Contact Lip Seal",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250305-013",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-03-05 09:00",
+        "end_time": "2025-03-05 11:00",
+        "personnel": "문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Incorrect seal type (clearance vs lip) / 부적절한 씰 타입(클리어런스 vs 립)",
+          "Detection: Seal type verified on-site; mismatch confirmed / 현장에서 씰 타입 확인; 부적합 확인",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Infrared thermography"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_14_20250313_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250313-014",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-03-13",
+        "scheduled_date": "2025-03-13 09:00",
+        "due_date": "2025-03-13 11:00",
+        "assignee": "최가영",
+        "summary": "Grease aging/hardening → Purge old grease and refill (NLGI #2)",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-03-13 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "3",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250313-014",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-03-13 09:00",
+        "end_time": "2025-03-13 11:00",
+        "personnel": "최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Grease aging/hardening / 그리스 노화/경화",
+          "Detection: High RMS at low frequency, TAN/oxidation indicators / 저주파 RMS 상승, 산가/산화 지표 상승",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_15_20250322_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250322-015",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-03-22",
+        "scheduled_date": "2025-03-22 09:00",
+        "due_date": "2025-03-22 12:30",
+        "assignee": "김민수, 박지헌",
+        "summary": "Rotor unbalance affecting bearing load → Balance rotor and verify alignment",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-03-22 12:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250322-015",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-03-22 09:00",
+        "end_time": "2025-03-22 12:30",
+        "personnel": "김민수, 박지헌",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Rotor unbalance affecting bearing load / 로터 언밸런스로 인한 베어링 과하중",
+          "Detection: Field balancing trial confirmed unbalance / 현장 밸런싱 트라이얼로 언밸런스 확인",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): In-situ balancing trial",
+          "검출 방법(Detection Method): Infrared thermography"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_16_20250408_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250408-016",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-04-08",
+        "scheduled_date": "2025-04-08 09:00",
+        "due_date": "2025-04-08 13:00",
+        "assignee": "김민수, 이현우",
+        "summary": "Shaft step wear → Polish shaft and replace bearing",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-08 13:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250408-016",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-04-08 09:00",
+        "end_time": "2025-04-08 13:00",
+        "personnel": "김민수, 이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Shaft step wear / 샤프트 스텝 마모",
+          "Detection: Visual/IR inspection confirmed shaft step wear / 육안/IR 점검으로 샤프트 스텝 마모 확인",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Infrared thermography",
+          "검출 방법(Detection Method): Visual inspection"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_17_20250412_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250412-017",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-04-12",
+        "scheduled_date": "2025-04-12 09:00",
+        "due_date": "2025-04-12 11:00",
+        "assignee": "이현우",
+        "summary": "Contamination (water ingress) → Replace seals to Viton and flush grease",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-12 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "VITON-SEAL",
+            "name": "Viton Seal",
+            "spec": "Viton Seal",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250412-017",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-04-12 09:00",
+        "end_time": "2025-04-12 11:00",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Contamination (water ingress) / 오염(수분 유입)",
+          "Detection: Particle count ↑, moisture % ↑, broadband energy / 입자 오염도↑, 수분 함량↑, 광대역 에너지",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Moisture analysis (ASTM D6304 Karl Fischer)",
+          "검출 방법(Detection Method): Oil particle counting (ISO 4406)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_18_20250418_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250418-018",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-04-18",
+        "scheduled_date": "2025-04-18 09:00",
+        "due_date": "2025-04-18 10:30",
+        "assignee": "박지헌, 문서현",
+        "summary": "Grease aging/hardening → Purge old grease and refill (NLGI #2)",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-18 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250418-018",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-04-18 09:00",
+        "end_time": "2025-04-18 10:30",
+        "personnel": "박지헌, 문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Grease aging/hardening / 그리스 노화/경화",
+          "Detection: Grease sampling showed aging/hardening / 그리스 샘플링으로 노화/경화 확인",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Lubrication audit / grease sampling (lab analysis)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_19_20250422_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250422-019",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-04-22",
+        "scheduled_date": "2025-04-22 09:00",
+        "due_date": "2025-04-22 10:30",
+        "assignee": "이현우",
+        "summary": "Shaft slip due to loosened setscrew → Retorque setscrew to 36.7 N·m",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-22 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "SC6-COLLAR",
+            "name": "Setscrew Collar",
+            "spec": "Setscrew Collar",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250422-019",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-04-22 09:00",
+        "end_time": "2025-04-22 10:30",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Shaft slip due to loosened setscrew / 세트스크류 풀림으로 인한 샤프트 미끄럼",
+          "Detection: Looseness harmonics (2x, 3x) and BPFI sidebands / 루즈니스 하모닉(2x, 3x) 및 BPFI 사이드밴드",
+          "ISO14224 Code: 02-SPO",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 세트스크류 재조임: 규정 토크 36.7 N·m, 나사잠금제 도포",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_20_20250425_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250425-020",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-04-25",
+        "scheduled_date": "2025-04-25 09:00",
+        "due_date": "2025-04-25 11:30",
+        "assignee": "문서현",
+        "summary": "Soft foot at base causing misalignment → Realign and secure base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-25 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "BASE-BOLT-16MM",
+            "name": "Base Bolt 16mm",
+            "spec": "Base Bolt 16mm",
+            "qty": "5",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250425-020",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-04-25 09:00",
+        "end_time": "2025-04-25 11:30",
+        "personnel": "문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Soft foot at base causing misalignment / 베이스 소프트풋으로 인한 미스얼라인먼트",
+          "Detection: High axial vibration, pedestal looseness test failed / 축방향 진동 증가, 베이스 루즈니스 테스트 실패",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Process/vibration monitoring (general)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베이스 볼트 토크 확인 및 재조임: 규정 토크 58 N·m 적용",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_21_20250430_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250430-021",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-04-30",
+        "scheduled_date": "2025-04-30 09:00",
+        "due_date": "2025-04-30 12:00",
+        "assignee": "이현우",
+        "summary": "Fretting corrosion at fits → Resurface fit and apply anti-fretting compound",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-04-30 12:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250430-021",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-04-30 09:00",
+        "end_time": "2025-04-30 12:00",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Fretting corrosion at fits / 결합부 프레팅 부식",
+          "Detection: Low-frequency broadband with friction tones / 저주파 광대역 및 마찰톤",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_22_20250506_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250506-022",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-05-06",
+        "scheduled_date": "2025-05-06 09:00",
+        "due_date": "2025-05-06 11:00",
+        "assignee": "최가영",
+        "summary": "Overload (process upset) → Normalize process and inspect bearing",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-05-06 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250506-022",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-05-06 09:00",
+        "end_time": "2025-05-06 11:00",
+        "personnel": "최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Overload (process upset) / 과하중(공정 이상)",
+          "Detection: Temperature ↑, RMS ↑, process pressure spike / 온도↑, RMS↑, 공정 압력 스파이크",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_23_20250511_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250511-023",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-05-11",
+        "scheduled_date": "2025-05-11 09:00",
+        "due_date": "2025-05-11 12:00",
+        "assignee": "이현우, 최가영",
+        "summary": "Thermal growth misalignment → Realign and secure base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-05-11 12:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "BASE-BOLT-16MM",
+            "name": "Base Bolt 16mm",
+            "spec": "Base Bolt 16mm",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250511-023",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-05-11 09:00",
+        "end_time": "2025-05-11 12:00",
+        "personnel": "이현우, 최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Thermal growth misalignment / 열팽창 미스얼라인먼트",
+          "Detection: Post-warm-up alignment check showed drift / 웜업 후 정렬 점검에서 드리프트 확인",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Laser/dial alignment check"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베이스 볼트 토크 확인 및 재조임: 규정 토크 58 N·m 적용",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_24_20250521_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250521-024",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-05-21",
+        "scheduled_date": "2025-05-21 09:00",
+        "due_date": "2025-05-21 14:00",
+        "assignee": "김민수, 문서현",
+        "summary": "Inner race spalling (BPFI) → Replace bearing set and inspect shaft",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-05-21 14:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250521-024",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-05-21 09:00",
+        "end_time": "2025-05-21 14:00",
+        "personnel": "김민수, 문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Inner race spalling (BPFI) / 내륜 스폴링(BPFI)",
+          "Detection: BPFI peak and sidebands, elevated crest factor / BPFI 피크와 사이드밴드, 크레스트 팩터 상승",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_25_20250527_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250527-025",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "request_date": "2025-05-27",
+        "scheduled_date": "2025-05-27 09:00",
+        "due_date": "2025-05-27 11:00",
+        "assignee": "문서현, 김민수",
+        "summary": "Outer ring pitting (BPFO) → Replace bearing insert",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-05-27 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250527-025",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "현장점검",
+        "start_time": "2025-05-27 09:00",
+        "end_time": "2025-05-27 11:00",
+        "personnel": "문서현, 김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Outer ring pitting (BPFO) / 외륜 피팅(BPFO)",
+          "Detection: Visual inspection and stethoscope confirmed pitting / 육안 및 스테토스코프 점검으로 피팅 확인",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Acoustic listening (stethoscope)",
+          "검출 방법(Detection Method): Infrared thermography",
+          "검출 방법(Detection Method): Visual inspection"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_26_20250607_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250607-026",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-06-07",
+        "scheduled_date": "2025-06-07 09:00",
+        "due_date": "2025-06-07 12:30",
+        "assignee": "김민수",
+        "summary": "Outer race pitting (BPFO) → Replace bearing insert",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-06-07 12:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250607-026",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-06-07 09:00",
+        "end_time": "2025-06-07 12:30",
+        "personnel": "김민수",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Outer race pitting (BPFO) / 외륜 피팅(BPFO)",
+          "Detection: BPFO peaks with harmonics, kurtosis increased / BPFO 피크 및 조화, 커토시스 증가",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_27_20250625_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250625-027",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-06-25",
+        "scheduled_date": "2025-06-25 09:00",
+        "due_date": "2025-06-25 13:30",
+        "assignee": "박지헌",
+        "summary": "Inner race spalling (BPFI) → Replace bearing set and inspect shaft",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-06-25 13:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250625-027",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-06-25 09:00",
+        "end_time": "2025-06-25 13:30",
+        "personnel": "박지헌",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Inner race spalling (BPFI) / 내륜 스폴링(BPFI)",
+          "Detection: BPFI peak and sidebands, elevated crest factor / BPFI 피크와 사이드밴드, 크레스트 팩터 상승",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_28_20250709_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250709-028",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-07-09",
+        "scheduled_date": "2025-07-09 09:00",
+        "due_date": "2025-07-09 11:00",
+        "assignee": "이현우",
+        "summary": "Cage wear (BSF) → Replace bearing and clean housing",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-07-09 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250709-028",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-07-09 09:00",
+        "end_time": "2025-07-09 11:00",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Cage wear (BSF) / 케이지 마모(BSF)",
+          "Detection: FTF fundamental and 2×, 3× harmonics observed / FTF 기본 및 2×, 3× 하모닉 관측",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_29_20250724_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250724-029",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-07-24",
+        "scheduled_date": "2025-07-24 09:00",
+        "due_date": "2025-07-24 10:30",
+        "assignee": "최가영",
+        "summary": "FTF (cage) defect → Inspect cage and replace if needed",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-07-24 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250724-029",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-07-24 09:00",
+        "end_time": "2025-07-24 10:30",
+        "personnel": "최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: FTF (cage) defect / FTF(케이지) 결함",
+          "Detection: FTF fundamental and 2×, 3× harmonics observed / FTF 기본 및 2×, 3× 하모닉 관측",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_30_20250805_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250805-030",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-08-05",
+        "scheduled_date": "2025-08-05 09:00",
+        "due_date": "2025-08-05 11:00",
+        "assignee": "문서현",
+        "summary": "Thermal growth misalignment → Realign and secure base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-08-05 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "BASE-BOLT-16MM",
+            "name": "Base Bolt 16mm",
+            "spec": "Base Bolt 16mm",
+            "qty": "6",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250805-030",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-08-05 09:00",
+        "end_time": "2025-08-05 11:00",
+        "personnel": "문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Thermal growth misalignment / 열팽창 미스얼라인먼트",
+          "Detection: Alignment drifts after warm-up; phase change / 워밍업 후 정렬 드리프트; 위상 변화",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Process/vibration monitoring (general)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베이스 볼트 토크 확인 및 재조임: 규정 토크 58 N·m 적용",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_31_20250812_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250812-031",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-08-12",
+        "scheduled_date": "2025-08-12 09:00",
+        "due_date": "2025-08-12 11:30",
+        "assignee": "문서현",
+        "summary": "Misalignment (angular/parallel) → Realign and secure base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-08-12 11:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "BASE-BOLT-16MM",
+            "name": "Base Bolt 16mm",
+            "spec": "Base Bolt 16mm",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250812-031",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-08-12 09:00",
+        "end_time": "2025-08-12 11:30",
+        "personnel": "문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Misalignment (angular/parallel) / 미스얼라인먼트(각도/평행)",
+          "Detection: 1× rotational axial peak, phase difference / 1× 회전수 축방향 피크, 위상 차",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베이스 볼트 토크 확인 및 재조임: 규정 토크 58 N·m 적용",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_32_20250828_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250828-032",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-08-28",
+        "scheduled_date": "2025-08-28 09:00",
+        "due_date": "2025-08-28 11:00",
+        "assignee": "김민수, 박지헌",
+        "summary": "Shaft slip due to loosened setscrew → Retorque setscrew to 36.7 N·m",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-08-28 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "SC6-COLLAR",
+            "name": "Setscrew Collar",
+            "spec": "Setscrew Collar",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250828-032",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-08-28 09:00",
+        "end_time": "2025-08-28 11:00",
+        "personnel": "김민수, 박지헌",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Shaft slip due to loosened setscrew / 세트스크류 풀림으로 인한 샤프트 미끄럼",
+          "Detection: Looseness harmonics (2×, 3×) and BPFI sidebands / 루즈니스 하모닉(2×, 3×) 및 BPFI 사이드밴드",
+          "ISO14224 Code: 02-SPO",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 세트스크류 재조임: 규정 토크 36.7 N·m, 나사잠금제 도포",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_33_20250912_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250912-033",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-09-12",
+        "scheduled_date": "2025-09-12 09:00",
+        "due_date": "2025-09-12 12:30",
+        "assignee": "김민수, 이현우",
+        "summary": "Contamination (water ingress) → Replace seal kit ZS6 and flush grease",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-09-12 12:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZS6-SEAL",
+            "name": "Seal Kit ZS6",
+            "spec": "Seal Kit ZS6",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250912-033",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-09-12 09:00",
+        "end_time": "2025-09-12 12:30",
+        "personnel": "김민수, 이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Contamination (water ingress) / 오염(수분 유입)",
+          "Detection: Particle count ↑, moisture % ↑, broadband energy / 입자수 ↑, 수분함량 ↑, 광대역 에너지",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Moisture analysis (ASTM D6304 Karl Fischer)",
+          "검출 방법(Detection Method): Oil particle counting (ISO 4406)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_34_20250916_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250916-034",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-09-16",
+        "scheduled_date": "2025-09-16 09:00",
+        "due_date": "2025-09-16 14:30",
+        "assignee": "문서현, 박지현",
+        "summary": "Housing base crack → Replace housing and reinstall base",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-09-16 14:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "HOUSING-ZA2115",
+            "name": "Housing ZA2115",
+            "spec": "Housing ZA2115",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250916-034",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-09-16 09:00",
+        "end_time": "2025-09-16 14:30",
+        "personnel": "문서현, 박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Housing base crack / 하우징 베이스 크랙",
+          "Detection: Low-frequency resonance, rising temperature at housing / 저주파 공진, 하우징 온도 상승",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 하우징 교체: 베이스 평탄도 확인, 수평도 보정 후 고정",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_35_20250927_B_BX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20250927-035",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-09-27",
+        "scheduled_date": "2025-09-27 09:00",
+        "due_date": "2025-09-27 10:30",
+        "assignee": "박지헌, 문서현",
+        "summary": "Overgreasing causing churning losses → Remove excess grease and set proper quantity",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-09-27 10:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "GREASE-NLGI2",
+            "name": "Grease NLGI #2",
+            "spec": "Grease NLGI #2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20250927-035",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 B / 제품 BX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-09-27 09:00",
+        "end_time": "2025-09-27 10:30",
+        "personnel": "박지헌, 문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Overgreasing causing churning losses / 과윤활로 인한 차덩 손실",
+          "Detection: Temperature rises with no fault frequencies, RMS moderate / 결함 주파수 없이 온도 상승, RMS 중간 수준",
+          "ISO14224 Code: 02-PDE",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 윤활 작업: 구 그리스 완전 퍼지 후 NLGI #2 주입, 채널링 방지 경로 점검",
+          "4) 정렬 점검: 레이저/다이얼 게이지로 평행·각도 오차 ±0.05 mm 이내 확보",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "정렬: 레이저 측정 결과 허용치 내(평행/각도 오차 ±0.05 mm 이내)",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_36_20251007_C_CX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20251007-036",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-10-07",
+        "scheduled_date": "2025-10-07 09:00",
+        "due_date": "2025-10-07 13:00",
+        "assignee": "박지현, 최가영",
+        "summary": "Outer race pitting (BPFO) → Replace bearing insert",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-10-07 13:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-INSERT",
+            "name": "Bearing Insert",
+            "spec": "Bearing Insert",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20251007-036",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 C / 제품 CX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-10-07 09:00",
+        "end_time": "2025-10-07 13:00",
+        "personnel": "박지현, 최가영",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Outer race pitting (BPFO) / 외륜 피팅(BPFO)",
+          "Detection: BPFO peaks with harmonics, kurtosis increased / BPFO 피크 및 조화, 커토시스 증가",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_37_20251015_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20251015-037",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-10-15",
+        "scheduled_date": "2025-10-15 09:00",
+        "due_date": "2025-10-15 11:00",
+        "assignee": "문서현",
+        "summary": "Inner ring looseness on shaft → Install microlock kit and retorque",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-10-15 11:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ML2-MICROLOCK",
+            "name": "Microlock Kit ML2",
+            "spec": "Microlock Kit ML2",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20251015-037",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-10-15 09:00",
+        "end_time": "2025-10-15 11:00",
+        "personnel": "문서현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Inner ring looseness on shaft / 내륜 샤프트 루즈니스",
+          "Detection: Sidebands around 1×, modulation, phase instability / 1× 주변 사이드밴드, 변조, 위상 불안정",
+          "ISO14224 Code: 02-SPO",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_38_20251030_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20251030-038",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-10-30",
+        "scheduled_date": "2025-10-30 09:00",
+        "due_date": "2025-10-30 12:00",
+        "assignee": "이현우",
+        "summary": "Seal damage → contamination ingress → Replace seal kit ZS6 and relubricate",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-10-30 12:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZS6-SEAL",
+            "name": "Seal Kit ZS6",
+            "spec": "Seal Kit ZS6",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20251030-038",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-10-30 09:00",
+        "end_time": "2025-10-30 12:00",
+        "personnel": "이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Seal damage → contamination ingress / 씰 파손 → 오염 유입",
+          "Detection: Temperature increased (76→93°C), particle count high / 온도 상승(76→93°C), 입자 오염도 증가",
+          "ISO14224 Code: 02-INL",
+          "검출 방법(Detection Method): Oil particle counting (ISO 4406)",
+          "검출 방법(Detection Method): Temperature monitoring (IR/thermography)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 씰 교체: 방향/접촉면 확인, 누유 테스트 수행",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C) 및 진동 RMS(≤4.5 mm/s) 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_39_20251105_A_AX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20251105-039",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-11-05",
+        "scheduled_date": "2025-11-05 09:00",
+        "due_date": "2025-11-05 13:30",
+        "assignee": "김민수, 이현우",
+        "summary": "Shaft step wear → Polish shaft and replace bearing",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-11-05 13:30",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "SHAFT-49MM",
+            "name": "Shaft Ø49mm",
+            "spec": "Shaft Ø49mm",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20251105-039",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 A / 제품 AX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-11-05 09:00",
+        "end_time": "2025-11-05 13:30",
+        "personnel": "김민수, 이현우",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Shaft step wear / 샤프트 스텝 마모",
+          "Detection: Crest factor increased, spectral asymmetry / 크레스트 팩터 증가, 스펙트럼 비대칭",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 샤프트 연마/교체: 스텝·마모부 치수 확인, 허용公差 내 복원",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    },
+    {
+      "source_file": "작업지시서_작업완료보고서_DTL_40_20251124_D_DX-01.xlsx",
+      "instruction": {
+        "wo_number": "WO-20251124-040",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "request_date": "2025-11-24",
+        "scheduled_date": "2025-11-24 09:00",
+        "due_date": "2025-11-24 13:00",
+        "assignee": "김민수, 박지현",
+        "summary": "Cage fracture → Replace bearing set",
+        "safety": "전원 차단(LOTO), PPE 착용(보안경/장갑), 회전체 접근 금지, 윤활 취급 주의",
+        "approver": "이름 / 직책 / 서명",
+        "completion_date": "2025-11-24 13:00",
+        "result_summary": "교체/점검 예정",
+        "checklist": [
+          "1) 설비 정지 및 LOTO(전원 차단) 확인",
+          "2) 보호구(PPE) 착용 확인",
+          "3) 고장 원인 진단(진동/온도/윤활)",
+          "4) 부품 교체/수리",
+          "5) 재조립 및 토크 확인",
+          "6) 시운전(온도/진동/전류 확인)",
+          "7) 측정값 기록 및 사진 첨부"
+        ],
+        "materials": [
+          {
+            "code": "ZA2115-SET",
+            "name": "Bearing Set",
+            "spec": "Bearing Set",
+            "qty": "1",
+            "unit": "EA",
+            "note": "참조: 부품 리드타임_가격표"
+          }
+        ],
+        "tools": [
+          {
+            "code": "TQ-SET",
+            "name": "토크렌치",
+            "spec": "5~60 N·m",
+            "qty": "1",
+            "unit": "EA",
+            "note": "세트스크류/베이스 볼트 토크"
+          },
+          {
+            "code": "VB-ANL",
+            "name": "진동분석기",
+            "spec": "ENVELOPE/속도계",
+            "qty": "1",
+            "unit": "EA",
+            "note": "포락선/속도 측정"
+          },
+          {
+            "code": "IR-CAM",
+            "name": "열화상카메라",
+            "spec": "320×240",
+            "qty": "1",
+            "unit": "EA",
+            "note": "시운전 온도 확인"
+          }
+        ],
+        "post_checks": [
+          "가동 전 점검 완료(체크)",
+          "온도/전류/진동 기준치 확인(라인 기준서)",
+          "윤활상태 양호(누유/과윤활 없음)",
+          "SCADA/PLC 태그 정상 수신",
+          "현장 청소 및 안전 표지 복구",
+          "윤활량/주기 기록 업데이트"
+        ],
+        "attachments": [
+          "열화상",
+          "측정기록지",
+          "교체이력"
+        ]
+      },
+      "completion": {
+        "wo_number": "WO-20251124-040",
+        "equipment": "ZA2115 Pillow Block / N/A",
+        "location": "라인 D / 제품 DX-01",
+        "work_type": "분석점검",
+        "start_time": "2025-11-24 09:00",
+        "end_time": "2025-11-24 13:00",
+        "personnel": "김민수, 박지현",
+        "report_approver": "이름 / 직책 / 서명",
+        "failure_causes": [
+          "Failure Mode: Cage fracture / 케이지 파손",
+          "Detection: Impulsive peaks, BSF harmonics, kurtosis very high / 충격성 피크, BSF 하모닉, 커토시스 매우 높음",
+          "ISO14224 Code: 02-STD",
+          "검출 방법(Detection Method): Vibration analysis (spectrum/envelope per ISO 20816-3)"
+        ],
+        "solutions": [
+          "1) 설비 정지 및 LOTO 시행 (메인 차단기, 패널 격리, Lockout Tagout 확인)",
+          "2) 분해 점검: 하우징/베어링/씰 상태 확인 (ISO 14224 결함 코드 참조)",
+          "3) 베어링 교체: 좌/우 장착 방향 확인, 간섭·윤활 통로 청결 유지",
+          "5) 재조립 및 토크 확인: 베이스/엔드캡/씰 체결, 토크 규정 준수",
+          "6) 시운전(15분): IR 열화상(≤75°C), 진동 RMS(≤4.5 mm/s), Envelope/스펙트럼 확인",
+          "7) 측정값 기록: ISO 20816-3 기준 준수 여부 확인 및 데이터 저장"
+        ],
+        "results": [
+          "온도: 시운전 후 안정, IR 측정 기준 ≤75°C 충족",
+          "진동: RMS 저감, 기준 ≤4.5 mm/s 충족; 결함 주파수(FTF/BPFI/BPFO/BSF) 소실/정상화",
+          "윤활: 오염도 정상(ISO 4406 기준 충족), 누유 없음",
+          "전류: 부하 전류 편차 ±5% 이내, 정상",
+          "가동률 영향: 다운타임 종료, 생산 정상화"
+        ],
+        "attachments": [
+          "전/후 사진",
+          "진동 스펙트럼 캡처",
+          "열화상"
+        ]
+      }
+    }
+  ],
+  "tool_list": [
+    {
+      "code": "TQ-SET",
+      "name": "토크렌치",
+      "spec": "5~60 N·m",
+      "qty": 5,
+      "unit": "EA",
+      "lead_time_days": 14,
+      "vendor": "Snap-on (CDI Torque)",
+      "unit_price_krw": 337500
+    },
+    {
+      "code": "VB-ANL",
+      "name": "진동분석기",
+      "spec": "ENVELOPE/속도계",
+      "qty": 2,
+      "unit": "EA",
+      "lead_time_days": 30,
+      "vendor": "SKF",
+      "unit_price_krw": 10800000
+    },
+    {
+      "code": "IR-CAM",
+      "name": "열화상카메라",
+      "spec": "320×240",
+      "qty": 2,
+      "unit": "EA",
+      "lead_time_days": 14,
+      "vendor": "Teledyne FLIR",
+      "unit_price_krw": 6750000
+    },
+    {
+      "code": "ML2-MICROLOCK",
+      "name": "Microlock Kit ML2",
+      "spec": "Microlock Kit ML2",
+      "qty": 5,
+      "unit": "EA",
+      "lead_time_days": 14,
+      "vendor": "Rexnord",
+      "unit_price_krw": 70000
+    },
+    {
+      "code": "LA-PRU",
+      "name": "레이저 샤프트 얼라인먼트 키트",
+      "spec": "PRÜFTECHNIK ShaftAlign/RotAlign",
+      "qty": 1,
+      "unit": "EA",
+      "lead_time_days": 30,
+      "vendor": "Fluke Reliability (PRÜFTECHNIK)",
+      "unit_price_krw": 20250000
+    },
+    {
+      "code": "IRT-5KV",
+      "name": "절연저항계 5 kV",
+      "spec": "Megger MIT525/S1-568 등",
+      "qty": 2,
+      "unit": "EA",
+      "lead_time_days": 14,
+      "vendor": "Megger",
+      "unit_price_krw": 4725000
+    },
+    {
+      "code": "BH-TIH220M",
+      "name": "베어링 유도 가열기",
+      "spec": "SKF TIH 220M",
+      "qty": 1,
+      "unit": "EA",
+      "lead_time_days": 30,
+      "vendor": "SKF",
+      "unit_price_krw": 16200000
+    },
+    {
+      "code": "BT-OPT",
+      "name": "벨트 텐션 미터",
+      "spec": "Optibelt TT",
+      "qty": 3,
+      "unit": "EA",
+      "lead_time_days": 14,
+      "vendor": "Optibelt",
+      "unit_price_krw": 675000
+    }
+  ]
+}

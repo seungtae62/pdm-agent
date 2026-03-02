@@ -24,7 +24,8 @@ venv/
 
 # Data (large dataset files)
 data/*
-!data/정비이력_비용분석_ISO14224_연계_v7
+!data/knowledge_base
+!data/parsed_maintenance_records.json
 
 # Jupyter
 .ipynb_checkpoints/
@@ -33,4 +34,5 @@ data/*
 *.log
 logs/
 
-.claude
+.claudefonts/
+FORMAT_REVIEW.md
