@@ -262,58 +262,68 @@ class TestToolExecutor:
     def test_tool_executor_no_tool_calls(self):
         """tool_executor with no tool_calls in last message → continue_reasoning."""
         from langchain_core.messages import AIMessage
-        from agent.nodes.tool_executor import tool_executor
+        from agent.nodes.tool_executor import create_tool_executor
 
+        executor = create_tool_executor([])
         msg = AIMessage(content="No tools needed.")
         state = _make_state(messages=[msg])
-        result = tool_executor(state)
+        result = executor(state)
         assert result["next_action"] == "continue_reasoning"
 
-    def test_tool_executor_with_mock_calls(self):
-        """tool_executor dispatches to RAG and notification mocks."""
-        from langchain_core.messages import AIMessage
-        from agent.nodes.tool_executor import tool_executor
+    def test_tool_executor_with_mock_tool_node(self):
+        """tool_executor delegates to ToolNode and tracks bookkeeping."""
+        from langchain_core.messages import AIMessage, ToolMessage
+        from agent.nodes.tool_executor import create_tool_executor
+
+        executor = create_tool_executor([])
 
         msg = AIMessage(
             content="",
             tool_calls=[
                 {"name": "search_maintenance_history", "args": {"query": "내륜 결함"}, "id": "call_1"},
-                {"name": "notify_maintenance_staff", "args": {"message": "알림", "risk_level": "warning", "equipment_id": "EQ-1"}, "id": "call_2"},
             ],
         )
         state = _make_state(messages=[msg])
 
-        mock_rag = MagicMock()
-        mock_rag.search_maintenance_history.return_value = [{"score": 0.9, "text": "히스토리"}]
+        mock_tool_messages = [ToolMessage(content='[{"score": 0.9}]', tool_call_id="call_1")]
 
-        mock_notif = MagicMock()
-        mock_notif_result = MagicMock()
-        mock_notif_result.success = True
-        mock_notif_result.message = "전송 완료"
-        mock_notif.notify_maintenance_staff.return_value = mock_notif_result
+        with patch("agent.nodes.tool_executor.ToolNode") as MockToolNode:
+            mock_node_instance = MagicMock()
+            mock_node_instance.invoke.return_value = {"messages": mock_tool_messages}
+            MockToolNode.return_value = mock_node_instance
 
-        result = tool_executor(state, rag_server=mock_rag, notification_server=mock_notif)
-        assert len(result["messages"]) == 2
-        assert result["tool_calls_count"] == 2
-        mock_rag.search_maintenance_history.assert_called_once()
-        mock_notif.notify_maintenance_staff.assert_called_once()
+            executor_patched = create_tool_executor([])
+            result = executor_patched(state)
 
-    def test_tool_executor_unknown_tool(self):
-        """tool_executor handles unknown tool name gracefully (error in ToolMessage)."""
-        from langchain_core.messages import AIMessage
-        from agent.nodes.tool_executor import tool_executor
+        assert len(result["messages"]) == 1
+        assert result["tool_calls_count"] == 1
+        assert result["next_action"] == "continue_reasoning"
+
+    def test_tool_executor_deep_research_flag(self):
+        """tool_calls_count >= 3 sets deep_research_activated."""
+        from langchain_core.messages import AIMessage, ToolMessage
+        from agent.nodes.tool_executor import create_tool_executor
 
         msg = AIMessage(
             content="",
             tool_calls=[
-                {"name": "nonexistent_tool", "args": {}, "id": "call_x"},
+                {"name": "search_maintenance_history", "args": {"query": "test"}, "id": "call_1"},
             ],
         )
-        state = _make_state(messages=[msg])
-        result = tool_executor(state)
-        assert len(result["messages"]) == 1
-        content = json.loads(result["messages"][0].content)
-        assert "error" in content
+        state = _make_state(messages=[msg], tool_calls_count=2)
+
+        with patch("agent.nodes.tool_executor.ToolNode") as MockToolNode:
+            mock_node_instance = MagicMock()
+            mock_node_instance.invoke.return_value = {
+                "messages": [ToolMessage(content="result", tool_call_id="call_1")]
+            }
+            MockToolNode.return_value = mock_node_instance
+
+            executor = create_tool_executor([])
+            result = executor(state)
+
+        assert result["tool_calls_count"] == 3
+        assert result["deep_research_activated"] is True
 
 
 # ---------------------------------------------------------------------------

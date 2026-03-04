@@ -17,106 +17,6 @@ from agent.state import PdMAgentState
 
 logger = logging.getLogger(__name__)
 
-# Tool 정의 (LangChain bind_tools용)
-TOOL_DEFINITIONS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_maintenance_history",
-            "description": "과거 고장/정비 이력을 의미적으로 검색합니다. 유사 결함 사례의 진행 경과, 근본 원인, 고장까지 소요 시간 등을 참조합니다.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "검색 쿼리 (예: '내륜 결함 급속 열화 사례')",
-                    },
-                    "equipment_id": {
-                        "type": "string",
-                        "description": "설비 ID 필터 (선택)",
-                    },
-                    "bearing_id": {
-                        "type": "string",
-                        "description": "베어링 ID 필터 (선택)",
-                    },
-                },
-                "required": ["query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "search_equipment_manual",
-            "description": "설비 매뉴얼, FMEA 문서, 정비 절차서를 검색합니다. 설비 사양, 결함 메커니즘, 급속 열화 조건, 교체 절차 등을 참조합니다.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "검색 쿼리 (예: '외륜 결함 급속 열화 조건')",
-                    },
-                    "doc_type": {
-                        "type": "string",
-                        "description": "문서 유형 필터 (선택). 예: spec, fault_guide, procedure, fmea",
-                    },
-                },
-                "required": ["query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "search_analysis_history",
-            "description": "에이전트의 과거 분석 판단 이력을 의미적으로 검색합니다. 유사한 패턴의 과거 판단과 결과를 참조합니다.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "검색 쿼리 (예: 'BPFI 상승 내륜 결함 2단계')",
-                    },
-                    "equipment_id": {
-                        "type": "string",
-                        "description": "설비 ID 필터 (선택)",
-                    },
-                    "bearing_id": {
-                        "type": "string",
-                        "description": "베어링 ID 필터 (선택)",
-                    },
-                },
-                "required": ["query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "notify_maintenance_staff",
-            "description": "정비 담당자에게 분석 결과 및 정비 권고 알림을 전송합니다. 위험도 Watch 이상이거나 인간의 확인이 필요할 때 호출합니다.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "알림 메시지 (분석 결과 요약 + 정비 권고)",
-                    },
-                    "risk_level": {
-                        "type": "string",
-                        "description": "위험도 (watch / warning / critical)",
-                    },
-                    "equipment_id": {
-                        "type": "string",
-                        "description": "설비 ID",
-                    },
-                },
-                "required": ["message", "risk_level", "equipment_id"],
-            },
-        },
-    },
-]
-
 
 def _build_initial_message(state: PdMAgentState) -> str:
     """첫 추론을 위한 사용자 메시지 생성."""
@@ -148,12 +48,13 @@ def _build_initial_message(state: PdMAgentState) -> str:
     return "\n".join(parts)
 
 
-def reasoning(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
+def reasoning(state: PdMAgentState, *, llm: BaseChatModel, tools: list) -> dict:
     """추론 노드.
 
     Args:
         state: 현재 State.
-        llm: LangChain ChatModel (bind_tools 적용됨).
+        llm: LangChain ChatModel.
+        tools: MCP에서 검색된 Tool 리스트 (bind_tools용).
 
     Returns:
         State 업데이트 dict.
@@ -169,7 +70,7 @@ def reasoning(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
         ]
 
     # LLM 호출 (tools bound)
-    llm_with_tools = llm.bind_tools(TOOL_DEFINITIONS)
+    llm_with_tools = llm.bind_tools(tools)
     response = llm_with_tools.invoke(messages)
 
     logger.info(
