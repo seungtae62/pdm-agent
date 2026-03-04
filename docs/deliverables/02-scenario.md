@@ -29,7 +29,7 @@
 | 1  | -      | 센서 데이터 실시간 수집 및 전처리                                                                  | Edge 시스템       | 실시간 스트리밍                 |
 | 2  | -      | 정량 분석 수행 - Feature 산출, 추세 연산 후 이벤트 페이로드 생성                                           | Edge 시스템       | anomaly_detected = false |
 | 3  | -      | Memory에서 해당 설비 이전 판단 이력 조회                                                           | Memory (장기)    | 이력 없음 확인                 |
-| 4  | -      | ReAct Thought 1: anomaly_detected = false 확인. 현재 특징량을 도메인 지식 기준으로 교차 확인하여 정상 범위 내 판정 | ReAct + 도메인 지식 | 정상 > 추론 조기 종료            |
+| 4  | -      | ReAct Thought 1: anomaly_detected = false 확인. 현재 특징량을 도메인 지식 기준으로 교차 확인하여 정상 범위 내 판정 | ReAct + 도메인 지식 | 정상 > 추론 조기 종료. Skills 미로드 (토큰 절감) |
 | 5  | -      | 정상 상태 간결 응답 생성                                                                       | ReAct          | Bearing 3 현재 상태 정상       |
 | 6  | -      | Memory에 판단 결과 저장 (정상, Normal)                                                        | Memory (장기)    |                          |
 
@@ -64,7 +64,7 @@
 | 1  | -      | 센서 데이터 실시간 수집 및 전처리                                                                             | Edge 시스템                | 실시간 스트리밍                |
 | 2  | -      | 정량 분석 수행 - Feature 산출, 추세 연산 후 이벤트 페이로드 생성                                                      | Edge 시스템                | anomaly_detected = true |
 | 3  | -      | Memory에서 해당 설비 이전 판단 이력 조회                                                                      | Memory (장기)             | 5일차 이력 확인               |
-| 4  | -      | ReAct Thought 1: anomaly_detected = true 확인. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + 도메인 지식          | 결함 유형 식별                |
+| 4  | -      | ReAct Thought 1: anomaly_detected = true 확인. fault-diagnosis Skill 로드. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + Agent Skills (fault-diagnosis) | 결함 유형 식별                |
 | 5  | -      | ReAct Thought 2: Kurtosis 상승 시작 + RMS 소폭 상승 확인. Memory의 5일차 정상 대비 변화 확인.                        | ReAct + 도메인 지식 + Memory | 결함 진행 단계 판정             |
 | 6  | -      | ReAct Thought 3: Edge 추세 데이터 (slope, trend_direction) 해석. 열화 속도 정상 범위 내 판단.                     | ReAct + 도메인 지식          | 비정상 가속 아님               |
 | 7  | -      | ReAct Thought 4: RUL 예측값과 에이전트 단계 판정 일관성 확인.                                                    | ReAct + Memory          | RUL 예측 평가               |
@@ -111,7 +111,7 @@
 | 4  | -           | ReAct Thought 1: anomaly_detected = true 확인. 주파수 영역에서 BPFI 진폭 상승 식별, 고주파 진동 출현, 1X 간격 사이드 밴드 확인. 내륜 결함 진행 확인.                                                     | ReAct + 도메인 지식          | 결함 유형 재확인                 |
 | 5  | -           | ReAct Thought 2: Kurtosis 상승 + RMS 상승 확인. Memory의 15일차 대비 진행 확인.                                                                                                  | ReAct + 도메인 지식 + Memory | 10일단 2단계 > 3단계 상승 확인      |
 | 6  | -           | ReAct Thought 3: Edge 추세 데이터 해석. 열화 속도가 정상 범위 내인지 확인.                                                                                                             | ReAct + 도메인 지식          | 열화 속도 평가                  |
-| 7  | -           | ReAct Thought 3: 정비 권고의 구체성을 높이기 위해 일반 RAG 활용. search_maintenance_history로 유사 내륜 결함 사례 검색, search_equipment_manual로 정비 절차 확인 | ReAct + RAG           | 정보 조회 목적의 선택적 RAG 호출 (1~2회)  |
+| 7  | -           | ReAct Thought 3: 정비 권고의 구체성을 높이기 위해 MCP Tool로 일반 RAG 활용. search_maintenance_history로 유사 내륜 결함 사례 검색, search_equipment_manual로 정비 절차 확인 | ReAct + MCP (RAG)     | 정보 조회 목적의 선택적 MCP Tool 호출 (1~2회) |
 | 8  | -           | ReAct Thought 4: RUL 예측값과 에이전트 판정 대조. Memory의 이전 RUL 추이 참조하여 분석 수행 후 가속 열화 판단.                                                                                    | ReAct + Memory          | RUL 예측 평가                 |
 | 9  | -           | ReAct Thought 5: 위험도 Warning 판정. RAG 검색 결과를 반영한 정비 권고 생성 (권고 조치, 시기, 근거)                                                                                   | ReAct                   | 종합 판단                     |
 | 10 | -           | 분석 리포트 생성: 추론 체인 + Memory 이력 + RAG 검색 결과를 정형화된 리포트로 작성 작업지시서 생성: 분석 리포트를 기반으로 현재 가진 Resource를 기반으로 작업지시서 생성                                                 | File Generation         | Warning > 리포트 생성          |
@@ -176,7 +176,7 @@
 | 4  | -             | ReAct Thought 1: BPFO 진폭 지배적 상승, 사이드밴드 미약. 외륜 결함으로 판별                                                                                                                                            | ReAct + 도메인 지식          | 결함 유형 식별                                              |
 | 5  | -             | ReAct Thought 2: RMS 급상승, Kurtosis 감소 경향. 도메인 지식 기준 "Kurtosis 감소 + RMS 급상승 = 말기 단계" 패턴 확인. Memory 대비 급속 진행 확인                                                                                    | ReAct + 도메인 지식 + Memory | "수일 내 1단계 > 4단계 급속 진행"                                |
 | 6  | -             | ReAct Thought 3: acceleration_detected = true 열화 속도가 일반적 대비 비정상적으로 빠름. 비정상 가속 감지, 일반 RAG로 유사 급속 열화 사례 조회                                                                                                       | ReAct + 도메인 지식          | 비정상 가속 감지                            |
-| 7  | -             | 일반 RAG 활용: search_equipment_manual로 "외륜 결함 급속 열화 조건" 검색, search_maintenance_history로 "유사 급속 열화 사례" 검색 (1~2회 호출) | ReAct + RAG           | 정보 조회 목적의 선택적 RAG 호출                            |
+| 7  | -             | MCP Tool로 일반 RAG 활용: search_equipment_manual로 "외륜 결함 급속 열화 조건" 검색, search_maintenance_history로 "유사 급속 열화 사례" 검색 (1~2회 호출) | ReAct + MCP (RAG)     | 정보 조회 목적의 선택적 MCP Tool 호출                       |
 | 8  | -             | ReAct Thought 4: ML RUL 예측값 확인. 가속 열화 상황이므로 신뢰구간 하한(보수적 추정)을 기준으로 판단. Memory의 이전 RUL 대비 급격한 감소 확인                                                                                                | ReAct + Memory          | 보수적 RUL 해석                                            |
 | 9  | -             | ReAct Thought 5: 위험도 Critical 판정. RAG 검색 결과를 반영한 긴급 정비 권고 생성. 외부 요인(과부하, 윤활 부족, 오염, 설치 불량) 개입 가능성 명시. 인간에게 운전 조건 변경 여부 추가 확인 요청                                                           | ReAct                   | 종합 판단                                                 |
 | 10 | -             | 분석 리포트 생성: 추론 체인 + Memory 이력 + RAG 검색 결과 + 보수적 RUL 해석을 포함한 긴급 리포트 작성                                                                                                                      | File Generation         | Critical > 긴급 리포트                                     |
@@ -236,8 +236,8 @@
 | 1      | "정비를 3일 유예할 수 있는가?" | Memory에서 현재 분석 맥락 로드. 전체 분석 결과가 아닌 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거)을 컨텍스트에 주입   | Memory + Prompt Optimization | 전체 추론 체인이 아닌 압축된 맥락 사용 |
 | 2      | -                   | RUL 예측값과 열화 속도를 기반으로 유예 가능 여부 판단. 유예 시 위험도 변화 및 예상 시나리오 설명                         | ReAct + 도메인 지식               |                        |
 | 3      | (대화 N턴 이상 지속 시)     | Prompt Optimization 자동 수행: 전체 대화 이력을 "분석 맥락 요약 + 최근 2~3턴 원문"으로 재구성하여 컨텍스트 윈도우 내 유지 | Prompt Optimization          | 슬라이딩 윈도우 + 요약 병행       |
-| 4      | "이 결함의 근본 원인을 더 자세히 분석해줘" | Deep Research 발동: 내부 RAG + 외부 웹 검색으로 근본 원인 심층 탐색 | Deep Research | 사용자 요청에 의한 Deep Research |
-| 5      | -                   | 내부 RAG: 유사 사례, 결함 메커니즘 확인 / 외부: 관련 논문·기술 리포트 검색 | RAG + Web Search | 내부 우선, 외부 보완 |
+| 4      | "이 결함의 근본 원인을 더 자세히 분석해줘" | deep-research Skill 로드. Deep Research 발동: MCP Tool로 내부 RAG + 외부 웹 검색으로 근본 원인 심층 탐색 | Agent Skills (deep-research) + MCP | 사용자 요청에 의한 Deep Research |
+| 5      | -                   | MCP Tool: 내부 RAG로 유사 사례, 결함 메커니즘 확인 / search_web으로 관련 논문·기술 리포트 검색 | MCP (RAG + Web Search) | 내부 우선, 외부 보완 |
 | 6      | -                   | 종합 분석 결과 응답. 외부 자료는 "외부 참고 (검증 필요)" 표기 | ReAct | 소스 구분 명시 |
 
 * Prompt Optimization 전략
