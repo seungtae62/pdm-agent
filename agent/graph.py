@@ -2,6 +2,7 @@
 
 LangGraph StateGraph 기반으로 7개 노드를 등록하고,
 조건부 엣지로 ReAct 추론 루프를 구성한다.
+MCP 서버에서 동적으로 Tool을 검색하여 사용한다.
 
 그래프 흐름:
     START → load_memory → reasoning → (조건부 분기)
@@ -15,8 +16,10 @@ LangGraph StateGraph 기반으로 7개 노드를 등록하고,
 from __future__ import annotations
 
 import logging
+import sys
 from functools import partial
 
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, END
 
 from agent.config import AgentConfig, create_chat_model
@@ -24,13 +27,11 @@ from agent.memory.store import MemoryStore
 from agent.state import PdMAgentState
 from agent.nodes.load_memory import load_memory
 from agent.nodes.reasoning import reasoning
-from agent.nodes.tool_executor import tool_executor
+from agent.nodes.tool_executor import create_tool_executor
 from agent.nodes.parse_diagnosis import parse_diagnosis
 from agent.nodes.generate_report import generate_report
 from agent.nodes.generate_work_order import generate_work_order
 from agent.nodes.save_memory import save_memory
-from mcp_servers.rag_server import RAGServer, RAGServerConfig
-from mcp_servers.notification_server import NotificationServer
 
 logger = logging.getLogger(__name__)
 
@@ -76,39 +77,53 @@ def _route_after_report(state: PdMAgentState) -> str:
         return "save_memory"
 
 
-def build_graph(
+def _build_mcp_server_config(config: AgentConfig) -> dict:
+    """MCP 서버 연결 설정 dict 생성."""
+    return {
+        "rag-server": {
+            "command": sys.executable,
+            "args": [config.rag_mcp_server_path],
+            "transport": "stdio",
+        },
+        "notification-server": {
+            "command": sys.executable,
+            "args": [config.notification_mcp_server_path],
+            "transport": "stdio",
+        },
+    }
+
+
+async def build_graph(
     config: AgentConfig | None = None,
     *,
     memory_store: MemoryStore | None = None,
-    rag_server: RAGServer | None = None,
-    notification_server: NotificationServer | None = None,
-) -> StateGraph:
+) -> tuple:
     """PdM Agent StateGraph를 빌드.
+
+    MCP 서버에서 동적으로 Tool을 검색하여 그래프에 바인딩한다.
 
     Args:
         config: 에이전트 설정. None이면 환경변수에서 로드.
         memory_store: PostgreSQL Memory. None이면 Memory 없이 실행.
-        rag_server: RAG 검색 서버. None이면 더미 응답.
-        notification_server: 알림 서버. None이면 더미 응답.
 
     Returns:
-        컴파일된 StateGraph.
+        (compiled_graph, mcp_client) 튜플.
     """
     if config is None:
         config = AgentConfig.from_env()
 
     llm = create_chat_model(config)
-    if notification_server is None:
-        notification_server = NotificationServer()
+
+    # MCP 서버 연결 및 Tool 검색
+    mcp_client = MultiServerMCPClient(_build_mcp_server_config(config))
+    tools = await mcp_client.get_tools()
+
+    logger.info(f"[build_graph] MCP Tool {len(tools)}개 검색 완료: {[t.name for t in tools]}")
 
     # 노드 함수 (의존성 주입)
     load_memory_fn = partial(load_memory, store=memory_store)
-    reasoning_fn = partial(reasoning, llm=llm)
-    tool_executor_fn = partial(
-        tool_executor,
-        rag_server=rag_server,
-        notification_server=notification_server,
-    )
+    reasoning_fn = partial(reasoning, llm=llm, tools=tools)
+    tool_executor_fn = create_tool_executor(tools)
     generate_report_fn = partial(generate_report, llm=llm)
     generate_work_order_fn = partial(generate_work_order, llm=llm)
     save_memory_fn = partial(save_memory, store=memory_store)
@@ -161,10 +176,10 @@ def build_graph(
     # save_memory → END
     graph.add_edge("save_memory", END)
 
-    return graph.compile()
+    return graph.compile(), mcp_client
 
 
-def run_agent(
+async def run_agent(
     event_payload: dict,
     config: AgentConfig | None = None,
     **kwargs,
@@ -179,7 +194,7 @@ def run_agent(
     Returns:
         최종 State.
     """
-    graph = build_graph(config, **kwargs)
+    graph, mcp_client = await build_graph(config, **kwargs)
 
     initial_state: PdMAgentState = {
         "event_payload": event_payload,
@@ -193,5 +208,5 @@ def run_agent(
         "next_action": "",
     }
 
-    result = graph.invoke(initial_state)
+    result = await graph.ainvoke(initial_state)
     return result

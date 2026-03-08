@@ -11,13 +11,13 @@
 ### Phase 2: RAG 구축
 2-1. 합성 PDF 문서 19건 생성 (템플릿 기반)
 2-2. Qdrant Collection 3개 구성 (maintenance_history, equipment_manual, analysis_history) 및 문서 적재
-2-3. MCP Server 구현 (RAG Tool 호출용)
+2-3. MCP Server 구현 (RAG Tool 호출용) + Agent Skills 구성 (도메인 지식 모듈화)
 2-4. 검색 품질 검증
 
 ### Phase 3: PdM Agent 핵심 구현
 3-1. LangGraph StateGraph 구현 (기본 골격)
 3-2. 시스템 프롬프트 탑재 및 기본 추론 검증 (Tool 없이)
-3-3. MCP Client 연동 (RAG Tool + 알림 Tool)
+3-3. MCP Client 연동 (RAG Tool + 알림 Tool) + Agent Skills 로더 구현
 3-4. Memory 구현 (PostgreSQL)
 3-5. Deep Research 로직 (내부 RAG + 외부 검색 기반 분석적 조사)
 3-6. 작업지시서 생성 기능 구현
@@ -76,7 +76,7 @@ class PdMAgentState(TypedDict):
     #   "reasoning_summary": str
     # }
 
-    # Tool 호출 관련 (MCP 기반)
+    # Tool 호출 관련 (MCP Tool 기반)
     tool_calls_count: int
     deep_research_activated: bool
 
@@ -92,8 +92,8 @@ class PdMAgentState(TypedDict):
 ### Node 구성
 
 1. **load_memory**: event_payload에서 설비/베어링 ID 추출 → PostgreSQL에서 이전 판단 이력 조회 → memory_context 저장
-2. **reasoning**: 시스템 프롬프트 + event_payload + memory_context + messages → GPT-4o 추론 → next_action 결정
-3. **tool_executor**: reasoning에서 Tool 호출 결정 시 MCP Client를 통해 해당 Tool 실행 → 결과를 messages에 추가 → tool_calls_count 증가
+2. **reasoning**: 시스템 프롬프트 + Agent Skills(온디맨드) + event_payload + memory_context + messages → GPT-4o 추론 → next_action 결정
+3. **tool_executor**: reasoning에서 MCP Tool 호출 결정 시 MCP Client를 통해 해당 Tool 실행 → 결과를 messages에 추가 → tool_calls_count 증가
 4. **parse_diagnosis**: ReAct 루프 완료 후 LLM 응답에서 diagnosis_result를 구조화된 형태로 파싱
 5. **generate_report**: diagnosis_result + messages + memory_context → 분석 리포트 생성
 6. **generate_work_order**: diagnosis_result + 분석 리포트 기반 → 정비 절차, 자원, 일정을 포함한 작업지시서 생성
@@ -143,11 +143,25 @@ START → load_memory → reasoning → (조건부 분기)
 
 ### MCP Server 구성
 
-RAG 검색 및 알림 Tool은 MCP Server로 구현하여, LangGraph Agent가 MCP Client로 호출한다.
+외부 시스템과의 상호작용은 MCP Server로 구현하여, LangGraph Agent가 MCP Client로 호출한다.
 
 - **rag_server**: search_maintenance_history, search_equipment_manual, search_analysis_history 3개 Tool 제공
 - **web_search_server**: search_web Tool 제공 (외부 인터넷 검색, Deep Research에서만 사용)
 - **notification_server**: notify_maintenance_staff Tool 제공
+
+### Agent Skills 구성
+
+도메인 지식은 Agent Skills 오픈 표준([agentskills.io](https://agentskills.io))으로 모듈화하여 시스템 프롬프트에서 분리한다. 점진적 로딩(Progressive Disclosure)으로 필요 시에만 컨텍스트에 주입한다.
+
+- **fault-diagnosis**: 결함 주파수 해석(BPFO, BPFI, BSF, FTF), P-F 곡선 4단계. anomaly_detected = true 시 로드
+- **feature-interpret**: 특징량 복합 해석 패턴 (Kurtosis + RMS 조합 등). Thought 2~3 단계에서 로드
+- **deep-research**: 분석적 심층 조사 절차. 대화형 상호작용에서 사용자의 분석적 질문 시 로드
+- **response-template**: 위험도별 응답 양식, 리포트/작업지시서 포함 기준. Thought 5 이후 로드
+
+**MCP-Skills 역할 분리 원칙:**
+- MCP = 외부 실행(근육): Qdrant 검색, 웹 검색, 알림 발송 등 실제 코드 실행
+- Skills = 도메인 지식(뇌): 추론 품질을 제어하는 지식/지침의 온디맨드 제공
+- 시스템 프롬프트에는 페르소나, 핵심 원칙, 추론 절차, MCP Tool 규칙만 상주
 
 ### 합성 PDF 문서 목록
 

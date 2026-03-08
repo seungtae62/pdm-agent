@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -47,9 +48,16 @@ class AgentConfig:
     max_tool_calls: int = DEFAULT_MAX_TOOL_CALLS
     rag_top_k: int = DEFAULT_RAG_TOP_K
 
+    # MCP Server 경로
+    rag_mcp_server_path: str = ""
+    notification_mcp_server_path: str = ""
+
     @classmethod
     def from_env(cls) -> "AgentConfig":
         """환경변수에서 설정 로드."""
+        project_root = Path(__file__).parent.parent
+        mcp_dir = project_root / "mcp_servers"
+
         return cls(
             llm_model=os.getenv("LLM_MODEL", DEFAULT_LLM_MODEL),
             embedding_model=os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL),
@@ -63,6 +71,14 @@ class AgentConfig:
             postgres_password=os.getenv("POSTGRES_PASSWORD", ""),
             max_tool_calls=int(os.getenv("PDM_AGENT_MAX_TOOL_CALLS", str(DEFAULT_MAX_TOOL_CALLS))),
             rag_top_k=int(os.getenv("PDM_RAG_TOP_K", str(DEFAULT_RAG_TOP_K))),
+            rag_mcp_server_path=os.getenv(
+                "RAG_MCP_SERVER_PATH",
+                str(mcp_dir / "rag_mcp.py"),
+            ),
+            notification_mcp_server_path=os.getenv(
+                "NOTIFICATION_MCP_SERVER_PATH",
+                str(mcp_dir / "notification_mcp.py"),
+            ),
         )
 
     @property
