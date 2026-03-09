@@ -68,10 +68,6 @@ def parse_diagnosis(state: PdMAgentState) -> dict:
             if key not in diagnosis:
                 diagnosis[key] = default_val
 
-    # risk_level 소문자 정규화
-    if "risk_level" in diagnosis and isinstance(diagnosis["risk_level"], str):
-        diagnosis["risk_level"] = diagnosis["risk_level"].lower().strip()
-
     logger.info(
         f"[parse_diagnosis] 파싱 완료: "
         f"fault_type={diagnosis.get('fault_type')}, "

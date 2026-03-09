@@ -29,7 +29,7 @@ def generate_work_order(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
         State 업데이트 dict.
     """
     diagnosis = state.get("diagnosis_result", {})
-    risk_level = diagnosis.get("risk_level", "normal").lower().strip()
+    risk_level = diagnosis.get("risk_level", "normal")
 
     # Normal/Watch: 작업지시서 건너뜀
     if risk_level in ("normal", "watch"):
