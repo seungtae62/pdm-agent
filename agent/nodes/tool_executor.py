@@ -26,7 +26,7 @@ def create_tool_executor(tools: list):
     """
     tool_node = ToolNode(tools)
 
-    def tool_executor(state: PdMAgentState) -> dict:
+    async def tool_executor(state: PdMAgentState) -> dict:
         """Tool 실행 노드."""
         messages = state.get("messages", [])
         tool_calls_count = state.get("tool_calls_count", 0)
@@ -45,7 +45,7 @@ def create_tool_executor(tools: list):
         )
 
         # ToolNode로 MCP 도구 실행 → ToolMessage 리스트 반환
-        result = tool_node.invoke(state)
+        result = await tool_node.ainvoke(state)
         tool_messages = result["messages"]
 
         new_count = tool_calls_count + len(tool_calls)
