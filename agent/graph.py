@@ -68,15 +68,13 @@ def _route_after_report(state: PdMAgentState) -> str:
     Warning/Critical → generate_work_order
     Normal/Watch → save_memory (작업지시서 건너뜀)
 
-    LLM 응답의 risk_level 정규화 + Edge health_state fallback으로
+    LLM 응답의 risk_level 대소문자 정규화 + Edge health_state fallback으로
     비결정적 LLM 출력에 대한 안정성을 보장한다.
     """
     diagnosis = state.get("diagnosis_result", {})
     risk_level = diagnosis.get("risk_level", "normal").lower().strip()
 
-    # LLM이 다양한 표현을 쓸 수 있으므로 확장 매칭
-    wo_triggers = {"warning", "critical", "high", "severe", "danger", "urgent"}
-    if risk_level in wo_triggers:
+    if risk_level in ("warning", "critical"):
         return "generate_work_order"
 
     # fallback: Edge의 원본 health_state 확인
