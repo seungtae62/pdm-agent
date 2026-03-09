@@ -106,20 +106,28 @@ class TestBuildEventPayload:
             timestamp=now,
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(detected=False),
-            sensor_channels=["ch0", "ch1"],
+            operation_days_elapsed=31,
+            total_running_hours=744.0,
         )
 
-        # 최상위 필드 — ID만 포함, 상세 메타데이터 없음
+        # 최상위 필드
         assert payload["event_id"].startswith("EVT-20260223-")
         assert payload["event_type"] == "periodic_monitoring"
         assert payload["edge_node_id"] == "EDGE-001"
-        assert payload["equipment_id"] == "IMS-TESTRIG-01"
-        assert payload["bearing_id"] == "BRG-003"
-        assert payload["sensor_channels"] == ["ch0", "ch1"]
 
-        # 상세 메타데이터가 없는지 확인
-        assert "equipment_meta" not in payload
-        assert "bearing" not in payload.get("equipment_meta", {})
+        # 플랫 필드가 없는지 확인
+        assert "equipment_id" not in payload
+        assert "bearing_id" not in payload
+        assert "sensor_channels" not in payload
+
+        # equipment_meta 중첩 구조 확인
+        meta = payload["equipment_meta"]
+        assert meta["equipment_id"] == "IMS-TESTRIG-01"
+        assert meta["operation_days_elapsed"] == 31
+        assert meta["total_running_hours"] == 744.0
+        assert meta["bearing"]["bearing_id"] == "BRG-003"
+        assert "defect_frequencies_hz" in meta["bearing"]
+        assert meta["sensor_config"]["channels"] == ["ch0", "ch1"]
 
         # anomaly_detection_result
         anom = payload["anomaly_detection_result"]
@@ -144,6 +152,8 @@ class TestBuildEventPayload:
             timestamp=datetime(2026, 2, 23, 12, 0, 0),
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(detected=True),
+            operation_days_elapsed=5,
+            total_running_hours=120.0,
         )
 
         assert payload["event_type"] == "anomaly_alert"
@@ -158,6 +168,8 @@ class TestBuildEventPayload:
             timestamp=now,
             features=_make_dummy_features(),
             anomaly_result=_make_dummy_anomaly_result(),
+            operation_days_elapsed=10,
+            total_running_hours=240.0,
         )
 
         assert payload["timestamp"] == "2026-02-23T15:30:00"

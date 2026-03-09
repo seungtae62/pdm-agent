@@ -36,7 +36,6 @@ from edge.metadata import (
     get_channel_indices,
     get_edge_node_id,
     get_equipment_id,
-    get_sensor_channels,
 )
 from edge.payload_generator import build_event_payload, save_payload
 
@@ -318,6 +317,9 @@ def generate_scenario_payload(
     )
 
     # 6. 페이로드 조립 (타임스탬프는 실행 시점 now() 사용)
+    operation_days_elapsed = scenario.target_day
+    total_running_hours = scenario.target_day * 24.0
+
     payload = build_event_payload(
         equipment_id=get_equipment_id(scenario.test_set_id),
         bearing_id=scenario.bearing_id,
@@ -325,10 +327,9 @@ def generate_scenario_payload(
         timestamp=datetime.now(),
         features=target_features,
         anomaly_result=anomaly_result,
+        operation_days_elapsed=operation_days_elapsed,
+        total_running_hours=total_running_hours,
         event_seq=1,
-        sensor_channels=get_sensor_channels(
-            scenario.test_set_id, scenario.bearing_id
-        ),
     )
 
     return payload
