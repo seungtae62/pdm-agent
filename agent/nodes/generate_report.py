@@ -29,7 +29,7 @@ def generate_report(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
         State 업데이트 dict.
     """
     diagnosis = state.get("diagnosis_result", {})
-    risk_level = diagnosis.get("risk_level", "normal")
+    risk_level = diagnosis.get("risk_level", "normal").lower().strip()
 
     # Normal/Watch: 리포트 생성 생략
     if risk_level in ("normal", "watch"):
