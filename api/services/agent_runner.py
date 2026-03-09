@@ -1,8 +1,9 @@
-"""Agent runner interface and mock implementation."""
+"""Agent runner interface and implementations."""
 
 from __future__ import annotations
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Protocol, runtime_checkable
@@ -21,6 +22,18 @@ from api.models.stream import (
     WorkOrderGeneratedEvent,
 )
 from api.services.run_manager import RunManager, RunStatus
+
+logger = logging.getLogger(__name__)
+
+GRAPH_NODES = {
+    "load_memory",
+    "reasoning",
+    "tool_executor",
+    "parse_diagnosis",
+    "generate_report",
+    "generate_work_order",
+    "save_memory",
+}
 
 
 @runtime_checkable
@@ -272,4 +285,251 @@ class MockAgentRunner:
             run_manager.set_status(run_id, RunStatus.FAILED)
 
         finally:
+            await run_manager.end_stream(run_id)
+
+
+class LangGraphAgentRunner:
+    """실제 LangGraph Agent를 실행하는 AgentRunner.
+
+    LangGraph의 astream_events를 SSE 이벤트로 변환하여
+    run_manager를 통해 스트리밍합니다.
+    """
+
+    def __init__(self, config: "AgentConfig | None" = None):
+        from agent.config import AgentConfig
+
+        self.config = config or AgentConfig.from_env()
+
+    async def run(
+        self,
+        event_payload: EventPayload,
+        run_manager: RunManager,
+        run_id: str,
+    ) -> None:
+        """LangGraph Agent 실행 및 SSE 이벤트 스트리밍."""
+        from agent.graph import build_graph
+
+        now = lambda: datetime.now(timezone.utc).isoformat()
+        mcp_client = None
+
+        try:
+            run_manager.set_status(run_id, RunStatus.RUNNING)
+
+            # run_started
+            await run_manager.emit_event(
+                run_id,
+                RunStartedEvent(
+                    run_id=run_id,
+                    timestamp=now(),
+                    event_id=event_payload.event_id,
+                ),
+            )
+            logger.info(
+                f"[SSE] run_started | run={run_id[:8]}"
+                f" | event_id={event_payload.event_id}"
+            )
+
+            # Build graph
+            graph, mcp_client = await build_graph(config=self.config)
+
+            # Initial state
+            payload_dict = event_payload.model_dump()
+            initial_state = {
+                "event_payload": payload_dict,
+                "memory_context": {},
+                "messages": [],
+                "diagnosis_result": {},
+                "tool_calls_count": 0,
+                "deep_research_activated": False,
+                "report": "",
+                "work_order": "",
+                "next_action": "",
+            }
+
+            # Track token count for logging
+            token_char_count = 0
+            final_state = None
+
+            async for event in graph.astream_events(
+                initial_state, version="v2"
+            ):
+                kind = event["event"]
+                name = event.get("name", "")
+                data = event.get("data", {})
+
+                # Node entered
+                if kind == "on_chain_start" and name in GRAPH_NODES:
+                    await run_manager.emit_event(
+                        run_id,
+                        NodeEnteredEvent(
+                            run_id=run_id,
+                            node_name=name,
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] node_entered | run={run_id[:8]}"
+                        f" | node={name}"
+                    )
+
+                # LLM token streaming
+                elif kind == "on_chat_model_stream":
+                    chunk = data.get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        token_char_count += len(chunk.content)
+                        await run_manager.emit_event(
+                            run_id,
+                            ReasoningTokenEvent(
+                                run_id=run_id,
+                                token=chunk.content,
+                            ),
+                        )
+
+                # Tool call start
+                elif kind == "on_tool_start":
+                    arguments = data.get("input", {})
+                    await run_manager.emit_event(
+                        run_id,
+                        ToolCallEvent(
+                            run_id=run_id,
+                            tool_name=name,
+                            arguments=arguments
+                            if isinstance(arguments, dict)
+                            else {},
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] tool_call | run={run_id[:8]}"
+                        f" | tool={name}"
+                    )
+
+                # Tool result
+                elif kind == "on_tool_end":
+                    output = data.get("output", "")
+                    await run_manager.emit_event(
+                        run_id,
+                        ToolResultEvent(
+                            run_id=run_id,
+                            tool_name=name,
+                            result=output,
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] tool_result | run={run_id[:8]}"
+                        f" | tool={name}"
+                    )
+
+                # Graph completed
+                elif kind == "on_chain_end" and name == "LangGraph":
+                    final_state = data.get("output", {})
+
+            if token_char_count > 0:
+                logger.info(
+                    f"[SSE] reasoning_token | run={run_id[:8]}"
+                    f" | tokens={token_char_count} chars"
+                )
+
+            # Extract results from final state
+            if final_state:
+                # Diagnosis
+                diagnosis = final_state.get("diagnosis_result", {})
+                if diagnosis:
+                    await run_manager.emit_event(
+                        run_id,
+                        DiagnosisEvent(
+                            run_id=run_id,
+                            diagnosis=diagnosis,
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] diagnosis | run={run_id[:8]}"
+                        f" | fault={diagnosis.get('fault_type', 'unknown')}"
+                        f" | risk={diagnosis.get('severity', 'unknown')}"
+                    )
+
+                # Report
+                report = final_state.get("report", "")
+                if report:
+                    await run_manager.emit_event(
+                        run_id,
+                        ReportGeneratedEvent(
+                            run_id=run_id,
+                            report=report,
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] report_generated | run={run_id[:8]}"
+                        f" | length={len(report)}"
+                    )
+
+                # Work order
+                work_order = final_state.get("work_order", "")
+                if work_order:
+                    wo = (
+                        work_order
+                        if isinstance(work_order, dict)
+                        else {"content": work_order}
+                    )
+                    await run_manager.emit_event(
+                        run_id,
+                        WorkOrderGeneratedEvent(
+                            run_id=run_id,
+                            work_order=wo,
+                            timestamp=now(),
+                        ),
+                    )
+                    logger.info(
+                        f"[SSE] work_order | run={run_id[:8]}"
+                        f" | priority={wo.get('priority', 'unknown')}"
+                    )
+
+            # Run completed
+            severity = (
+                final_state.get("diagnosis_result", {}).get(
+                    "severity", "unknown"
+                )
+                if final_state
+                else "unknown"
+            )
+            summary = f"진단 완료: {severity}"
+            await run_manager.emit_event(
+                run_id,
+                RunCompletedEvent(
+                    run_id=run_id,
+                    summary=summary,
+                    timestamp=now(),
+                ),
+            )
+            run_manager.set_status(run_id, RunStatus.COMPLETED)
+            logger.info(
+                f"[SSE] run_completed | run={run_id[:8]}"
+                f" | summary={summary}"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"[SSE] error | run={run_id[:8]} | {e}",
+                exc_info=True,
+            )
+            await run_manager.emit_event(
+                run_id,
+                ErrorEvent(
+                    run_id=run_id,
+                    message=str(e),
+                    timestamp=now(),
+                ),
+            )
+            run_manager.set_status(run_id, RunStatus.FAILED)
+
+        finally:
+            # Cleanup MCP client
+            if mcp_client:
+                try:
+                    await mcp_client.close()
+                except Exception:
+                    pass
             await run_manager.end_stream(run_id)

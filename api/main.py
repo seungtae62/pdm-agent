@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -9,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import events, stream
-from api.services.agent_runner import MockAgentRunner
+from api.services.agent_runner import LangGraphAgentRunner, MockAgentRunner
 from api.services.run_manager import RunManager
 
 
@@ -17,7 +18,15 @@ from api.services.run_manager import RunManager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: initialize services."""
     app.state.run_manager = RunManager()
-    app.state.agent_runner = MockAgentRunner()
+
+    runner_mode = os.getenv("AGENT_RUNNER_MODE", "mock")
+    if runner_mode == "langgraph":
+        from agent.config import AgentConfig
+
+        app.state.agent_runner = LangGraphAgentRunner(AgentConfig.from_env())
+    else:
+        app.state.agent_runner = MockAgentRunner()
+
     yield
 
 

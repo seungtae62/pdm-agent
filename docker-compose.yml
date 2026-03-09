@@ -1,0 +1,38 @@
+services:
+  pdm-agent:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - qdrant
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      QDRANT_HOST: qdrant
+    volumes:
+      - ./data:/workspace/data
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pdm_agent
+      POSTGRES_USER: pdm_agent
+      POSTGRES_PASSWORD: pdm_agent_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  postgres_data:
+  qdrant_data:
