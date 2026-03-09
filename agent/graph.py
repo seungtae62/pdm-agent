@@ -67,14 +67,31 @@ def _route_after_report(state: PdMAgentState) -> str:
 
     Warning/Critical → generate_work_order
     Normal/Watch → save_memory (작업지시서 건너뜀)
+
+    LLM 응답의 risk_level 정규화 + Edge health_state fallback으로
+    비결정적 LLM 출력에 대한 안정성을 보장한다.
     """
     diagnosis = state.get("diagnosis_result", {})
-    risk_level = diagnosis.get("risk_level", "normal")
+    risk_level = diagnosis.get("risk_level", "normal").lower().strip()
 
-    if risk_level in ("warning", "critical"):
+    # LLM이 다양한 표현을 쓸 수 있으므로 확장 매칭
+    wo_triggers = {"warning", "critical", "high", "severe", "danger", "urgent"}
+    if risk_level in wo_triggers:
         return "generate_work_order"
-    else:
-        return "save_memory"
+
+    # fallback: Edge의 원본 health_state 확인
+    payload = state.get("event_payload", {})
+    if isinstance(payload, dict):
+        adr = payload.get("anomaly_detection_result", {})
+        health = adr.get("health_state", "normal").lower().strip()
+        if health in ("warning", "critical"):
+            logger.info(
+                f"[route] risk_level='{risk_level}' 이지만 "
+                f"health_state='{health}' fallback으로 work_order 생성"
+            )
+            return "generate_work_order"
+
+    return "save_memory"
 
 
 def _build_mcp_server_config(config: AgentConfig) -> dict:
@@ -115,10 +132,16 @@ async def build_graph(
     llm = create_chat_model(config)
 
     # MCP 서버 연결 및 Tool 검색
-    mcp_client = MultiServerMCPClient(_build_mcp_server_config(config))
-    tools = await mcp_client.get_tools()
-
-    logger.info(f"[build_graph] MCP Tool {len(tools)}개 검색 완료: {[t.name for t in tools]}")
+    mcp_client = None
+    tools = []
+    try:
+        mcp_client = MultiServerMCPClient(_build_mcp_server_config(config))
+        tools = await mcp_client.get_tools()
+        logger.info(f"[build_graph] MCP Tool {len(tools)}개 검색 완료: {[t.name for t in tools]}")
+    except Exception as e:
+        logger.warning(f"[build_graph] MCP 연결 실패, 빈 도구 목록으로 진행: {e}")
+        mcp_client = None
+        tools = []
 
     # 노드 함수 (의존성 주입)
     load_memory_fn = partial(load_memory, store=memory_store)
