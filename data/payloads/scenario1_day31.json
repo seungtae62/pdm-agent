@@ -1,0 +1,120 @@
+{
+  "event_id": "EVT-20260223-0001",
+  "timestamp": "2026-02-23T03:50:06.960176",
+  "event_type": "anomaly_alert",
+  "edge_node_id": "EDGE-001",
+  "equipment_meta": {
+    "equipment_id": "IMS-TESTRIG-01",
+    "equipment_name": "IMS Bearing Test Rig #1",
+    "location": "University of Cincinnati, NSF I/UCRC",
+    "shaft_rpm": 2000,
+    "radial_load_lbs": 6000,
+    "operation_start_date": "2003-10-22",
+    "bearing": {
+      "bearing_id": "BRG-003",
+      "position": "Bearing 3",
+      "install_date": "2003-10-22",
+      "model": "Rexnord ZA-2115",
+      "type": "Double Row Bearing",
+      "rolling_elements_count": 16,
+      "ball_diameter_inch": 0.331,
+      "pitch_diameter_inch": 2.815,
+      "contact_angle_deg": 15.17,
+      "defect_frequencies_hz": {
+        "BPFO": 236.4,
+        "BPFI": 296.9,
+        "BSF": 141.1,
+        "FTF": 14.8
+      },
+      "last_maintenance_date": null
+    },
+    "sensor_config": {
+      "sensor_count": 8,
+      "channels": [
+        "ch0",
+        "ch1"
+      ],
+      "sensor_type": "PCB 353B33 High Sensitivity Accelerometer",
+      "sampling_rate_hz": 20000,
+      "samples_per_snapshot": 20480,
+      "snapshot_interval_min": 10
+    },
+    "operation_days_elapsed": 31,
+    "total_running_hours": 744.0
+  },
+  "anomaly_detection_result": {
+    "model_id": "rule_v1",
+    "anomaly_detected": true,
+    "anomaly_score": 0.882,
+    "anomaly_threshold": 0.65,
+    "health_state": "warning",
+    "confidence": 0.8726
+  },
+  "current_features": {
+    "snapshot_timestamp": "2026-02-23T03:50:06.960176",
+    "time_domain": {
+      "ch0": {
+        "rms": 0.163155,
+        "peak": 0.916,
+        "peak_to_peak": 1.663,
+        "crest_factor": 5.614288,
+        "kurtosis": 4.041479,
+        "skewness": 0.0465,
+        "standard_deviation": 0.117027,
+        "mean": -0.113688,
+        "shape_factor": 1.216949
+      },
+      "ch1": {
+        "rms": 0.166394,
+        "peak": 0.891,
+        "peak_to_peak": 1.474,
+        "crest_factor": 5.354765,
+        "kurtosis": 3.520597,
+        "skewness": 0.018285,
+        "standard_deviation": 0.121519,
+        "mean": -0.113669,
+        "shape_factor": 1.22146
+      }
+    },
+    "frequency_domain": {
+      "ch0": {
+        "bpfo_amplitude": 0.001029,
+        "bpfi_amplitude": 0.001391,
+        "bsf_amplitude": 0.002201,
+        "ftf_amplitude": 0.001299,
+        "bpfo_harmonics_2x": 0.002473,
+        "bpfi_harmonics_2x": 0.001206,
+        "spectral_energy_total": 0.079089,
+        "spectral_energy_high_freq_band": 0.012188,
+        "dominant_frequency_hz": 988.28125,
+        "sideband_presence": true,
+        "sideband_spacing_hz": 33.333333,
+        "sideband_count": 14
+      },
+      "ch1": {
+        "bpfo_amplitude": 0.002159,
+        "bpfi_amplitude": 0.001161,
+        "bsf_amplitude": 0.002191,
+        "ftf_amplitude": 0.002313,
+        "bpfo_harmonics_2x": 0.004208,
+        "bpfi_harmonics_2x": 0.001957,
+        "spectral_energy_total": 0.081218,
+        "spectral_energy_high_freq_band": 0.01231,
+        "dominant_frequency_hz": 8996.09375,
+        "sideband_presence": true,
+        "sideband_spacing_hz": 33.333333,
+        "sideband_count": 14
+      }
+    }
+  },
+  "ml_rul_prediction": {
+    "model_id": "rul_v1",
+    "predicted_rul_hours": null,
+    "confidence_interval_hours": {
+      "lower": null,
+      "upper": null
+    },
+    "prediction_status": "not_applicable",
+    "reason": "RUL model not deployed in current PoC"
+  }
+}
