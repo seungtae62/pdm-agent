@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.language_models import BaseChatModel
 
 from agent.prompts.system_prompt import load_system_prompt
+from agent.skills.registry import load_matching_skills
 from agent.state import PdMAgentState
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,11 @@ def _build_initial_message(state: PdMAgentState) -> str:
         parts.append(f"\n## 이전 분석 이력\n{history_summary}")
     else:
         parts.append("\n## 이전 분석 이력\n이전 분석 이력 없음.")
+
+    # Skills 주입
+    skills_content = load_matching_skills(state)
+    if skills_content:
+        parts.append(f"\n## Active Domain Skills\n{skills_content}")
 
     parts.append(
         "\n위 이벤트 페이로드를 분석하세요. "
