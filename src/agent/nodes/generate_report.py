@@ -46,11 +46,17 @@ def generate_report(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
         memory_context=memory.get("history_summary", "이력 없음"),
     )
 
-    response = llm.invoke([
-        SystemMessage(content="당신은 예지보전 분석 리포트를 작성하는 전문가입니다."),
-        HumanMessage(content=prompt),
-    ])
-
-    report = response.content
+    try:
+        response = llm.invoke([
+            SystemMessage(content="당신은 예지보전 분석 리포트를 작성하는 전문가입니다."),
+            HumanMessage(content=prompt),
+        ])
+        report = response.content
+    except Exception as e:
+        logger.error(f"[generate_report] LLM 호출 실패: {e}")
+        report = (
+            f"[{risk_level.upper()}] 리포트 자동 생성 실패.\n\n"
+            f"진단 결과: {json.dumps(diagnosis, indent=2, ensure_ascii=False)}"
+        )
     logger.info(f"[generate_report] {risk_level} — 상세 리포트 생성 완료 ({len(report)}자)")
     return {"report": report}

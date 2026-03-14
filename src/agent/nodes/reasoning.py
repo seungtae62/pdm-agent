@@ -76,8 +76,18 @@ def reasoning(state: PdMAgentState, *, llm: BaseChatModel, tools: list) -> dict:
         ]
 
     # LLM 호출 (tools bound)
-    llm_with_tools = llm.bind_tools(tools)
-    response = llm_with_tools.invoke(messages)
+    try:
+        llm_with_tools = llm.bind_tools(tools)
+        response = llm_with_tools.invoke(messages)
+    except Exception as e:
+        logger.error(f"[reasoning] LLM 호출 실패: {e}")
+        from langchain_core.messages import AIMessage
+
+        error_msg = f"LLM 호출 실패로 자동 분석을 수행할 수 없습니다. 오류: {e}"
+        return {
+            "messages": [AIMessage(content=error_msg)],
+            "next_action": "generate_report",
+        }
 
     logger.info(
         f"[reasoning] LLM 응답: tool_calls={len(response.tool_calls) if hasattr(response, 'tool_calls') and response.tool_calls else 0}"

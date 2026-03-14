@@ -310,7 +310,6 @@ class LangGraphAgentRunner:
         from agent.graph import build_graph
 
         now = lambda: datetime.now(timezone.utc).isoformat()
-        mcp_client = None
 
         try:
             run_manager.set_status(run_id, RunStatus.RUNNING)
@@ -330,7 +329,7 @@ class LangGraphAgentRunner:
             )
 
             # Build graph
-            graph, mcp_client = await build_graph(config=self.config)
+            graph = await build_graph(config=self.config)
 
             # Initial state
             payload_dict = event_payload.model_dump()
@@ -350,80 +349,81 @@ class LangGraphAgentRunner:
             token_char_count = 0
             final_state = None
 
-            async for event in graph.astream_events(
-                initial_state, version="v2"
-            ):
-                kind = event["event"]
-                name = event.get("name", "")
-                data = event.get("data", {})
+            async with asyncio.timeout(300):
+                async for event in graph.astream_events(
+                    initial_state, version="v2"
+                ):
+                    kind = event["event"]
+                    name = event.get("name", "")
+                    data = event.get("data", {})
 
-                # Node entered
-                if kind == "on_chain_start" and name in GRAPH_NODES:
-                    await run_manager.emit_event(
-                        run_id,
-                        NodeEnteredEvent(
-                            run_id=run_id,
-                            node_name=name,
-                            timestamp=now(),
-                        ),
-                    )
-                    logger.info(
-                        f"[SSE] node_entered | run={run_id[:8]}"
-                        f" | node={name}"
-                    )
-
-                # LLM token streaming
-                elif kind == "on_chat_model_stream":
-                    chunk = data.get("chunk")
-                    if chunk and hasattr(chunk, "content") and chunk.content:
-                        token_char_count += len(chunk.content)
+                    # Node entered
+                    if kind == "on_chain_start" and name in GRAPH_NODES:
                         await run_manager.emit_event(
                             run_id,
-                            ReasoningTokenEvent(
+                            NodeEnteredEvent(
                                 run_id=run_id,
-                                token=chunk.content,
+                                node_name=name,
+                                timestamp=now(),
                             ),
                         )
+                        logger.info(
+                            f"[SSE] node_entered | run={run_id[:8]}"
+                            f" | node={name}"
+                        )
 
-                # Tool call start
-                elif kind == "on_tool_start":
-                    arguments = data.get("input", {})
-                    await run_manager.emit_event(
-                        run_id,
-                        ToolCallEvent(
-                            run_id=run_id,
-                            tool_name=name,
-                            arguments=arguments
-                            if isinstance(arguments, dict)
-                            else {},
-                            timestamp=now(),
-                        ),
-                    )
-                    logger.info(
-                        f"[SSE] tool_call | run={run_id[:8]}"
-                        f" | tool={name}"
-                    )
+                    # LLM token streaming
+                    elif kind == "on_chat_model_stream":
+                        chunk = data.get("chunk")
+                        if chunk and hasattr(chunk, "content") and chunk.content:
+                            token_char_count += len(chunk.content)
+                            await run_manager.emit_event(
+                                run_id,
+                                ReasoningTokenEvent(
+                                    run_id=run_id,
+                                    token=chunk.content,
+                                ),
+                            )
 
-                # Tool result
-                elif kind == "on_tool_end":
-                    output = data.get("output", "")
-                    await run_manager.emit_event(
-                        run_id,
-                        ToolResultEvent(
-                            run_id=run_id,
-                            tool_name=name,
-                            result=output,
-                            timestamp=now(),
-                        ),
-                    )
-                    logger.info(
-                        f"[SSE] tool_result | run={run_id[:8]}"
-                        f" | tool={name}"
-                    )
+                    # Tool call start
+                    elif kind == "on_tool_start":
+                        arguments = data.get("input", {})
+                        await run_manager.emit_event(
+                            run_id,
+                            ToolCallEvent(
+                                run_id=run_id,
+                                tool_name=name,
+                                arguments=arguments
+                                if isinstance(arguments, dict)
+                                else {},
+                                timestamp=now(),
+                            ),
+                        )
+                        logger.info(
+                            f"[SSE] tool_call | run={run_id[:8]}"
+                            f" | tool={name}"
+                        )
 
-                # Graph completed
-                elif kind == "on_chain_end" and name == "LangGraph":
-                    final_state = data.get("output", {})
+                    # Tool result
+                    elif kind == "on_tool_end":
+                        output = data.get("output", "")
+                        await run_manager.emit_event(
+                            run_id,
+                            ToolResultEvent(
+                                run_id=run_id,
+                                tool_name=name,
+                                result=output,
+                                timestamp=now(),
+                            ),
+                        )
+                        logger.info(
+                            f"[SSE] tool_result | run={run_id[:8]}"
+                            f" | tool={name}"
+                        )
+
+                    # Graph completed
+                    elif kind == "on_chain_end" and name == "LangGraph":
+                        final_state = data.get("output", {})
 
             if token_char_count > 0:
                 logger.info(
@@ -526,10 +526,4 @@ class LangGraphAgentRunner:
             run_manager.set_status(run_id, RunStatus.FAILED)
 
         finally:
-            # Cleanup MCP client
-            if mcp_client:
-                try:
-                    await mcp_client.close()
-                except Exception:
-                    pass
             await run_manager.end_stream(run_id)

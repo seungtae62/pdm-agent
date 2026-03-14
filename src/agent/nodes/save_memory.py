@@ -33,8 +33,10 @@ def save_memory(
     payload = state.get("event_payload", {})
     diagnosis = state.get("diagnosis_result", {})
 
-    equipment_id = payload.get("equipment_id", "")
-    bearing_id = payload.get("bearing_id", "")
+    equipment_meta = payload.get("equipment_meta", {})
+    equipment_id = equipment_meta.get("equipment_id", "")
+    bearing_info = equipment_meta.get("bearing", {})
+    bearing_id = bearing_info.get("bearing_id", "")
     event_id = payload.get("event_id", "")
     timestamp_str = payload.get("timestamp", "")
 

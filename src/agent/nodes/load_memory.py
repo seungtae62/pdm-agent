@@ -25,8 +25,10 @@ def load_memory(state: PdMAgentState, *, store: MemoryStore | None = None) -> di
         State 업데이트 dict.
     """
     payload = state["event_payload"]
-    equipment_id = payload.get("equipment_id", "")
-    bearing_id = payload.get("bearing_id", "")
+    equipment_meta = payload.get("equipment_meta", {})
+    equipment_id = equipment_meta.get("equipment_id", "")
+    bearing_info = equipment_meta.get("bearing", {})
+    bearing_id = bearing_info.get("bearing_id", "")
 
     if store is None:
         logger.info("[load_memory] MemoryStore 없음, 빈 context 반환")
@@ -39,8 +41,13 @@ def load_memory(state: PdMAgentState, *, store: MemoryStore | None = None) -> di
             }
         }
 
-    records = store.load_recent(equipment_id, bearing_id)
-    summary = MemoryStore.summarize_history(records)
+    try:
+        records = store.load_recent(equipment_id, bearing_id)
+        summary = MemoryStore.summarize_history(records)
+    except Exception as e:
+        logger.error(f"[load_memory] Memory 로드 실패: {e}")
+        records = []
+        summary = ""
 
     logger.info(
         f"[load_memory] {equipment_id}/{bearing_id}: {len(records)}건 이력 로드"

@@ -36,7 +36,7 @@ from agent.nodes.save_memory import save_memory
 logger = logging.getLogger(__name__)
 
 
-def _route_after_reasoning(state: PdMAgentState) -> str:
+def _route_after_reasoning(state: PdMAgentState, *, max_calls: int = 10) -> str:
     """reasoning 노드 후 조건부 분기.
 
     Returns:
@@ -44,7 +44,6 @@ def _route_after_reasoning(state: PdMAgentState) -> str:
     """
     next_action = state.get("next_action", "generate_report")
     tool_count = state.get("tool_calls_count", 0)
-    max_calls = 10  # 안전장치
 
     # 안전장치: Tool 호출 횟수 초과 → 강제 종료
     if tool_count > max_calls:
@@ -97,7 +96,7 @@ async def build_graph(
     config: AgentConfig | None = None,
     *,
     memory_store: MemoryStore | None = None,
-) -> tuple:
+):
     """PdM Agent StateGraph를 빌드.
 
     MCP 서버에서 동적으로 Tool을 검색하여 그래프에 바인딩한다.
@@ -107,7 +106,7 @@ async def build_graph(
         memory_store: PostgreSQL Memory. None이면 Memory 없이 실행.
 
     Returns:
-        (compiled_graph, mcp_client) 튜플.
+        compiled_graph.
     """
     if config is None:
         config = AgentConfig.from_env()
@@ -144,9 +143,10 @@ async def build_graph(
     graph.add_edge("load_memory", "reasoning")
 
     # reasoning → 조건부 분기
+    route_fn = partial(_route_after_reasoning, max_calls=config.max_tool_calls)
     graph.add_conditional_edges(
         "reasoning",
-        _route_after_reasoning,
+        route_fn,
         {
             "tool_executor": "tool_executor",
             "reasoning": "reasoning",
@@ -176,7 +176,7 @@ async def build_graph(
     # save_memory → END
     graph.add_edge("save_memory", END)
 
-    return graph.compile(), mcp_client
+    return graph.compile()
 
 
 async def run_agent(
@@ -194,7 +194,7 @@ async def run_agent(
     Returns:
         최종 State.
     """
-    graph, mcp_client = await build_graph(config, **kwargs)
+    graph = await build_graph(config, **kwargs)
 
     initial_state: PdMAgentState = {
         "event_payload": event_payload,
@@ -208,5 +208,4 @@ async def run_agent(
         "next_action": "",
     }
 
-    result = await graph.ainvoke(initial_state)
-    return result
+    return await graph.ainvoke(initial_state)

@@ -43,11 +43,14 @@ def generate_work_order(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
         report=report,
     )
 
-    response = llm.invoke([
-        SystemMessage(content="당신은 예지보전 정비 작업지시서를 작성하는 전문가입니다."),
-        HumanMessage(content=prompt),
-    ])
-
-    work_order = response.content
+    try:
+        response = llm.invoke([
+            SystemMessage(content="당신은 예지보전 정비 작업지시서를 작성하는 전문가입니다."),
+            HumanMessage(content=prompt),
+        ])
+        work_order = response.content
+    except Exception as e:
+        logger.error(f"[generate_work_order] LLM 호출 실패: {e}")
+        work_order = ""
     logger.info(f"[generate_work_order] {risk_level} — 작업지시서 생성 완료 ({len(work_order)}자)")
     return {"work_order": work_order}

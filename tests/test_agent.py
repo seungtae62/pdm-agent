@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -26,9 +26,18 @@ DUMMY_PAYLOAD = {
     "timestamp": "2026-02-23T12:00:00",
     "event_type": "anomaly_alert",
     "edge_node_id": "EDGE-001",
-    "equipment_id": "IMS-TESTRIG-01",
-    "bearing_id": "BRG-003",
-    "sensor_channels": ["ch0", "ch1"],
+    "equipment_meta": {
+        "equipment_id": "IMS-TESTRIG-01",
+        "equipment_name": "IMS Test Rig",
+        "bearing": {
+            "bearing_id": "BRG-003",
+            "model": "6205-2RS",
+        },
+        "sensor_config": {
+            "channels": ["ch0", "ch1"],
+        },
+        "total_running_hours": 1000,
+    },
     "anomaly_detection_result": {
         "model_id": "rule_v1",
         "anomaly_detected": True,
@@ -259,7 +268,8 @@ class TestGraphStructure:
 
 
 class TestToolExecutor:
-    def test_tool_executor_no_tool_calls(self):
+    @pytest.mark.asyncio
+    async def test_tool_executor_no_tool_calls(self):
         """tool_executor with no tool_calls in last message → continue_reasoning."""
         from langchain_core.messages import AIMessage
         from agent.nodes.tool_executor import create_tool_executor
@@ -267,10 +277,11 @@ class TestToolExecutor:
         executor = create_tool_executor([])
         msg = AIMessage(content="No tools needed.")
         state = _make_state(messages=[msg])
-        result = executor(state)
+        result = await executor(state)
         assert result["next_action"] == "continue_reasoning"
 
-    def test_tool_executor_with_mock_tool_node(self):
+    @pytest.mark.asyncio
+    async def test_tool_executor_with_mock_tool_node(self):
         """tool_executor delegates to ToolNode and tracks bookkeeping."""
         from langchain_core.messages import AIMessage, ToolMessage
         from agent.nodes.tool_executor import create_tool_executor
@@ -289,17 +300,18 @@ class TestToolExecutor:
 
         with patch("agent.nodes.tool_executor.ToolNode") as MockToolNode:
             mock_node_instance = MagicMock()
-            mock_node_instance.invoke.return_value = {"messages": mock_tool_messages}
+            mock_node_instance.ainvoke = AsyncMock(return_value={"messages": mock_tool_messages})
             MockToolNode.return_value = mock_node_instance
 
             executor_patched = create_tool_executor([])
-            result = executor_patched(state)
+            result = await executor_patched(state)
 
         assert len(result["messages"]) == 1
         assert result["tool_calls_count"] == 1
         assert result["next_action"] == "continue_reasoning"
 
-    def test_tool_executor_deep_research_flag(self):
+    @pytest.mark.asyncio
+    async def test_tool_executor_deep_research_flag(self):
         """tool_calls_count >= 3 sets deep_research_activated."""
         from langchain_core.messages import AIMessage, ToolMessage
         from agent.nodes.tool_executor import create_tool_executor
@@ -314,13 +326,13 @@ class TestToolExecutor:
 
         with patch("agent.nodes.tool_executor.ToolNode") as MockToolNode:
             mock_node_instance = MagicMock()
-            mock_node_instance.invoke.return_value = {
-                "messages": [ToolMessage(content="result", tool_call_id="call_1")]
-            }
+            mock_node_instance.ainvoke = AsyncMock(
+                return_value={"messages": [ToolMessage(content="result", tool_call_id="call_1")]}
+            )
             MockToolNode.return_value = mock_node_instance
 
             executor = create_tool_executor([])
-            result = executor(state)
+            result = await executor(state)
 
         assert result["tool_calls_count"] == 3
         assert result["deep_research_activated"] is True
