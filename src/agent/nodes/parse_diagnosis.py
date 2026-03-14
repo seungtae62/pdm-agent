@@ -46,7 +46,9 @@ def parse_diagnosis(state: PdMAgentState) -> dict:
     # AI 메시지에서 마지막 텍스트 응답 추출
     last_content = ""
     for msg in reversed(messages):
-        if hasattr(msg, "content") and msg.content and not hasattr(msg, "tool_call_id"):
+        from langchain_core.messages import AIMessage
+
+        if isinstance(msg, AIMessage) and msg.content:
             last_content = msg.content
             break
 

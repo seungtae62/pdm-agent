@@ -22,12 +22,12 @@ def _make_server_config() -> dict:
     return {
         "rag-server": {
             "command": sys.executable,
-            "args": [str(PROJECT_ROOT / "mcp_servers" / "rag_mcp.py")],
+            "args": [str(PROJECT_ROOT / "src" / "mcp_servers" / "rag_mcp.py")],
             "transport": "stdio",
         },
         "notification-server": {
             "command": sys.executable,
-            "args": [str(PROJECT_ROOT / "mcp_servers" / "notification_mcp.py")],
+            "args": [str(PROJECT_ROOT / "src" / "mcp_servers" / "notification_mcp.py")],
             "transport": "stdio",
         },
     }

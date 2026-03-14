@@ -26,7 +26,12 @@
       "WebFetch(domain:neo4j.com)",
       "WebFetch(domain:thesof.medium.com)",
       "WebFetch(domain:deepwiki.com)",
-      "Bash(python -m pytest:*)"
+      "Bash(python -m pytest:*)",
+      "Bash(source .venv/bin/activate 2>/dev/null && pip show langchain-mcp-adapters 2>/dev/null | head -5)",
+      "Bash(source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -60)",
+      "Bash(source venv/bin/activate && PYTHONPATH=src pytest tests/ -v 2>&1 | tail -80)",
+      "Bash(source venv/bin/activate && PYTHONPATH=src pytest tests/test_agent.py -v --tb=short 2>&1 | tail -40)",
+      "Bash(source venv/bin/activate)"
     ]
   }
 }
