@@ -98,13 +98,13 @@ pytest tests/test_<module>.py -v
 
 | 경로 | 설명 |
 |------|------|
-| `agent/graph.py` | LangGraph StateGraph 정의 |
-| `agent/state.py` | State 스키마 |
-| `agent/nodes/` | 노드 구현 (reasoning, tool_executor 등) |
-| `agent/prompts/system_prompt.py` | 시스템 프롬프트 |
-| `agent/memory/` | PostgreSQL Memory 관리 |
-| `mcp_servers/rag_server.py` | RAG 검색 MCP Server |
-| `mcp_servers/notification_server.py` | 알림 MCP Server |
+| `src/agent/graph.py` | LangGraph StateGraph 정의 |
+| `src/agent/state.py` | State 스키마 |
+| `src/agent/nodes/` | 노드 구현 (reasoning, tool_executor 등) |
+| `src/agent/prompts/system_prompt.py` | 시스템 프롬프트 |
+| `src/agent/memory/` | PostgreSQL Memory 관리 |
+| `src/mcp_servers/rag_server.py` | RAG 검색 MCP Server |
+| `src/mcp_servers/notification_server.py` | 알림 MCP Server |
 | `scripts/` | 데이터셋 다운로드 등 유틸리티 스크립트 |
 | `ui/app.py` | Streamlit 데모 UI |
 

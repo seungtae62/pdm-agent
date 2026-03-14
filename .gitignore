@@ -25,7 +25,6 @@ venv/
 # Data (large dataset files)
 data/*
 !data/knowledge_base
-!data/parsed_maintenance_records.json
 
 # Jupyter
 .ipynb_checkpoints/

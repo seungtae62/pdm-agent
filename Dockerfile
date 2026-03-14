@@ -25,10 +25,10 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
-COPY agent/ ./agent/
-COPY api/ ./api/
-COPY mcp_servers/ ./mcp_servers/
+COPY src/ ./src/
 COPY data/ ./data/
+
+ENV PYTHONPATH=/workspace/src
 
 EXPOSE 8000
 

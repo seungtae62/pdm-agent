@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from edge.anomaly_detection import compute_anomaly_baseline, detect_anomaly
 from edge.autoencoder import train_autoencoder

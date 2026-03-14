@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-# 서브프로세스에서 프로젝트 루트 import 보장
+# 서브프로세스에서 src 디렉토리 import 보장
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
