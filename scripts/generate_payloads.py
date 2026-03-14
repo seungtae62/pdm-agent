@@ -24,7 +24,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # 프로젝트 루트를 path에 추가
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+_project_root = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _project_root)
+sys.path.insert(0, _project_root + "/src")
 
 from edge.anomaly_detection import compute_anomaly_baseline, detect_anomaly
 from edge.autoencoder import train_autoencoder

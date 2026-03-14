@@ -178,6 +178,15 @@ def _find_7z_exe() -> str | None:
     return None
 
 
+def _find_rar_exe() -> tuple[str, str] | None:
+    """Find unrar or unar executable. Returns (exe_path, tool_type) or None."""
+    for cmd, tool_type in [("unrar", "unrar"), ("unar", "unar")]:
+        path = shutil.which(cmd)
+        if path:
+            return (path, tool_type)
+    return None
+
+
 _7Z_RETURN_CODES = {
     1: "Warning (non-fatal, e.g. locked files)",
     2: "Fatal error",
@@ -188,23 +197,52 @@ _7Z_RETURN_CODES = {
 
 
 def _extract_rar(rar_path: Path, dest_dir: Path) -> bool:
-    """Extract a RAR archive using 7z."""
-    exe = _find_7z_exe()
-    if exe is None:
-        if sys.platform == "win32":
-            hint = "Install from https://7-zip.org/"
-        else:
-            hint = "Install with: apt install p7zip-full  (or equivalent)"
-        logger.error("7-Zip is required for .rar extraction. %s", hint)
+    """Extract a RAR archive using unrar/unar, falling back to 7z."""
+    # Try unrar / unar first (handles more RAR compression methods)
+    rar_tool = _find_rar_exe()
+    if rar_tool:
+        exe, tool_type = rar_tool
+        try:
+            if tool_type == "unrar":
+                result = subprocess.run(
+                    [exe, "x", "-y", "-o+", str(rar_path), str(dest_dir) + "/"],
+                    capture_output=True,
+                    text=True,
+                )
+            else:  # unar
+                result = subprocess.run(
+                    [exe, "-o", str(dest_dir), "-f", str(rar_path)],
+                    capture_output=True,
+                    text=True,
+                )
+            if result.returncode == 0:
+                logger.info("  Extracted nested (%s): %s", tool_type, rar_path.name)
+                return True
+            logger.warning(
+                "  %s failed (exit %d), trying 7z fallback...",
+                tool_type,
+                result.returncode,
+            )
+        except Exception as e:
+            logger.warning("  %s failed (%s), trying 7z fallback...", tool_type, e)
+
+    # Fallback to 7z
+    exe_7z = _find_7z_exe()
+    if exe_7z is None:
+        if rar_tool is None:
+            logger.error(
+                "No RAR extraction tool found. "
+                "Install unrar (brew install unrar) or 7z."
+            )
         return False
     try:
         result = subprocess.run(
-            [exe, "x", "-y", f"-o{dest_dir}", str(rar_path)],
+            [exe_7z, "x", "-y", f"-o{dest_dir}", str(rar_path)],
             capture_output=True,
             text=True,
         )
         if result.returncode == 0:
-            logger.info("  Extracted nested: %s", rar_path.name)
+            logger.info("  Extracted nested (7z): %s", rar_path.name)
             return True
         code_hint = _7Z_RETURN_CODES.get(result.returncode, "Unknown error")
         logger.error(
@@ -240,15 +278,52 @@ def _find_test_set_dirs(search_dir: Path) -> dict[str, Path]:
 
 
 def _extract_single(archive: Path, dest: Path) -> bool:
-    """Extract a single archive (.zip / .7z / .rar) into dest. Returns True on success."""
+    """Extract a single archive (.zip / .7z / .rar) into dest. Returns True on success.
+
+    Uses 7z CLI when available (handles more compression methods than Python libs).
+    """
+    dest.mkdir(parents=True, exist_ok=True)
+
+    # Try 7z first for all formats — it handles compression methods
+    # that Python's zipfile/py7zr cannot (e.g. WinZip AES, PPMd).
+    exe_7z = _find_7z_exe()
+    if exe_7z:
+        result = subprocess.run(
+            [exe_7z, "x", "-y", f"-o{dest}", str(archive)],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode in (0, 1):
+            # Validate: 7z may silently produce 0-byte files for RAR archives
+            # when it lacks support for the internal compression method.
+            extracted_files = [f for f in dest.rglob("*") if f.is_file()]
+            has_content = any(f.stat().st_size > 0 for f in extracted_files)
+            if extracted_files and not has_content and archive.suffix == ".rar":
+                logger.warning(
+                    "  7z created only empty files for %s, "
+                    "falling back to unrar/unar...",
+                    archive.name,
+                )
+                _rmtree(dest)
+                dest.mkdir(parents=True, exist_ok=True)
+                return _extract_rar(archive, dest)
+            logger.info("  Extracted nested (7z): %s", archive.name)
+            return True
+        logger.warning(
+            "  7z failed for %s (exit %d), trying Python fallback...",
+            archive.name,
+            result.returncode,
+        )
+
+    # Fallback to Python libraries
     if archive.suffix == ".zip":
         try:
             with zipfile.ZipFile(str(archive), "r") as zf:
                 zf.extractall(str(dest))
             logger.info("  Extracted nested: %s", archive.name)
             return True
-        except (zipfile.BadZipFile, OSError, EOFError) as e:
-            logger.error("  Nested archive corrupted: %s (%s)", archive.name, e)
+        except (zipfile.BadZipFile, OSError, EOFError, NotImplementedError) as e:
+            logger.error("  Nested archive failed: %s (%s)", archive.name, e)
             return False
 
     elif archive.suffix == ".7z":
@@ -270,7 +345,6 @@ def _extract_single(archive: Path, dest: Path) -> bool:
             return False
 
     elif archive.suffix == ".rar":
-        dest.mkdir(parents=True, exist_ok=True)
         return _extract_rar(archive, dest)
 
     logger.warning("  Unsupported archive format: %s", archive.name)
@@ -299,13 +373,25 @@ def extract_archive(archive_path: Path, data_dir: Path) -> bool:
     with tempfile.TemporaryDirectory(dir=archive_path.parent) as tmp_extract:
         tmp_extract_path = Path(tmp_extract)
 
-        # Extract outer zip
-        try:
-            with zipfile.ZipFile(str(archive_path), "r") as zf:
-                zf.extractall(str(tmp_extract_path))
-        except (zipfile.BadZipFile, OSError, EOFError) as e:
-            logger.error("Archive is corrupted: %s (%s)", archive_path, e)
-            return False
+        # Extract outer zip (try 7z first, fallback to Python zipfile)
+        exe_7z = _find_7z_exe()
+        if exe_7z:
+            result = subprocess.run(
+                [exe_7z, "x", "-y", f"-o{tmp_extract_path}", str(archive_path)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode not in (0, 1):
+                logger.error("7z extraction failed: %s", result.stderr or result.stdout)
+                return False
+            logger.info("Extracted outer archive with 7z")
+        else:
+            try:
+                with zipfile.ZipFile(str(archive_path), "r") as zf:
+                    zf.extractall(str(tmp_extract_path))
+            except (zipfile.BadZipFile, OSError, EOFError, NotImplementedError) as e:
+                logger.error("Archive extraction failed: %s (%s)", archive_path, e)
+                return False
 
         # Look for test set directories directly
         found_dirs = _find_test_set_dirs(tmp_extract_path)
@@ -544,10 +630,14 @@ def main():
         logger.info("Use --force to re-download.")
         return 0
 
-    # Force mode: clean up existing data
+    # Force mode: clean up existing data (keep zip)
     if args.force and data_dir.exists():
-        logger.info("Force mode: removing existing dataset...")
-        _rmtree(data_dir)
+        logger.info("Force mode: removing existing dataset (keeping zip)...")
+        for item in data_dir.iterdir():
+            if item.is_dir():
+                _rmtree(item)
+            elif item.is_file() and item.suffix != ".zip":
+                item.unlink()
 
     # Disk space check
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -557,7 +647,7 @@ def main():
     # Download
     zip_path = data_dir.parent / "ims_bearing_dataset.zip"
 
-    if zip_path.exists() and not args.force:
+    if zip_path.exists():
         logger.info("Using existing archive: %s", zip_path)
     else:
         if not try_download(zip_path):
@@ -576,10 +666,10 @@ def main():
     else:
         logger.warning("Dataset validation found issues. Check the output above.")
 
-    # Clean up zip
-    if not args.keep_zip and zip_path.exists():
-        logger.info("Removing archive: %s", zip_path)
-        zip_path.unlink()
+    # Clean up zip (disabled — re-download takes too long)
+    # if not args.keep_zip and zip_path.exists():
+    #     logger.info("Removing archive: %s", zip_path)
+    #     zip_path.unlink()
 
     return 0
 
