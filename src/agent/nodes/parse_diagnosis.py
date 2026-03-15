@@ -43,27 +43,29 @@ def parse_diagnosis(state: PdMAgentState) -> dict:
     """
     messages = state.get("messages", [])
 
-    # AI 메시지에서 마지막 텍스트 응답 추출
-    last_content = ""
+    from langchain_core.messages import AIMessage
+
+    # AI 메시지에서 diagnosis JSON 추출 (마지막부터 역순 탐색)
+    diagnosis = None
+    fallback_content = ""
     for msg in reversed(messages):
-        from langchain_core.messages import AIMessage
-
         if isinstance(msg, AIMessage) and msg.content:
-            last_content = msg.content
-            break
+            if not fallback_content:
+                fallback_content = msg.content
+            extracted = _extract_json(msg.content)
+            if extracted is not None:
+                diagnosis = extracted
+                break
 
-    if not last_content:
+    if not fallback_content:
         logger.warning("[parse_diagnosis] AI 응답 없음, 기본값 사용")
         return {"diagnosis_result": DEFAULT_DIAGNOSIS.copy()}
-
-    # JSON 블록 추출
-    diagnosis = _extract_json(last_content)
 
     if diagnosis is None:
         logger.warning("[parse_diagnosis] JSON 추출 실패, 기본값 + reasoning_summary 사용")
         diagnosis = DEFAULT_DIAGNOSIS.copy()
         # 전체 응답을 reasoning_summary로 저장
-        diagnosis["reasoning_summary"] = last_content[:2000]
+        diagnosis["reasoning_summary"] = fallback_content[:2000]
     else:
         # 누락 필드 보완
         for key, default_val in DEFAULT_DIAGNOSIS.items():

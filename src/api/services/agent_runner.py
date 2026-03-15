@@ -471,11 +471,16 @@ class LangGraphAgentRunner:
                         if hasattr(output, "content"):
                             # ToolMessage 등 langchain 메시지 객체
                             output = output.content
-                        elif not isinstance(
+                        if not isinstance(
                             output,
-                            (str, int, float, bool, list, dict, type(None)),
+                            (str, int, float, bool, type(None)),
                         ):
-                            output = str(output)
+                            # dict/list도 내부에 비직렬화 객체가 있을 수 있음
+                            try:
+                                import json as _json
+                                _json.dumps(output)
+                            except (TypeError, ValueError):
+                                output = str(output)
                         await run_manager.emit_event(
                             run_id,
                             ToolResultEvent(

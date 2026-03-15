@@ -15,12 +15,13 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(__file__))
 
 from api_client import stream_events, submit_event
+from styles import GLOBAL_CSS, SIDEBAR_CSS
 from components import (
     render_diagnosis_cards,
     render_equipment_info,
-    render_thought_streaming,
+    render_report,
     render_thoughts,
-    render_tool_call,
+    render_thoughts_live,
     render_work_order,
 )
 
@@ -28,9 +29,12 @@ from components import (
 
 st.set_page_config(
     page_title="PdM Agent",
-    page_icon="\U0001f527",
+    page_icon="PdM",
     layout="wide",
 )
+
+st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+st.markdown(SIDEBAR_CSS, unsafe_allow_html=True)
 
 # ──────────────────────────── 샘플 시나리오 ────────────────────────────
 
@@ -341,6 +345,7 @@ def _init_session_state() -> None:
         "diagnosis": {},
         "report": "",
         "work_order": {},
+        "error_msg": "",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -355,6 +360,7 @@ def _reset_session_state() -> None:
     st.session_state.diagnosis = {}
     st.session_state.report = ""
     st.session_state.work_order = {}
+    st.session_state.error_msg = ""
 
 
 _init_session_state()
@@ -363,11 +369,10 @@ _init_session_state()
 # ──────────────────────────── 사이드바 ────────────────────────────
 
 with st.sidebar:
-    st.markdown("## \U0001f527 PdM Agent")
+    st.markdown("## PdM Agent")
     st.markdown("---")
 
     # 시나리오 선택
-    st.markdown("### 시나리오 선택")
     scenario_names = list(SAMPLE_SCENARIOS.keys())
     selected_scenario = st.selectbox(
         "시나리오",
@@ -376,14 +381,7 @@ with st.sidebar:
     )
     payload = SAMPLE_SCENARIOS[selected_scenario]
 
-    # 시나리오 설명
-    health = payload["anomaly_detection_result"]["health_state"]
-    score = payload["anomaly_detection_result"]["anomaly_score"]
-    st.caption(f"Health: **{health.upper()}** | Score: **{score}**")
-
-    st.markdown("---")
-
-    # 설비 정보
+    # 설비 정보 + 이상감지
     render_equipment_info(payload)
 
     st.markdown("---")
@@ -392,20 +390,19 @@ with st.sidebar:
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
         start_btn = st.button(
-            "\U0001f680 분석 시작",
+            "분석 시작",
             use_container_width=True,
             disabled=st.session_state.status == "running",
         )
     with col_btn2:
         reset_btn = st.button(
-            "\U0001f504 초기화",
+            "초기화",
             use_container_width=True,
         )
 
     st.markdown("---")
 
     # API 설정
-    st.markdown("### 설정")
     api_url = st.text_input(
         "API URL",
         value="http://localhost:8000",
@@ -430,9 +427,8 @@ def _run_analysis() -> None:
     _reset_session_state()
     st.session_state.status = "running"
 
-    # Placeholder 생성
-    thoughts_section = st.container()
-    current_thought_ph = st.empty()
+    # Placeholder 생성: 하나의 placeholder에서 모든 thought를 누적 렌더링
+    thoughts_ph = st.empty()
     status_ph = st.empty()
 
     # 로컬 추적 변수
@@ -440,21 +436,22 @@ def _run_analysis() -> None:
     current_text = ""
     in_reasoning = False
 
+    def _render_live() -> None:
+        """완료된 thoughts + 현재 streaming을 통합 렌더링."""
+        render_thoughts_live(thoughts, current_text, thoughts_ph)
+
     def _start_new_thought() -> None:
         """이전 thought를 완료하고 새 thought 시작."""
         nonlocal current_text, in_reasoning
         if in_reasoning and current_text:
-            # 이전 thought 완료
             thoughts.append({
                 "text": current_text,
                 "tool_calls": [],
                 "status": "done",
             })
-            # 완료된 thoughts를 section에 렌더
-            with thoughts_section:
-                render_thoughts(thoughts, is_streaming=False)
         current_text = ""
         in_reasoning = True
+        _render_live()
 
     def _finish_current_thought() -> None:
         """현재 thought를 완료 처리."""
@@ -495,12 +492,7 @@ def _run_analysis() -> None:
             elif event_type == "reasoning_token":
                 token = event.get("token", "")
                 current_text += token
-                # 실시간 스트리밍 표시
-                render_thought_streaming(
-                    len(thoughts) + 1,
-                    current_text,
-                    current_thought_ph,
-                )
+                _render_live()
 
             elif event_type == "tool_call":
                 pending_tool = {
@@ -515,9 +507,7 @@ def _run_analysis() -> None:
                     # Tool 호출을 마지막 thought에 연결
                     if thoughts:
                         thoughts[-1]["tool_calls"].append(pending_tool)
-                    # 완료된 thoughts 다시 렌더 (tool 결과 포함)
-                    with thoughts_section:
-                        render_thoughts(thoughts)
+                    _render_live()
                     pending_tool = None
 
             elif event_type == "diagnosis":
@@ -533,27 +523,25 @@ def _run_analysis() -> None:
                 _finish_current_thought()
                 st.session_state.thoughts = thoughts
                 st.session_state.status = "completed"
-                current_thought_ph.empty()
-                status_ph.success(
-                    f"분석 완료: {event.get('summary', '')}"
-                )
+                return
 
             elif event_type == "error":
                 _finish_current_thought()
                 st.session_state.thoughts = thoughts
                 st.session_state.status = "failed"
-                status_ph.error(f"오류: {event.get('message', '')}")
+                st.session_state.error_msg = event.get("message", "")
                 return
 
     except Exception as e:
         _finish_current_thought()
         st.session_state.thoughts = thoughts
         st.session_state.status = "failed"
-        status_ph.error(f"연결 오류: {e}")
+        st.session_state.error_msg = str(e)
 
 
 if start_btn:
     _run_analysis()
+    st.rerun()
 
 
 # ──────────────────────────── 결과 표시 (완료 후) ────────────────────────────
@@ -561,6 +549,7 @@ if start_btn:
 if st.session_state.status == "completed":
     # 추론 과정 (Thought 단위)
     if st.session_state.thoughts:
+        st.caption(f"DEBUG: {len(st.session_state.thoughts)} thoughts")  # TODO: 확인 후 제거
         st.markdown("### 에이전트 추론 과정")
         render_thoughts(st.session_state.thoughts)
 
@@ -579,18 +568,12 @@ if st.session_state.status == "completed":
     tabs = st.tabs(tab_names)
 
     with tabs[0]:
-        if st.session_state.report:
-            st.markdown(st.session_state.report)
-        else:
-            st.info("리포트가 생성되지 않았습니다.")
+        render_report(st.session_state.report)
 
     if st.session_state.work_order and len(tabs) > 1:
         with tabs[1]:
-            render_work_order(st.session_state.work_order)
-
-            # PDF 다운로드 버튼
+            # PDF 다운로드 버튼 (우측 상단)
             try:
-                # src/ 를 path에 추가하여 utils 패키지 import 가능하게
                 src_path = os.path.join(
                     os.path.dirname(os.path.dirname(__file__)), "src"
                 )
@@ -598,23 +581,31 @@ if st.session_state.status == "completed":
                     sys.path.insert(0, src_path)
                 from utils.pdf import generate_work_order_pdf_bytes
 
-
                 pdf_bytes = generate_work_order_pdf_bytes(st.session_state.work_order)
-
                 wo_number = st.session_state.work_order.get(
                     "wo_number", "work_order"
                 )
-                st.download_button(
-                    label="\U0001f4e5 PDF \ub2e4\uc6b4\ub85c\ub4dc",
-                    data=pdf_bytes,
-                    file_name=f"{wo_number}_\uc791\uc5c5\uc9c0\uc2dc\uc11c.pdf",
-                    mime="application/pdf",
-                )
+                _, btn_col = st.columns([4, 1])
+                with btn_col:
+                    st.download_button(
+                        label="PDF 다운로드",
+                        data=pdf_bytes,
+                        file_name=f"{wo_number}_작업지시서.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
             except Exception as e:
-                st.warning(f"PDF \uc0dd\uc131 \uc2e4\ud328: {e}")
+                st.warning(f"PDF 생성 실패: {e}")
+
+            render_work_order(st.session_state.work_order)
 
 elif st.session_state.status == "idle":
     st.info("좌측 사이드바에서 시나리오를 선택하고 '분석 시작'을 클릭하세요.")
 
 elif st.session_state.status == "failed":
-    st.error("분석 실패. API 서버 연결을 확인하세요.")
+    error_msg = st.session_state.get("error_msg", "")
+    st.error(f"분석 실패: {error_msg}" if error_msg else "분석 실패. API 서버 연결을 확인하세요.")
+    # 실패 시에도 추론 과정이 있으면 표시
+    if st.session_state.thoughts:
+        st.markdown("### 에이전트 추론 과정")
+        render_thoughts(st.session_state.thoughts)
