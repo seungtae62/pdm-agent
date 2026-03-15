@@ -430,7 +430,7 @@ def _toggle_chat() -> None:
 def _render_chat_messages_html() -> str:
     """채팅 메시지를 HTML로 렌더링."""
     if not st.session_state.chat_messages:
-        return '<div style="color:rgba(128,128,128,0.6);text-align:center;margin-top:40px;font-size:13px;">베어링 진단, 진동 분석, 정비 등에 대해 질문해 보세요.</div>'
+        return '<div style="color:rgba(128,128,128,0.5);text-align:center;margin-top:40px;font-size:13px;">진단, 진동 분석, 정비 등에 대해 질문해 보세요.</div>'
     html_parts = []
     for msg in st.session_state.chat_messages:
         css_class = "chat-msg-user" if msg["role"] == "user" else "chat-msg-assistant"
@@ -441,7 +441,7 @@ def _render_chat_messages_html() -> str:
 
 # 채팅 패널 열림 상태에 따라 레이아웃 분할
 if st.session_state.chat_open:
-    main_col, chat_col = st.columns([3, 1])
+    main_col, chat_col = st.columns([5, 2])
 else:
     main_col = st.container()
     chat_col = None
@@ -627,7 +627,6 @@ with main_col:
     if st.session_state.status == "completed":
         # 추론 과정 (Thought 단위)
         if st.session_state.thoughts:
-            st.caption(f"DEBUG: {len(st.session_state.thoughts)} thoughts")  # TODO: 확인 후 제거
             st.markdown("### 에이전트 추론 과정")
             render_thoughts(st.session_state.thoughts)
 
@@ -702,9 +701,8 @@ def _handle_chat_submit() -> None:
 
 
 if st.session_state.chat_open and chat_col is not None:
-    # ── 채팅 패널 (우측 컬럼) ──
     with chat_col:
-        # 헤더: 제목 + 닫기
+        # 헤더
         hdr1, hdr2 = st.columns([5, 1])
         with hdr1:
             st.markdown("**채팅**")
@@ -713,7 +711,7 @@ if st.session_state.chat_open and chat_col is not None:
             st.button("X", key="chat_close", on_click=_toggle_chat)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 메시지 영역
+        # 메시지 영역 (max-height 고정, 스크롤)
         chat_messages_ph = st.empty()
         chat_messages_ph.markdown(
             f'<div class="chat-messages">{_render_chat_messages_html()}</div>',

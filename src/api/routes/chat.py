@@ -39,7 +39,7 @@ async def submit_chat(
         if not session:
             raise HTTPException(status_code=404, detail="Chat session not found")
     else:
-        session = run_manager.create_chat_session(req.run_id or "")
+        session = run_manager.create_chat_session(req.run_id or "", req.user_id)
 
     # Store user message in history
     session.message_history.append({"role": "user", "content": req.message})

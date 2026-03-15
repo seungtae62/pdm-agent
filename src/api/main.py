@@ -27,15 +27,30 @@ from api.services.run_manager import RunManager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: initialize services."""
     app.state.run_manager = RunManager()
-    app.state.chat_runner = MockChatRunner()
 
     runner_mode = os.getenv("AGENT_RUNNER_MODE", "mock")
     if runner_mode == "langgraph":
         from agent.config import AgentConfig
 
-        app.state.agent_runner = LangGraphAgentRunner(AgentConfig.from_env())
+        config = AgentConfig.from_env()
+        app.state.agent_runner = LangGraphAgentRunner(config)
     else:
+        config = None
         app.state.agent_runner = MockAgentRunner()
+
+    chat_mode = os.getenv("CHAT_RUNNER_MODE", "llm")
+    if chat_mode == "llm" and config is not None:
+        from api.services.llm_chat_runner import LLMChatRunner
+
+        app.state.chat_runner = LLMChatRunner(config)
+    elif chat_mode == "llm":
+        # langgraph 모드가 아니어도 LLM 챗은 독립 사용 가능
+        from agent.config import AgentConfig
+        from api.services.llm_chat_runner import LLMChatRunner
+
+        app.state.chat_runner = LLMChatRunner(AgentConfig.from_env())
+    else:
+        app.state.chat_runner = MockChatRunner()
 
     yield
 

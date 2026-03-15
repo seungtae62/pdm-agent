@@ -60,5 +60,8 @@ class PdMAgentState(TypedDict):
     report: str
     work_order: dict
 
+    # 사용자 식별
+    user_id: str  # default: "default"
+
     # 워크플로우 제어
     next_action: str  # continue_reasoning / call_tool / generate_report / end

@@ -383,7 +383,7 @@ THOUGHT_CSS = """
 
 CHAT_PANEL_CSS = """
 <style>
-/* ── 채팅 토글 버튼 (제목 우측) ── */
+/* ── 채팅 토글 버튼 ── */
 .chat-toggle-btn button {
     border-radius: 20px !important;
     padding: 4px 16px !important;
@@ -392,13 +392,26 @@ CHAT_PANEL_CSS = """
     line-height: 1.4 !important;
 }
 
-/* ── 채팅 패널 (우측 컬럼) ── */
+/* ── 채팅 우측 컬럼 sticky ── */
+[data-testid="stHorizontalBlock"]:has(.chat-messages)
+    > [data-testid="stColumn"]:last-child {
+    position: sticky;
+    top: 1rem;
+    align-self: flex-start;
+}
+
+/* ── 메시지 영역 ── */
 .chat-messages {
+    max-height: 420px;
     overflow-y: auto;
-    padding: 4px 0;
+    padding: 8px 4px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    border: 1px solid rgba(128,128,128,0.12);
+    border-radius: 8px;
+    background: rgba(128,128,128,0.02);
+    margin-bottom: 8px;
 }
 .chat-msg-user {
     align-self: flex-end;
@@ -433,7 +446,8 @@ CHAT_PANEL_CSS = """
     vertical-align: middle;
     animation: pulse-dot 1s ease-in-out infinite;
 }
-/* 채팅 패널 닫기 버튼 */
+
+/* ── 닫기 버튼 ── */
 .chat-close-btn button {
     background: transparent !important;
     border: none !important;

@@ -11,6 +11,7 @@ class ChatRequest(BaseModel):
     run_id: str | None = None
     session_id: str | None = None
     message: str
+    user_id: str = "default"
 
 
 class ChatResponse(BaseModel):

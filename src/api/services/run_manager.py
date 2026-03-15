@@ -49,6 +49,7 @@ class ChatSessionInfo:
 
     session_id: str
     run_id: str
+    user_id: str = "default"
     event_queue: asyncio.Queue[ChatEvent | None] = field(
         default_factory=asyncio.Queue
     )
@@ -98,10 +99,14 @@ class RunManager:
 
     # ── Chat session management ──
 
-    def create_chat_session(self, run_id: str) -> ChatSessionInfo:
+    def create_chat_session(
+        self, run_id: str, user_id: str = "default"
+    ) -> ChatSessionInfo:
         """Create a new chat session for a run."""
         session_id = str(uuid.uuid4())
-        session = ChatSessionInfo(session_id=session_id, run_id=run_id)
+        session = ChatSessionInfo(
+            session_id=session_id, run_id=run_id, user_id=user_id
+        )
         self._chat_sessions[session_id] = session
         return session
 
