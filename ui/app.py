@@ -427,9 +427,9 @@ def _run_analysis() -> None:
     _reset_session_state()
     st.session_state.status = "running"
 
-    # Placeholder 생성: 하나의 placeholder에서 모든 thought를 누적 렌더링
-    thoughts_ph = st.empty()
+    # Placeholder 생성: 상태 표시를 상단에, thought를 하단에 배치
     status_ph = st.empty()
+    thoughts_ph = st.empty()
 
     # 로컬 추적 변수
     thoughts: list[dict] = []
@@ -445,6 +445,7 @@ def _run_analysis() -> None:
         nonlocal current_text, in_reasoning
         if in_reasoning and current_text:
             thoughts.append({
+                "type": "thought",
                 "text": current_text,
                 "tool_calls": [],
                 "status": "done",
@@ -458,6 +459,7 @@ def _run_analysis() -> None:
         nonlocal current_text, in_reasoning
         if in_reasoning and current_text:
             thoughts.append({
+                "type": "thought",
                 "text": current_text,
                 "tool_calls": [],
                 "status": "done",
@@ -485,11 +487,21 @@ def _run_analysis() -> None:
                 node_name = event.get("node_name", "")
                 if node_name == "reasoning":
                     _start_new_thought()
-                elif in_reasoning:
-                    # reasoning 밖으로 나감 → 현재 thought 완료
-                    _finish_current_thought()
+                else:
+                    if in_reasoning:
+                        _finish_current_thought()
+                    # 산출물 생성 노드를 타임라인에 표시
+                    if node_name in ("generate_report", "generate_work_order"):
+                        thoughts.append({
+                            "type": "node",
+                            "name": node_name,
+                            "status": "thinking",
+                        })
+                        _render_live()
 
             elif event_type == "reasoning_token":
+                if not in_reasoning:
+                    continue
                 token = event.get("token", "")
                 current_text += token
                 _render_live()
@@ -500,13 +512,29 @@ def _run_analysis() -> None:
                     "arguments": event.get("arguments", {}),
                     "result": None,
                 }
+                # Tool 호출을 별도 타임라인 step으로 추가
+                thoughts.append({
+                    "type": "mcp",
+                    "name": pending_tool["name"],
+                    "arguments": pending_tool["arguments"],
+                    "result": None,
+                    "status": "thinking",
+                })
+                _render_live()
 
             elif event_type == "tool_result":
                 if pending_tool:
-                    pending_tool["result"] = event.get("result", "")
-                    # Tool 호출을 마지막 thought에 연결
-                    if thoughts:
-                        thoughts[-1]["tool_calls"].append(pending_tool)
+                    result = event.get("result", "")
+                    # 마지막 tool step 업데이트
+                    for step in reversed(thoughts):
+                        if (
+                            step.get("type") == "mcp"
+                            and step.get("name") == pending_tool["name"]
+                            and step.get("status") == "thinking"
+                        ):
+                            step["result"] = result
+                            step["status"] = "done"
+                            break
                     _render_live()
                     pending_tool = None
 
@@ -515,9 +543,19 @@ def _run_analysis() -> None:
 
             elif event_type == "report_generated":
                 st.session_state.report = event.get("report", "")
+                for step in reversed(thoughts):
+                    if step.get("type") == "node" and step.get("name") == "generate_report":
+                        step["status"] = "done"
+                        break
+                _render_live()
 
             elif event_type == "work_order_generated":
                 st.session_state.work_order = event.get("work_order", {})
+                for step in reversed(thoughts):
+                    if step.get("type") == "node" and step.get("name") == "generate_work_order":
+                        step["status"] = "done"
+                        break
+                _render_live()
 
             elif event_type == "run_completed":
                 _finish_current_thought()
@@ -595,7 +633,7 @@ if st.session_state.status == "completed":
                         use_container_width=True,
                     )
             except Exception as e:
-                st.warning(f"PDF 생성 실패: {e}")
+                st.warning(f"PDF 생 실패: {e}")
 
             render_work_order(st.session_state.work_order)
 

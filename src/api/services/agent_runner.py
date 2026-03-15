@@ -408,6 +408,7 @@ class LangGraphAgentRunner:
             # Track token count for logging
             token_char_count = 0
             final_state = None
+            current_node = ""  # 현재 실행 중인 노드 추적
 
             async with asyncio.timeout(300):
                 async for event in graph.astream_events(
@@ -417,8 +418,19 @@ class LangGraphAgentRunner:
                     name = event.get("name", "")
                     data = event.get("data", {})
 
+                    # Debug: 모든 이벤트 종류 로깅
+                    if kind in (
+                        "on_tool_start", "on_tool_end",
+                        "on_chain_start", "on_chain_end",
+                    ):
+                        logger.info(
+                            f"[SSE] event | run={run_id[:8]}"
+                            f" | kind={kind} | name={name}"
+                        )
+
                     # Node entered
                     if kind == "on_chain_start" and name in GRAPH_NODES:
+                        current_node = name
                         await run_manager.emit_event(
                             run_id,
                             NodeEnteredEvent(
@@ -432,8 +444,10 @@ class LangGraphAgentRunner:
                             f" | node={name}"
                         )
 
-                    # LLM token streaming
+                    # LLM token streaming (reasoning 노드에서만)
                     elif kind == "on_chat_model_stream":
+                        if current_node != "reasoning":
+                            continue
                         chunk = data.get("chunk")
                         if chunk and hasattr(chunk, "content") and chunk.content:
                             token_char_count += len(chunk.content)
@@ -445,17 +459,35 @@ class LangGraphAgentRunner:
                                 ),
                             )
 
-                    # Tool call start
-                    elif kind == "on_tool_start":
-                        arguments = data.get("input", {})
+                    # Tool call + result (on_tool_start가 MCP 도구에서 누락되므로
+                    # on_tool_end에서 ToolCallEvent + ToolResultEvent 모두 emit)
+                    elif kind == "on_tool_end":
+                        # ToolCallEvent: input에서 arguments 추출
+                        input_data = data.get("input", {})
+                        if isinstance(input_data, dict):
+                            try:
+                                import json as _json
+                                _json.dumps(input_data)
+                            except (TypeError, ValueError):
+                                input_data = {
+                                    k: v
+                                    for k, v in input_data.items()
+                                    if isinstance(
+                                        v,
+                                        (
+                                            str, int, float, bool,
+                                            type(None), list, dict,
+                                        ),
+                                    )
+                                }
+                        else:
+                            input_data = {}
                         await run_manager.emit_event(
                             run_id,
                             ToolCallEvent(
                                 run_id=run_id,
                                 tool_name=name,
-                                arguments=arguments
-                                if isinstance(arguments, dict)
-                                else {},
+                                arguments=input_data,
                                 timestamp=now(),
                             ),
                         )
@@ -464,8 +496,7 @@ class LangGraphAgentRunner:
                             f" | tool={name}"
                         )
 
-                    # Tool result
-                    elif kind == "on_tool_end":
+                        # ToolResultEvent: output 추출
                         output = data.get("output", "")
                         # langchain 객체 → 직렬화 가능한 형태로 변환
                         if hasattr(output, "content"):

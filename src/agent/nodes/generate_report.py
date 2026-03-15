@@ -48,7 +48,7 @@ def generate_report(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
 
     try:
         response = llm.invoke([
-            SystemMessage(content="당신은 예지보전 분석 리포트를 작성하는 전문가입니다."),
+            SystemMessage(content="당신은 예지보전 분석 리포트를 작성하는 전문가입니다. 반드시 한국어로 작성하세요. 도메인 전문 용어(BPFO, BPFI, RMS, Kurtosis 등)와 고유명사는 원어 그대로 사용합니다."),
             HumanMessage(content=prompt),
         ])
         report = response.content

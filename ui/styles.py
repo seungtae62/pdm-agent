@@ -264,6 +264,28 @@ THOUGHT_CSS = """
     border-radius: 50%;
     background: #0d6efd;
 }
+.thought-dot-tool {
+    background: rgba(111,66,193,0.15);
+    border: 2px solid #6f42c1;
+}
+.thought-dot-tool::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6f42c1;
+}
+.thought-dot-node {
+    background: rgba(32,201,151,0.15);
+    border: 2px solid #20c997;
+}
+.thought-dot-node::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #20c997;
+}
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(0.85); }

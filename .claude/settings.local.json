@@ -36,7 +36,8 @@
       "Read(//tmp/**)",
       "Bash(unrar x:*)",
       "Bash(grep:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(chmod:*)"
     ]
   }
 }

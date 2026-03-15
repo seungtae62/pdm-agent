@@ -76,7 +76,7 @@ def _render_tool_html(tc: dict) -> str:
 
 
 def _build_step_html(
-    num: int,
+    label: str,
     summary: str,
     body_html: str,
     tools_html: str,
@@ -89,31 +89,70 @@ def _build_step_html(
         f'<div class="thought-step">'
         f'  <div class="thought-dot {dot_class}"></div>'
         f'  <details class="thought-accordion"{open_attr}>'
-        f"    <summary>Step {num} &mdash; {html.escape(summary)}</summary>"
+        f"    <summary>{label} &mdash; {html.escape(summary)}</summary>"
         f'    <div class="thought-body">{body_html}{tools_html}</div>'
         f"  </details>"
         f"</div>"
     )
 
 
-def render_thoughts(thoughts: list[dict]) -> None:
-    """Thought 단계별 추론 과정을 타임라인 형태로 표시.
+def _build_tool_body_html(step: dict) -> str:
+    """Tool step의 body HTML 생성 (arguments + result)."""
+    parts = []
+    args = step.get("arguments")
+    result = step.get("result")
+    if args:
+        args_str = html.escape(json.dumps(args, ensure_ascii=False, indent=2))
+        parts.append(
+            f"<details open><summary>Arguments</summary><pre>{args_str}</pre></details>"
+        )
+    if result is not None:
+        if isinstance(result, dict):
+            result_str = html.escape(
+                json.dumps(result, ensure_ascii=False, indent=2)
+            )
+        else:
+            result_str = html.escape(str(result)[:2000])
+        parts.append(
+            f"<details><summary>Result</summary><pre>{result_str}</pre></details>"
+        )
+    elif step.get("status") == "thinking":
+        parts.append('<p style="color:rgba(128,128,128,0.6);">실행 중...</p>')
+    return "".join(parts)
 
-    각 thought: {text, tool_calls, status}
-    status: "thinking" / "done"
 
-    Note: 스트리밍과 동일한 HTML 스타일 유지. 단, 각 step을 개별 st.markdown()으로
-    분리하여 st.rerun() 후에도 모든 <details> 태그가 정상 렌더링되도록 한다.
-    """
-    st.markdown(THOUGHT_CSS, unsafe_allow_html=True)
+_NODE_LABELS: dict[str, str] = {
+    "generate_report": "리포트 생성",
+    "generate_work_order": "작업지시서 생성",
+}
 
-    for i, thought in enumerate(thoughts):
-        num = i + 1
-        status = thought.get("status", "done")
-        text = thought.get("text", "")
-        tool_calls = thought.get("tool_calls", [])
+
+def _render_single_step(step: dict, thought_num: list[int]) -> str:
+    """단일 step(thought, mcp, node)의 HTML을 반환. thought_num은 mutable counter."""
+    step_type = step.get("type", "thought")
+    status = step.get("status", "done")
+
+    if step_type == "mcp":
+        name = step.get("name", "unknown")
+        dot_class = "thought-dot-tool" if status == "done" else "thought-dot-active"
+        body_html = _build_tool_body_html(step)
+        return _build_step_html(
+            "MCP", name, body_html, "", dot_class, is_open=(status == "thinking")
+        )
+    elif step_type == "node":
+        name = step.get("name", "")
+        label = _NODE_LABELS.get(name, name)
+        dot_class = "thought-dot-node" if status == "done" else "thought-dot-active"
+        status_text = "완료" if status == "done" else "생성 중..."
+        body_html = f'<p style="color:rgba(128,128,128,0.7);">{status_text}</p>'
+        return _build_step_html(
+            label, "", body_html, "", dot_class, is_open=(status == "thinking")
+        )
+    else:
+        thought_num[0] += 1
+        text = step.get("text", "")
+        tool_calls = step.get("tool_calls", [])
         summary = _extract_summary(text)
-
         dot_class = "thought-dot-active" if status == "thinking" else "thought-dot-done"
         body_html = _md_to_html_simple(text)
 
@@ -122,9 +161,29 @@ def render_thoughts(thoughts: list[dict]) -> None:
             tool_items = "".join(_render_tool_html(tc) for tc in tool_calls)
             tools_html = f'<div style="margin-top:8px;">{tool_items}</div>'
 
+        return _build_step_html(
+            f"Step {thought_num[0]}", summary, body_html, tools_html,
+            dot_class, is_open=(status == "thinking"),
+        )
+
+
+def render_thoughts(thoughts: list[dict]) -> None:
+    """Thought/Tool 단계별 추론 과정을 타임라인 형태로 표시.
+
+    각 step: {type: "thought"|"tool", ...}
+    - thought: {text, tool_calls, status}
+    - tool: {name, arguments, result, status}
+
+    Note: 각 step을 개별 st.markdown()으로 분리하여
+    st.rerun() 후에도 모든 <details> 태그가 정상 렌더링되도록 한다.
+    """
+    st.markdown(THOUGHT_CSS, unsafe_allow_html=True)
+
+    thought_num = [0]
+    for step in thoughts:
         step_html = (
             f'<div class="thought-timeline">'
-            + _build_step_html(num, summary, body_html, tools_html, dot_class, is_open=(status == "thinking"))
+            + _render_single_step(step, thought_num)
             + "</div>"
         )
         st.markdown(step_html, unsafe_allow_html=True)
@@ -135,33 +194,24 @@ def render_thoughts_live(
     current_text: str,
     placeholder,
 ) -> None:
-    """완료된 thoughts(접힌 상태) + 현재 streaming thought(펼친 상태)를 하나의 placeholder에 누적 렌더링."""
+    """완료된 steps(접힌 상태) + 현재 streaming thought(펼친 상태)를 하나의 placeholder에 누적 렌더링."""
     steps_html = []
+    thought_num = [0]
 
     # 완료된 steps (접힌 상태)
-    for i, thought in enumerate(completed):
-        num = i + 1
-        text = thought.get("text", "")
-        tool_calls = thought.get("tool_calls", [])
-        summary = _extract_summary(text)
-        body_html = _md_to_html_simple(text)
+    for step in completed:
+        steps_html.append(_render_single_step(step, thought_num))
 
-        tools_html = ""
-        if tool_calls:
-            tool_items = "".join(_render_tool_html(tc) for tc in tool_calls)
-            tools_html = f'<div style="margin-top:8px;">{tool_items}</div>'
-
-        steps_html.append(
-            _build_step_html(num, summary, body_html, tools_html, "thought-dot-done", is_open=False)
-        )
-
-    # 현재 streaming step (펼친 상태)
+    # 현재 streaming thought (펼친 상태)
     if current_text:
-        current_num = len(completed) + 1
+        thought_num[0] += 1
         summary = _extract_summary(current_text)
         body_html = _md_to_html_simple(current_text)
         steps_html.append(
-            _build_step_html(current_num, summary, body_html, "", "thought-dot-active", is_open=True)
+            _build_step_html(
+                f"Step {thought_num[0]}", summary, body_html, "",
+                "thought-dot-active", is_open=True,
+            )
         )
 
     timeline_html = f'<div class="thought-timeline">{"".join(steps_html)}</div>'
@@ -194,7 +244,7 @@ def render_diagnosis_cards(diagnosis: dict) -> None:
 
     st.markdown(DIAG_CARD_CSS, unsafe_allow_html=True)
 
-    risk_level = diagnosis.get("risk_level", "normal")
+    risk_level = diagnosis.get("risk_level") or diagnosis.get("severity", "normal")
     risk_color = RISK_COLORS.get(risk_level, "#6c757d")
 
     fault_type = html.escape(str(diagnosis.get("fault_type", "-")))
@@ -202,7 +252,8 @@ def render_diagnosis_cards(diagnosis: dict) -> None:
     rul = _format_rul(diagnosis.get("rul_assessment", "-"))
     rec = html.escape(str(diagnosis.get("recommendation", "-")))
 
-    risk_html = f'<span class="risk-badge" style="background:{risk_color};">{risk_level.upper()}</span>'
+    risk_text_color = "#212529" if risk_level in ("watch", "warning") else "white"
+    risk_html = f'<span class="risk-badge" style="background:{risk_color};color:{risk_text_color};">{risk_level.upper()}</span>'
 
     rows = [
         ("결함 유형", fault_type),

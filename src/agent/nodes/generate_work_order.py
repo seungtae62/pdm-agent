@@ -82,7 +82,9 @@ def generate_work_order(state: PdMAgentState, *, llm: BaseChatModel) -> dict:
             SystemMessage(
                 content=(
                     "당신은 예지보전 정비 작업지시서를 작성하는 전문가입니다. "
-                    "반드시 유효한 JSON만 출력하세요."
+                    "반드시 유효한 JSON만 출력하세요. "
+                    "모든 텍스트 값은 한국어로 작성하세요. "
+                    "도메인 전문 용어와 고유명사는 원어 그대로 사용합니다."
                 )
             ),
             HumanMessage(content=prompt),
