@@ -232,3 +232,16 @@ LLM이 참조할 외부 지식과 대화/분석 이력의 관리 전략을 수�
 | Agent Skills | SKILL.md 기반 도메인 지식 모듈화. 점진적 로딩(Progressive Disclosure) 적용 | 세션 시작 시 메타데이터(Skill 이름 + 설명)만 로드하고, 추론 과정에서 필요한 Skill만 온디맨드 로드. 정상 이벤트(Thought 1 조기 종료)에서 불필요한 도메인 지식 로딩을 제거하여 토큰 효율성 확보 |
 | Skill 구성 | fault-diagnosis (결함 주파수 + P-F 곡선) · feature-interpret (특징량 복합 해석) · deep-research (심화 조사 절차) · response-template (위험도별 응답 양식) | 추론 단계별로 필요한 지식만 선택 로드. 새 설비 유형(모터, 펌프 등) 확장 시 Skill 파일 추가만으로 대응 가능 |
 | MCP-Skills 역할 분리 | Skills = 도메인 지식(뇌), MCP = 외부 실행(근육) | Skills는 에이전트의 추론 품질을 제어하는 지식/지침, MCP는 외부 데이터 소스와의 실제 상호작용을 담당. 관심사 분리로 각 레이어의 독립적 확장 가능 |
+
+---
+
+### 향후 확장 아키텍처 (v1.0 비전)
+
+현재 PoC의 Agent Skills 구조를 확장하여, v1.0에서 도입할 4가지 기술 차별점입니다.
+
+| **확장 영역** | **개념** | **현재 → v1.0** |
+| --- | --- | --- |
+| **Self-Evolving Skills** | 분석 결과와 실제 고장 결과를 대조하여 Skill 내 해석 규칙을 자동 보정하는 자기 진화 메커니즘 | 정적 SKILL.md → analysis_history 피드백 기반 자동 업데이트 |
+| **Deep Search Engine (Group Agent)** | 복수 검색 에이전트가 병렬 탐색(내부 RAG, 외부 웹, 논문 DB)하고 결과를 교차 검증하는 그룹 에이전트 | 단일 에이전트 순차 검색 → 검색 엔진만 그룹화하여 깊이+병렬성 확보 |
+| **Personalized Skills** | `skills/users/{user_id}/`에 사용자별 커스텀 Skill을 배치하여 설비 담당자별 특화 지식 자동 로드 | 전체 공유 `skills/` → `core/`(공통) + `users/`(개인화) 분리 |
+| **Skills Store** | core/users 분리 관리 + Skill 등록/공유/검증 파이프라인. users → core 승격으로 개인 노하우가 조직 표준으로 확산 | 단일 디렉토리 5개 Skill → 계층화 + 버전 관리 + 검증 파이프라인 |
