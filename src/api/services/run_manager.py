@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from api.models.stream import AgentEvent
+from api.models.stream import AgentEvent, ChatCompletedEvent, ChatErrorEvent, ChatTokenEvent
 
 
 class RunStatus(str, Enum):
@@ -40,6 +40,21 @@ class RunInfo:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
 
+ChatEvent = ChatTokenEvent | ChatCompletedEvent | ChatErrorEvent
+
+
+@dataclass
+class ChatSessionInfo:
+    """Information about a chat session."""
+
+    session_id: str
+    run_id: str
+    event_queue: asyncio.Queue[ChatEvent | None] = field(
+        default_factory=asyncio.Queue
+    )
+    message_history: list[dict[str, str]] = field(default_factory=list)
+
+
 class RunManager:
     """In-memory run state manager (PoC).
 
@@ -48,6 +63,7 @@ class RunManager:
 
     def __init__(self) -> None:
         self._runs: dict[str, RunInfo] = {}
+        self._chat_sessions: dict[str, ChatSessionInfo] = {}
 
     def create_run(self, event_id: str) -> RunInfo:
         """Create a new run and return its info."""
@@ -79,3 +95,28 @@ class RunManager:
         run_info = self._runs.get(run_id)
         if run_info:
             await run_info.event_queue.put(None)
+
+    # ── Chat session management ──
+
+    def create_chat_session(self, run_id: str) -> ChatSessionInfo:
+        """Create a new chat session for a run."""
+        session_id = str(uuid.uuid4())
+        session = ChatSessionInfo(session_id=session_id, run_id=run_id)
+        self._chat_sessions[session_id] = session
+        return session
+
+    def get_chat_session(self, session_id: str) -> ChatSessionInfo | None:
+        """Get chat session by session_id."""
+        return self._chat_sessions.get(session_id)
+
+    async def emit_chat_event(self, session_id: str, event: ChatEvent) -> None:
+        """Push a chat event to the session's queue."""
+        session = self._chat_sessions.get(session_id)
+        if session:
+            await session.event_queue.put(event)
+
+    async def end_chat_stream(self, session_id: str) -> None:
+        """Signal end of chat stream."""
+        session = self._chat_sessions.get(session_id)
+        if session:
+            await session.event_queue.put(None)

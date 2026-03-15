@@ -14,8 +14,8 @@ import streamlit as st
 # ui/ 디렉토리를 path에 추가 (components, styles import용)
 sys.path.insert(0, os.path.dirname(__file__))
 
-from api_client import stream_events, submit_event
-from styles import GLOBAL_CSS, SIDEBAR_CSS
+from api_client import stream_chat, stream_events, submit_chat, submit_event
+from styles import CHAT_PANEL_CSS, GLOBAL_CSS, SIDEBAR_CSS
 from components import (
     render_diagnosis_cards,
     render_equipment_info,
@@ -35,6 +35,7 @@ st.set_page_config(
 
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 st.markdown(SIDEBAR_CSS, unsafe_allow_html=True)
+st.markdown(CHAT_PANEL_CSS, unsafe_allow_html=True)
 
 # ──────────────────────────── 샘플 시나리오 ────────────────────────────
 
@@ -45,15 +46,15 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
         "event_type": "periodic_monitoring",
         "edge_node_id": "EDGE-IMS-01",
         "equipment_meta": {
-            "equipment_id": "IMS-TESTRIG-01",
-            "equipment_name": "IMS Bearing Test Rig",
-            "location": "Lab-A",
+            "equipment_id": "LINE-A",
+            "equipment_name": "ZA2115 Pillow Block Line A",
+            "location": "라인 A / 제품 AX-01",
             "shaft_rpm": 2000,
             "radial_load_lbs": 6000,
             "operation_start_date": "2026-01-01",
             "bearing": {
-                "bearing_id": "BRG-001",
-                "position": "Bearing 1",
+                "bearing_id": "AX-01",
+                "position": "Drive End",
                 "install_date": "2026-01-01",
                 "model": "Rexnord ZA-2115",
                 "type": "Double Row Bearing",
@@ -115,15 +116,15 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
         "event_type": "anomaly_alert",
         "edge_node_id": "EDGE-IMS-01",
         "equipment_meta": {
-            "equipment_id": "IMS-TESTRIG-01",
-            "equipment_name": "IMS Bearing Test Rig",
-            "location": "Lab-A",
+            "equipment_id": "LINE-A",
+            "equipment_name": "ZA2115 Pillow Block Line A",
+            "location": "라인 A / 제품 AX-01",
             "shaft_rpm": 2000,
             "radial_load_lbs": 6000,
             "operation_start_date": "2026-01-01",
             "bearing": {
-                "bearing_id": "BRG-003",
-                "position": "Bearing 3",
+                "bearing_id": "AX-01",
+                "position": "Drive End",
                 "install_date": "2026-01-01",
                 "model": "Rexnord ZA-2115",
                 "type": "Double Row Bearing",
@@ -185,15 +186,15 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
         "event_type": "anomaly_alert",
         "edge_node_id": "EDGE-IMS-01",
         "equipment_meta": {
-            "equipment_id": "IMS-TESTRIG-01",
-            "equipment_name": "IMS Bearing Test Rig",
-            "location": "Lab-A",
+            "equipment_id": "LINE-A",
+            "equipment_name": "ZA2115 Pillow Block Line A",
+            "location": "라인 A / 제품 AX-01",
             "shaft_rpm": 2000,
             "radial_load_lbs": 6000,
             "operation_start_date": "2026-01-01",
             "bearing": {
-                "bearing_id": "BRG-003",
-                "position": "Bearing 3",
+                "bearing_id": "AX-01",
+                "position": "Drive End",
                 "install_date": "2026-01-01",
                 "model": "Rexnord ZA-2115",
                 "type": "Double Row Bearing",
@@ -261,15 +262,15 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
         "event_type": "anomaly_alert",
         "edge_node_id": "EDGE-IMS-01",
         "equipment_meta": {
-            "equipment_id": "IMS-TESTRIG-01",
-            "equipment_name": "IMS Bearing Test Rig",
-            "location": "Lab-A",
+            "equipment_id": "LINE-C",
+            "equipment_name": "ZA2115 Pillow Block Line C",
+            "location": "라인 C / 제품 CX-01",
             "shaft_rpm": 2000,
             "radial_load_lbs": 6000,
             "operation_start_date": "2026-01-01",
             "bearing": {
-                "bearing_id": "BRG-004",
-                "position": "Bearing 4",
+                "bearing_id": "CX-01",
+                "position": "Drive End",
                 "install_date": "2026-01-01",
                 "model": "Rexnord ZA-2115",
                 "type": "Double Row Bearing",
@@ -346,6 +347,9 @@ def _init_session_state() -> None:
         "report": "",
         "work_order": {},
         "error_msg": "",
+        "chat_open": False,
+        "chat_messages": [],  # list of {"role": "user"|"assistant", "content": str}
+        "chat_session_id": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -353,7 +357,7 @@ def _init_session_state() -> None:
 
 
 def _reset_session_state() -> None:
-    """분석 결과 초기화."""
+    """분석 결과 초기화 (채팅 상태는 유지)."""
     st.session_state.run_id = None
     st.session_state.status = "idle"
     st.session_state.thoughts = []
@@ -361,6 +365,8 @@ def _reset_session_state() -> None:
     st.session_state.report = ""
     st.session_state.work_order = {}
     st.session_state.error_msg = ""
+    # 채팅은 분석과 독립적이므로 세션만 초기화
+    st.session_state.chat_session_id = None
 
 
 _init_session_state()
@@ -414,10 +420,42 @@ if reset_btn:
     _reset_session_state()
     st.rerun()
 
-# ──────────────────────────── 메인 영역 ────────────────────────────
+# ──────────────────────────── 메인 영역 레이아웃 ────────────────────────────
 
-st.markdown("## PdM Agent 진단 대시보드")
-st.markdown("---")
+# 채팅 패널 토글 콜백
+def _toggle_chat() -> None:
+    st.session_state.chat_open = not st.session_state.chat_open
+
+
+def _render_chat_messages_html() -> str:
+    """채팅 메시지를 HTML로 렌더링."""
+    if not st.session_state.chat_messages:
+        return '<div style="color:rgba(128,128,128,0.6);text-align:center;margin-top:40px;font-size:13px;">베어링 진단, 진동 분석, 정비 등에 대해 질문해 보세요.</div>'
+    html_parts = []
+    for msg in st.session_state.chat_messages:
+        css_class = "chat-msg-user" if msg["role"] == "user" else "chat-msg-assistant"
+        content = msg["content"].replace("\n", "<br>")
+        html_parts.append(f'<div class="{css_class}">{content}</div>')
+    return "\n".join(html_parts)
+
+
+# 채팅 패널 열림 상태에 따라 레이아웃 분할
+if st.session_state.chat_open:
+    main_col, chat_col = st.columns([3, 1])
+else:
+    main_col = st.container()
+    chat_col = None
+
+with main_col:
+    title_col, chat_btn_col = st.columns([6, 1])
+    with title_col:
+        st.markdown("## PdM Agent 진단 대시보드")
+    with chat_btn_col:
+        if not st.session_state.chat_open:
+            st.markdown('<div class="chat-toggle-btn">', unsafe_allow_html=True)
+            st.button("Chat", key="chat_fab", on_click=_toggle_chat)
+            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("---")
 
 
 # ──────────────────────────── 분석 실행 ────────────────────────────
@@ -428,8 +466,9 @@ def _run_analysis() -> None:
     st.session_state.status = "running"
 
     # Placeholder 생성: 상태 표시를 상단에, thought를 하단에 배치
-    status_ph = st.empty()
-    thoughts_ph = st.empty()
+    with main_col:
+        status_ph = st.empty()
+        thoughts_ph = st.empty()
 
     # 로컬 추적 변수
     thoughts: list[dict] = []
@@ -584,66 +623,168 @@ if start_btn:
 
 # ──────────────────────────── 결과 표시 (완료 후) ────────────────────────────
 
-if st.session_state.status == "completed":
-    # 추론 과정 (Thought 단위)
-    if st.session_state.thoughts:
-        st.caption(f"DEBUG: {len(st.session_state.thoughts)} thoughts")  # TODO: 확인 후 제거
-        st.markdown("### 에이전트 추론 과정")
-        render_thoughts(st.session_state.thoughts)
+with main_col:
+    if st.session_state.status == "completed":
+        # 추론 과정 (Thought 단위)
+        if st.session_state.thoughts:
+            st.caption(f"DEBUG: {len(st.session_state.thoughts)} thoughts")  # TODO: 확인 후 제거
+            st.markdown("### 에이전트 추론 과정")
+            render_thoughts(st.session_state.thoughts)
 
-    # 진단 결과
-    if st.session_state.diagnosis:
-        st.markdown("### 진단 결과")
-        render_diagnosis_cards(st.session_state.diagnosis)
+        # 진단 결과
+        if st.session_state.diagnosis:
+            st.markdown("### 진단 결과")
+            render_diagnosis_cards(st.session_state.diagnosis)
 
-    st.markdown("---")
+        st.markdown("---")
 
-    # 산출물 탭
-    tab_names = ["분석 리포트"]
-    if st.session_state.work_order:
-        tab_names.append("작업지시서")
+        # 산출물 탭
+        tab_names = ["분석 리포트"]
+        if st.session_state.work_order:
+            tab_names.append("작업지시서")
 
-    tabs = st.tabs(tab_names)
+        tabs = st.tabs(tab_names)
 
-    with tabs[0]:
-        render_report(st.session_state.report)
+        with tabs[0]:
+            render_report(st.session_state.report)
 
-    if st.session_state.work_order and len(tabs) > 1:
-        with tabs[1]:
-            # PDF 다운로드 버튼 (우측 상단)
-            try:
-                src_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)), "src"
-                )
-                if src_path not in sys.path:
-                    sys.path.insert(0, src_path)
-                from utils.pdf import generate_work_order_pdf_bytes
-
-                pdf_bytes = generate_work_order_pdf_bytes(st.session_state.work_order)
-                wo_number = st.session_state.work_order.get(
-                    "wo_number", "work_order"
-                )
-                _, btn_col = st.columns([4, 1])
-                with btn_col:
-                    st.download_button(
-                        label="PDF 다운로드",
-                        data=pdf_bytes,
-                        file_name=f"{wo_number}_작업지시서.pdf",
-                        mime="application/pdf",
-                        use_container_width=True,
+        if st.session_state.work_order and len(tabs) > 1:
+            with tabs[1]:
+                # PDF 다운로드 버튼 (우측 상단)
+                try:
+                    src_path = os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)), "src"
                     )
+                    if src_path not in sys.path:
+                        sys.path.insert(0, src_path)
+                    from utils.pdf import generate_work_order_pdf_bytes
+
+                    pdf_bytes = generate_work_order_pdf_bytes(st.session_state.work_order)
+                    wo_number = st.session_state.work_order.get(
+                        "wo_number", "work_order"
+                    )
+                    _, dl_btn_col = st.columns([4, 1])
+                    with dl_btn_col:
+                        st.download_button(
+                            label="PDF 다운로드",
+                            data=pdf_bytes,
+                            file_name=f"{wo_number}_작업지시서.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                        )
+                except Exception as e:
+                    st.warning(f"PDF 생 실패: {e}")
+
+                render_work_order(st.session_state.work_order)
+
+    elif st.session_state.status == "idle":
+        st.info("좌측 사이드바에서 시나리오를 선택하고 '분석 시작'을 클릭하세요.")
+
+    elif st.session_state.status == "failed":
+        error_msg = st.session_state.get("error_msg", "")
+        st.error(f"분석 실패: {error_msg}" if error_msg else "분석 실패. API 서버 연결을 확인하세요.")
+        # 실패 시에도 추론 과정이 있으면 표시
+        if st.session_state.thoughts:
+            st.markdown("### 에이전트 추론 과정")
+            render_thoughts(st.session_state.thoughts)
+
+
+# ──────────────────────────── 채팅 패널 ────────────────────────────
+
+
+def _handle_chat_submit() -> None:
+    """채팅 메시지 제출 콜백 (session_state에서 입력값 읽기)."""
+    msg = st.session_state.get("_chat_text_input", "").strip()
+    if not msg:
+        return
+    st.session_state._pending_chat_msg = msg
+    st.session_state._chat_text_input = ""
+
+
+if st.session_state.chat_open and chat_col is not None:
+    # ── 채팅 패널 (우측 컬럼) ──
+    with chat_col:
+        # 헤더: 제목 + 닫기
+        hdr1, hdr2 = st.columns([5, 1])
+        with hdr1:
+            st.markdown("**채팅**")
+        with hdr2:
+            st.markdown('<div class="chat-close-btn">', unsafe_allow_html=True)
+            st.button("X", key="chat_close", on_click=_toggle_chat)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 메시지 영역
+        chat_messages_ph = st.empty()
+        chat_messages_ph.markdown(
+            f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
+            unsafe_allow_html=True,
+        )
+
+        # 입력
+        st.text_input(
+            "질문 입력",
+            key="_chat_text_input",
+            placeholder="질문을 입력하세요...",
+            on_change=_handle_chat_submit,
+            label_visibility="collapsed",
+        )
+
+        # 보류 중인 메시지 처리
+        pending_msg = st.session_state.pop("_pending_chat_msg", None)
+        if pending_msg:
+            st.session_state.chat_messages.append(
+                {"role": "user", "content": pending_msg}
+            )
+            chat_messages_ph.markdown(
+                f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
+                unsafe_allow_html=True,
+            )
+
+            try:
+                chat_resp = submit_chat(
+                    api_url,
+                    st.session_state.run_id,
+                    pending_msg,
+                    st.session_state.chat_session_id,
+                )
+                session_id = chat_resp["session_id"]
+                st.session_state.chat_session_id = session_id
+
+                assistant_text = ""
+                for evt in stream_chat(api_url, session_id):
+                    evt_type = evt.get("event", "")
+                    if evt_type == "chat_token":
+                        assistant_text += evt.get("token", "")
+                        streaming_html = _render_chat_messages_html()
+                        streaming_html += (
+                            f'\n<div class="chat-msg-assistant">'
+                            f"{assistant_text}"
+                            f'<span class="chat-streaming-dot"></span>'
+                            f"</div>"
+                        )
+                        chat_messages_ph.markdown(
+                            f'<div class="chat-messages">{streaming_html}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    elif evt_type == "chat_completed":
+                        assistant_text = evt.get("content", assistant_text)
+                    elif evt_type == "chat_error":
+                        assistant_text = (
+                            f"오류: {evt.get('message', '알 수 없는 오류')}"
+                        )
+
+                st.session_state.chat_messages.append(
+                    {"role": "assistant", "content": assistant_text}
+                )
+                chat_messages_ph.markdown(
+                    f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
+                    unsafe_allow_html=True,
+                )
             except Exception as e:
-                st.warning(f"PDF 생 실패: {e}")
+                st.session_state.chat_messages.append(
+                    {"role": "assistant", "content": f"오류: {e}"}
+                )
+                st.rerun()
 
-            render_work_order(st.session_state.work_order)
-
-elif st.session_state.status == "idle":
-    st.info("좌측 사이드바에서 시나리오를 선택하고 '분석 시작'을 클릭하세요.")
-
-elif st.session_state.status == "failed":
-    error_msg = st.session_state.get("error_msg", "")
-    st.error(f"분석 실패: {error_msg}" if error_msg else "분석 실패. API 서버 연결을 확인하세요.")
-    # 실패 시에도 추론 과정이 있으면 표시
-    if st.session_state.thoughts:
-        st.markdown("### 에이전트 추론 과정")
-        render_thoughts(st.session_state.thoughts)
+else:
+    pass  # Chat 버튼은 제목 우측에 표시됨

@@ -1,7 +1,8 @@
 """tool_executor 노드 — MCP Tool 실행.
 
 ToolNode를 감싸 MCP 도구를 실행하고,
-tool_calls_count / deep_research_activated 부기 로직을 유지한다.
+tool_calls_count 부기 로직을 유지한다.
+deep_research_activated는 대화형 상호작용에서 사용자 요청 시에만 설정된다.
 """
 
 from __future__ import annotations
@@ -49,7 +50,6 @@ def create_tool_executor(tools: list):
         tool_messages = result["messages"]
 
         new_count = tool_calls_count + len(tool_calls)
-        deep_research = new_count >= 3
 
         logger.info(
             f"[tool_executor] {len(tool_calls)}건 실행 완료, "
@@ -59,7 +59,6 @@ def create_tool_executor(tools: list):
         return {
             "messages": tool_messages,
             "tool_calls_count": new_count,
-            "deep_research_activated": deep_research,
             "next_action": "continue_reasoning",
         }
 

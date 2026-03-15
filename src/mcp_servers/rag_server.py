@@ -77,6 +77,7 @@ class RAGServer:
         self.qdrant = qdrant_client or QdrantClient(
             host=self.config.qdrant_host,
             port=self.config.qdrant_port,
+            check_compatibility=False,
         )
         self.openai = openai_client or OpenAI()
 
@@ -120,22 +121,25 @@ class RAGServer:
             if conditions:
                 qdrant_filter = Filter(must=conditions)
 
-        results = self.qdrant.search(
+        response = self.qdrant.query_points(
             collection_name=collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_k,
             query_filter=qdrant_filter,
+            with_payload=True,
         )
 
         return [
             {
-                "score": hit.score,
-                "text": hit.payload.get("text", ""),
+                "score": point.score,
+                "text": (point.payload or {}).get("text", ""),
                 "metadata": {
-                    k: v for k, v in (hit.payload or {}).items() if k != "text"
+                    k: v
+                    for k, v in (point.payload or {}).items()
+                    if k != "text"
                 },
             }
-            for hit in results
+            for point in response.points
         ]
 
     # -------------------------------------------------------------------

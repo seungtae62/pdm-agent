@@ -99,6 +99,35 @@ class ErrorEvent(BaseModel):
     timestamp: str
 
 
+class ChatTokenEvent(BaseModel):
+    """Chat response token streaming."""
+
+    event: Literal["chat_token"] = "chat_token"
+    run_id: str
+    session_id: str
+    token: str
+
+
+class ChatCompletedEvent(BaseModel):
+    """Chat response completed."""
+
+    event: Literal["chat_completed"] = "chat_completed"
+    run_id: str
+    session_id: str
+    content: str
+    timestamp: str
+
+
+class ChatErrorEvent(BaseModel):
+    """Chat error occurred."""
+
+    event: Literal["chat_error"] = "chat_error"
+    run_id: str
+    session_id: str
+    message: str
+    timestamp: str
+
+
 AgentEvent = Union[
     RunStartedEvent,
     NodeEnteredEvent,
@@ -110,4 +139,7 @@ AgentEvent = Union[
     WorkOrderGeneratedEvent,
     RunCompletedEvent,
     ErrorEvent,
+    ChatTokenEvent,
+    ChatCompletedEvent,
+    ChatErrorEvent,
 ]

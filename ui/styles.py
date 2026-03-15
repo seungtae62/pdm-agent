@@ -380,3 +380,71 @@ THOUGHT_CSS = """
 
 </style>
 """
+
+CHAT_PANEL_CSS = """
+<style>
+/* ── 채팅 토글 버튼 (제목 우측) ── */
+.chat-toggle-btn button {
+    border-radius: 20px !important;
+    padding: 4px 16px !important;
+    font-size: 13px !important;
+    min-height: 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* ── 채팅 패널 (우측 컬럼) ── */
+.chat-messages {
+    overflow-y: auto;
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.chat-msg-user {
+    align-self: flex-end;
+    background: rgba(13,110,253,0.1);
+    border: 1px solid rgba(13,110,253,0.2);
+    border-radius: 12px 12px 2px 12px;
+    padding: 8px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 85%;
+    word-break: break-word;
+}
+.chat-msg-assistant {
+    align-self: flex-start;
+    background: rgba(128,128,128,0.06);
+    border: 1px solid rgba(128,128,128,0.1);
+    border-radius: 12px 12px 12px 2px;
+    padding: 8px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 85%;
+    word-break: break-word;
+}
+.chat-streaming-dot::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0d6efd;
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: pulse-dot 1s ease-in-out infinite;
+}
+/* 채팅 패널 닫기 버튼 */
+.chat-close-btn button {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(128,128,128,0.6) !important;
+    font-size: 16px !important;
+    padding: 2px 6px !important;
+    min-height: 0 !important;
+    line-height: 1 !important;
+}
+.chat-close-btn button:hover {
+    color: inherit !important;
+}
+</style>
+"""

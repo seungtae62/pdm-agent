@@ -21,7 +21,7 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
@@ -282,9 +282,15 @@ def upsert_documents(
 
     points: list[PointStruct] = []
     for doc, embedding in zip(documents, embeddings):
-        source_file = doc.get("source_file", doc.get("wo_number", "unknown"))
-        chunk_index = doc.get("chunk_index")
-        point_id = make_point_id(source_file, chunk_index)
+        # Build unique key: for manuals use source_file+chunk_index,
+        # for maintenance use wo_number+doc_subtype
+        source_file = doc.get("source_file")
+        if source_file:
+            point_id = make_point_id(source_file, doc.get("chunk_index"))
+        else:
+            wo = doc.get("wo_number", "unknown")
+            subtype = doc.get("doc_subtype", "")
+            point_id = make_point_id(f"{wo}_{subtype}")
 
         # payload = doc without embedding, keep text and all metadata
         payload = {k: v for k, v in doc.items()}

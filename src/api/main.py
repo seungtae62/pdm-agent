@@ -17,8 +17,9 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
-from api.routes import events, stream
+from api.routes import chat, events, stream
 from api.services.agent_runner import LangGraphAgentRunner, MockAgentRunner
+from api.services.chat_runner import MockChatRunner
 from api.services.run_manager import RunManager
 
 
@@ -26,6 +27,7 @@ from api.services.run_manager import RunManager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: initialize services."""
     app.state.run_manager = RunManager()
+    app.state.chat_runner = MockChatRunner()
 
     runner_mode = os.getenv("AGENT_RUNNER_MODE", "mock")
     if runner_mode == "langgraph":
@@ -59,3 +61,4 @@ app.add_middleware(
 
 app.include_router(events.router)
 app.include_router(stream.router)
+app.include_router(chat.router)
