@@ -399,7 +399,7 @@ class TestGenerateWorkOrder:
         )
         mock_llm = MagicMock()
         result = generate_work_order(state, llm=mock_llm)
-        assert result["work_order"] == ""
+        assert result["work_order"] == {}
         mock_llm.invoke.assert_not_called()
 
 

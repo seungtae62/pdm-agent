@@ -204,7 +204,7 @@ async def run_agent(
         "tool_calls_count": 0,
         "deep_research_activated": False,
         "report": "",
-        "work_order": "",
+        "work_order": {},
         "next_action": "",
     }
 

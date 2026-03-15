@@ -58,7 +58,7 @@ class PdMAgentState(TypedDict):
 
     # 리포트 및 작업지시서
     report: str
-    work_order: str
+    work_order: dict
 
     # 워크플로우 제어
     next_action: str  # continue_reasoning / call_tool / generate_report / end

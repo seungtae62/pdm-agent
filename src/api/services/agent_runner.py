@@ -239,12 +239,72 @@ class MockAgentRunner:
                 )
                 await asyncio.sleep(1.0)
 
+                wo_number = f"WO-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{event_payload.event_id[-3:]}"
                 work_order = {
-                    "work_order_id": f"WO-{run_id[:8].upper()}",
-                    "priority": "urgent" if severity == "critical" else "normal",
-                    "equipment_id": event_payload.equipment_meta.equipment_id,
-                    "task": diagnosis["recommended_action"],
-                    "assigned_to": None,
+                    "wo_number": wo_number,
+                    "equipment": f"{event_payload.equipment_meta.equipment_name} / {event_payload.equipment_meta.equipment_id}",
+                    "location": event_payload.equipment_meta.location,
+                    "work_type": "긴급수리" if severity == "critical" else "예방정비",
+                    "request_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                    "scheduled_date": "",
+                    "due_date": "",
+                    "assignee": "정비팀",
+                    "summary": f"{event_payload.equipment_meta.bearing.bearing_id} 베어링 {diagnosis['fault_type']} 결함 감지. {diagnosis['recommended_action']}.",
+                    "safety": "작업 전 설비 전원 차단 및 LOTO 절차 준수. 개인보호구(PPE) 착용 필수.",
+                    "checklist": [
+                        "설비 가동 정지 및 전원 차단 확인",
+                        "베어링 하우징 외관 점검",
+                        "베어링 탈거 및 손상 부위 육안 검사",
+                        "신규 베어링 규격 확인 후 장착",
+                        "윤활유 적정량 주입",
+                        "시운전 후 진동/온도 측정",
+                    ],
+                    "materials": [
+                        {
+                            "code": "BRG-ZA2115",
+                            "name": "Rexnord ZA-2115 베어링",
+                            "spec": "Double Row",
+                            "qty": "1",
+                            "unit": "EA",
+                            "note": "동일 모델 교체",
+                        },
+                        {
+                            "code": "LUB-001",
+                            "name": "베어링 전용 윤활유",
+                            "spec": "ISO VG 68",
+                            "qty": "1",
+                            "unit": "L",
+                            "note": "",
+                        },
+                    ],
+                    "tools": [
+                        {
+                            "code": "TL-BPL-01",
+                            "name": "베어링 풀러",
+                            "spec": "유압식",
+                            "qty": "1",
+                            "unit": "SET",
+                            "note": "",
+                        },
+                        {
+                            "code": "TL-VIB-01",
+                            "name": "휴대용 진동 측정기",
+                            "spec": "",
+                            "qty": "1",
+                            "unit": "EA",
+                            "note": "시운전 측정용",
+                        },
+                    ],
+                    "post_checks": [
+                        "진동값 정상 범위 확인 (RMS < 0.1g)",
+                        "베어링 온도 안정화 확인 (< 70°C)",
+                        "이상 소음 여부 청음 검사",
+                        "윤활유 누유 여부 확인",
+                    ],
+                    "approver": "",
+                    "completion_date": "",
+                    "result_summary": "",
+                    "attachments": [],
                 }
                 await run_manager.emit_event(
                     run_id,
@@ -341,7 +401,7 @@ class LangGraphAgentRunner:
                 "tool_calls_count": 0,
                 "deep_research_activated": False,
                 "report": "",
-                "work_order": "",
+                "work_order": {},
                 "next_action": "",
             }
 
@@ -407,6 +467,15 @@ class LangGraphAgentRunner:
                     # Tool result
                     elif kind == "on_tool_end":
                         output = data.get("output", "")
+                        # langchain 객체 → 직렬화 가능한 형태로 변환
+                        if hasattr(output, "content"):
+                            # ToolMessage 등 langchain 메시지 객체
+                            output = output.content
+                        elif not isinstance(
+                            output,
+                            (str, int, float, bool, list, dict, type(None)),
+                        ):
+                            output = str(output)
                         await run_manager.emit_event(
                             run_id,
                             ToolResultEvent(
@@ -467,13 +536,9 @@ class LangGraphAgentRunner:
                     )
 
                 # Work order
-                work_order = final_state.get("work_order", "")
+                work_order = final_state.get("work_order", {})
                 if work_order:
-                    wo = (
-                        work_order
-                        if isinstance(work_order, dict)
-                        else {"content": work_order}
-                    )
+                    wo = work_order
                     await run_manager.emit_event(
                         run_id,
                         WorkOrderGeneratedEvent(
