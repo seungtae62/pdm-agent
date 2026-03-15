@@ -128,16 +128,16 @@ _NODE_LABELS: dict[str, str] = {
 
 
 def _render_single_step(step: dict, thought_num: list[int]) -> str:
-    """단일 step(thought, mcp, node)의 HTML을 반환. thought_num은 mutable counter."""
+    """단일 step(thought, skill, node)의 HTML을 반환. thought_num은 mutable counter."""
     step_type = step.get("type", "thought")
     status = step.get("status", "done")
 
-    if step_type == "mcp":
+    if step_type == "skill":
         name = step.get("name", "unknown")
         dot_class = "thought-dot-tool" if status == "done" else "thought-dot-active"
         body_html = _build_tool_body_html(step)
         return _build_step_html(
-            "MCP", name, body_html, "", dot_class, is_open=(status == "thinking")
+            "Skill", name, body_html, "", dot_class, is_open=(status == "thinking")
         )
     elif step_type == "node":
         name = step.get("name", "")
@@ -168,11 +168,11 @@ def _render_single_step(step: dict, thought_num: list[int]) -> str:
 
 
 def render_thoughts(thoughts: list[dict]) -> None:
-    """Thought/Tool 단계별 추론 과정을 타임라인 형태로 표시.
+    """Thought/Skill 단계별 추론 과정을 타임라인 형태로 표시.
 
-    각 step: {type: "thought"|"tool", ...}
+    각 step: {type: "thought"|"skill"|"node", ...}
     - thought: {text, tool_calls, status}
-    - tool: {name, arguments, result, status}
+    - skill: {name, arguments, result, status}
 
     Note: 각 step을 개별 st.markdown()으로 분리하여
     st.rerun() 후에도 모든 <details> 태그가 정상 렌더링되도록 한다.

@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 # docs/system-prompt.md에서 프롬프트 본문만 추출 (코드블록 내부)
-_PROMPT_FILE = Path(__file__).resolve().parent.parent.parent / "docs" / "system-prompt.md"
+_PROMPT_FILE = Path(__file__).resolve().parent.parent.parent.parent / "docs" / "system-prompt.md"
 
 
 def load_system_prompt() -> str:

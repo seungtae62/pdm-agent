@@ -37,7 +37,8 @@
       "Bash(unrar x:*)",
       "Bash(grep:*)",
       "Bash(python3:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(source:*)"
     ]
   }
 }

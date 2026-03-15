@@ -2,7 +2,7 @@
 
 LangGraph StateGraph 기반으로 7개 노드를 등록하고,
 조건부 엣지로 ReAct 추론 루프를 구성한다.
-MCP 서버에서 동적으로 Tool을 검색하여 사용한다.
+Action Skills로 RAG 검색 및 알림 Tool을 제공한다.
 
 그래프 흐름:
     START → load_memory → reasoning → (조건부 분기)
@@ -16,10 +16,8 @@ MCP 서버에서 동적으로 Tool을 검색하여 사용한다.
 from __future__ import annotations
 
 import logging
-import sys
 from functools import partial
 
-from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, END
 
 from agent.config import AgentConfig, create_chat_model
@@ -76,22 +74,6 @@ def _route_after_report(state: PdMAgentState) -> str:
         return "save_memory"
 
 
-def _build_mcp_server_config(config: AgentConfig) -> dict:
-    """MCP 서버 연결 설정 dict 생성."""
-    return {
-        "rag-server": {
-            "command": sys.executable,
-            "args": [config.rag_mcp_server_path],
-            "transport": "stdio",
-        },
-        "notification-server": {
-            "command": sys.executable,
-            "args": [config.notification_mcp_server_path],
-            "transport": "stdio",
-        },
-    }
-
-
 async def build_graph(
     config: AgentConfig | None = None,
     *,
@@ -99,7 +81,7 @@ async def build_graph(
 ):
     """PdM Agent StateGraph를 빌드.
 
-    MCP 서버에서 동적으로 Tool을 검색하여 그래프에 바인딩한다.
+    Action Skills에서 Tool을 로드하여 그래프에 바인딩한다.
 
     Args:
         config: 에이전트 설정. None이면 환경변수에서 로드.
@@ -113,11 +95,15 @@ async def build_graph(
 
     llm = create_chat_model(config)
 
-    # MCP 서버 연결 및 Tool 검색
-    mcp_client = MultiServerMCPClient(_build_mcp_server_config(config))
-    tools = await mcp_client.get_tools()
+    # Action Skills — RAG 검색 + 알림
+    from agent.skills.actions.rag_search import get_action_tools
+    from agent.skills.actions.notification import get_notification_tools
 
-    logger.info(f"[build_graph] MCP Tool {len(tools)}개 검색 완료: {[t.name for t in tools]}")
+    tools = get_action_tools() + get_notification_tools()
+    logger.info(
+        f"[build_graph] Action Skill {len(tools)}개 로드: "
+        f"{[t.name for t in tools]}"
+    )
 
     # 노드 함수 (의존성 주입)
     load_memory_fn = partial(load_memory, store=memory_store)

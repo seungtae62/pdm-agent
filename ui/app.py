@@ -553,7 +553,7 @@ def _run_analysis() -> None:
                 }
                 # Tool 호출을 별도 타임라인 step으로 추가
                 thoughts.append({
-                    "type": "mcp",
+                    "type": "skill",
                     "name": pending_tool["name"],
                     "arguments": pending_tool["arguments"],
                     "result": None,
@@ -567,7 +567,7 @@ def _run_analysis() -> None:
                     # 마지막 tool step 업데이트
                     for step in reversed(thoughts):
                         if (
-                            step.get("type") == "mcp"
+                            step.get("type") == "skill"
                             and step.get("name") == pending_tool["name"]
                             and step.get("status") == "thinking"
                         ):
