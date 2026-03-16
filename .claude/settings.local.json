@@ -40,7 +40,8 @@
       "Bash(chmod:*)",
       "Bash(source:*)",
       "Bash(PYTHONPATH=src python -m pytest tests/test_skills.py -v 2>&1 | tail -30)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

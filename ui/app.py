@@ -347,7 +347,7 @@ def _init_session_state() -> None:
         "report": "",
         "work_order": {},
         "error_msg": "",
-        "chat_open": False,
+        "chat_open": True,
         "chat_messages": [],  # list of {"role": "user"|"assistant", "content": str}
         "chat_session_id": None,
     }
@@ -427,6 +427,15 @@ def _toggle_chat() -> None:
     st.session_state.chat_open = not st.session_state.chat_open
 
 
+_SCROLL_SNIPPET = (
+    '<img src="" onerror="'
+    "var c=this.closest('.chat-messages');"
+    "if(c)c.scrollTop=c.scrollHeight;"
+    'this.remove();" '
+    'style="display:none;">'
+)
+
+
 def _render_chat_messages_html() -> str:
     """채팅 메시지를 HTML로 렌더링."""
     if not st.session_state.chat_messages:
@@ -436,6 +445,7 @@ def _render_chat_messages_html() -> str:
         css_class = "chat-msg-user" if msg["role"] == "user" else "chat-msg-assistant"
         content = msg["content"].replace("\n", "<br>")
         html_parts.append(f'<div class="{css_class}">{content}</div>')
+    html_parts.append(_SCROLL_SNIPPET)
     return "\n".join(html_parts)
 
 
@@ -443,18 +453,10 @@ def _render_chat_messages_html() -> str:
 if st.session_state.chat_open:
     main_col, chat_col = st.columns([5, 2])
 else:
-    main_col = st.container()
-    chat_col = None
+    main_col, chat_col = st.columns([20, 1])
 
 with main_col:
-    title_col, chat_btn_col = st.columns([6, 1])
-    with title_col:
-        st.markdown("## PdM Agent 진단 대시보드")
-    with chat_btn_col:
-        if not st.session_state.chat_open:
-            st.markdown('<div class="chat-toggle-btn">', unsafe_allow_html=True)
-            st.button("Chat", key="chat_fab", on_click=_toggle_chat)
-            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("## PdM Agent 진단 대시보드")
     st.markdown("---")
 
 
@@ -700,15 +702,15 @@ def _handle_chat_submit() -> None:
     st.session_state._chat_text_input = ""
 
 
-if st.session_state.chat_open and chat_col is not None:
+if st.session_state.chat_open:
     with chat_col:
         # 헤더
         hdr1, hdr2 = st.columns([5, 1])
         with hdr1:
             st.markdown("**채팅**")
         with hdr2:
-            st.markdown('<div class="chat-close-btn">', unsafe_allow_html=True)
-            st.button("X", key="chat_close", on_click=_toggle_chat)
+            st.markdown('<div class="chat-fold-btn">', unsafe_allow_html=True)
+            st.button("\u00ab", key="chat_close", on_click=_toggle_chat)
             st.markdown("</div>", unsafe_allow_html=True)
 
         # 메시지 영역 (max-height 고정, 스크롤)
@@ -759,6 +761,7 @@ if st.session_state.chat_open and chat_col is not None:
                             f"{assistant_text}"
                             f'<span class="chat-streaming-dot"></span>'
                             f"</div>"
+                            f"{_SCROLL_SNIPPET}"
                         )
                         chat_messages_ph.markdown(
                             f'<div class="chat-messages">{streaming_html}</div>',
@@ -785,4 +788,7 @@ if st.session_state.chat_open and chat_col is not None:
                 st.rerun()
 
 else:
-    pass  # Chat 버튼은 제목 우측에 표시됨
+    with chat_col:
+        st.markdown('<div class="chat-open-btn">', unsafe_allow_html=True)
+        st.button("\u00bb", key="chat_open_btn", on_click=_toggle_chat)
+        st.markdown("</div>", unsafe_allow_html=True)

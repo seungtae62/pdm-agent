@@ -383,26 +383,50 @@ THOUGHT_CSS = """
 
 CHAT_PANEL_CSS = """
 <style>
-/* ── 채팅 토글 버튼 ── */
-.chat-toggle-btn button {
-    border-radius: 20px !important;
-    padding: 4px 16px !important;
-    font-size: 13px !important;
+/* ── 채팅 열기 버튼 (접힌 상태) ── */
+.chat-open-btn {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+}
+.chat-open-btn button {
+    background: transparent !important;
+    border: 1px solid rgba(128,128,128,0.2) !important;
+    color: rgba(128,128,128,0.7) !important;
+    font-size: 18px !important;
+    padding: 4px 8px !important;
     min-height: 0 !important;
-    line-height: 1.4 !important;
+    line-height: 1 !important;
+    border-radius: 4px !important;
+}
+.chat-open-btn button:hover {
+    color: inherit !important;
+    border-color: rgba(128,128,128,0.4) !important;
 }
 
-/* ── 채팅 우측 컬럼 sticky ── */
+/* ── 채팅 우측 컬럼 sticky + 뷰포트 높이 ── */
 [data-testid="stHorizontalBlock"]:has(.chat-messages)
     > [data-testid="stColumn"]:last-child {
     position: sticky;
     top: 1rem;
     align-self: flex-start;
+    height: calc(100vh - 2rem);
+}
+
+/* 컬럼 내부 블록을 flex column으로 */
+[data-testid="stHorizontalBlock"]:has(.chat-messages)
+    > [data-testid="stColumn"]:last-child
+    > div:first-child > div:first-child {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 2rem);
+    overflow: hidden;
 }
 
 /* ── 메시지 영역 ── */
 .chat-messages {
-    max-height: 420px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 8px 4px;
     display: flex;
@@ -447,17 +471,17 @@ CHAT_PANEL_CSS = """
     animation: pulse-dot 1s ease-in-out infinite;
 }
 
-/* ── 닫기 버튼 ── */
-.chat-close-btn button {
+/* ── 접기 버튼 ── */
+.chat-fold-btn button {
     background: transparent !important;
     border: none !important;
     color: rgba(128,128,128,0.6) !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     padding: 2px 6px !important;
     min-height: 0 !important;
     line-height: 1 !important;
 }
-.chat-close-btn button:hover {
+.chat-fold-btn button:hover {
     color: inherit !important;
 }
 </style>
