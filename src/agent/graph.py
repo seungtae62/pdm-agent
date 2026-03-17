@@ -95,11 +95,12 @@ async def build_graph(
 
     llm = create_chat_model(config)
 
-    # Action Skills — RAG 검색 + 알림
+    # Action Skills — RAG 검색 + 알림 + 웹 검색
     from agent.skills.actions.rag_search import get_action_tools
     from agent.skills.actions.notification import get_notification_tools
+    from agent.skills.actions.web_search import get_web_search_tools
 
-    tools = get_action_tools() + get_notification_tools()
+    tools = get_action_tools() + get_notification_tools() + get_web_search_tools()
     logger.info(
         f"[build_graph] Action Skill {len(tools)}개 로드: "
         f"{[t.name for t in tools]}"
