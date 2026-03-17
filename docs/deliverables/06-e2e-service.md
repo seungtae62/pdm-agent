@@ -1,11 +1,15 @@
-## 1. 최종 아키텍처 요약
+# 06. E2E 서비스 통합
 
-- **아키텍처:** LangGraph 단일 에이전트(ReAct) + Agent Skills(Knowledge 5종 + Action 4종) + FastAPI SSE + Streamlit UI
+> PdM Agent — 예지보전 AI 에이전트
+
+## 최종 아키텍처 요약
+
+- **아키텍처:** LangGraph 단일 에이전트(ReAct) + Agent Skills(Knowledge 5종 + Action 5종) + FastAPI SSE + Streamlit UI
 - **산출물:** Edge 이벤트 수신 → 결함 진단 → 리포트/작업지시서 생성 → 대화형 상호작용
 - **Agent 흐름:** `load_memory` → `reasoning` ↔ `tool_executor` → `parse_diagnosis` → `generate_report` → (조건부) `generate_work_order` → `save_memory`
 - **Skills 이원 구조:** Knowledge Skills(md, 프롬프트 주입)이 추론 품질을 제어하고, Action Skills(Python @tool, 서버 직접 호출)이 외부 데이터 조회를 수행
 
-## 2. KPI 달성도 (Plan vs Actual)
+## KPI 달성도 (Plan vs Actual)
 
 | **KPI** | **목표** | **실제** | **비고** |
 | --- | --- | --- | --- |
@@ -14,7 +18,7 @@
 | Tool 호출 효율성 | 정상 0회, 이상 1~2회 | 달성 | "최소 Function Call" 원칙 준수 |
 | 처리 시간 | 기존 대비 90%+ 단축 | 수 분 내 완료 | 기존 수동 수 시간 대비 |
 
-## 3. 창출된 핵심 가치
+## 창출된 핵심 가치
 
 **비즈니스:**
 
@@ -29,14 +33,14 @@
 - Action Skills가 RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거
 - LangGraph → FastAPI SSE → Streamlit 실시간 스트리밍 파이프라인
 
-## 4. 운영 및 보안 고려 사항
+## 운영 및 보안 고려 사항
 
 - **안전장치:** tool_calls_count > 10 강제 종료, 수치 계산 금지 (프롬프트 레벨), asyncio.timeout(300)
 - **Memory:** PostgreSQL 영구 저장 (정상 포함), 최근 5건 컨텍스트 로드, Qdrant analysis_history 벡터 적재
 - **Action Skills:** RAGServer/NotificationServer 지연 초기화 (싱글턴). 프로덕션에서 MCP transport로 전환하여 분리 배포 가능
 - **에러 처리:** LLM 실패 시 graceful degradation, SSE 종료 시 Queue 정리, JSON 파싱 실패 시 fallback 기본값
 
-## 5. 회고 및 향후 확장
+## 회고 및 향후 확장
 
 ### 기술적 한계
 

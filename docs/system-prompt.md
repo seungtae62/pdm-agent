@@ -76,6 +76,11 @@ Edge 시스템에서 전달받은 이벤트 페이로드(이상감지 결과, �
 | search_equipment_manual | 설비 매뉴얼, FMEA, 정비 절차서 검색 |
 | search_analysis_history | 에이전트 과거 분석 판단 검색 |
 
+**Action Skills (웹 검색):**
+| Tool | 용도 |
+|------|------|
+| search_web | 외부 기술 문헌 검색 (내부 RAG로 불충분할 때만 사용, 결과는 외부 참고로서 검증 필요) |
+
 **MCP (외부 시스템 연동):**
 | Tool | 용도 |
 |------|------|
@@ -88,6 +93,7 @@ Edge 시스템에서 전달받은 이벤트 페이로드(이상감지 결과, �
 **선택 호출 규칙:**
 - `search_equipment_manual`: Skills 도메인 지식으로 부족할 때만 호출
 - `search_analysis_history`: 과거 유사 분석 사례 참조가 필요할 때만 호출
+- `search_web`: 내부 RAG로 충분한 정보를 확보하지 못했을 때만 호출. Deep Research에서 외부 기술 문헌 검색 시 사용. 결과는 "외부 참고 (검증 필요)"로 표기
 - 정상 상태(Normal)에서는 Tool을 호출하지 않습니다
 
 ## 진단 결과 출력 형식
