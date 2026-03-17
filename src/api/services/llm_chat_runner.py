@@ -13,6 +13,7 @@ from api.models.stream import ChatCompletedEvent, ChatErrorEvent, ChatTokenEvent
 from api.services.chat_prompt import build_chat_system_prompt
 from api.services.chat_tools import get_chat_tools
 from api.services.run_manager import RunManager
+from api.services.slash_commands import handle_slash_command
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,24 @@ class LLMChatRunner:
                 raise ValueError(f"Chat session not found: {session_id}")
 
             user_id = session.user_id
+
+            # 슬래시 커맨드 처리 (LLM 호출 스킵)
+            if message.startswith("/"):
+                result = handle_slash_command(message, user_id)
+                if result and result.handled:
+                    await run_manager.emit_chat_event(
+                        session_id,
+                        ChatCompletedEvent(
+                            run_id=run_id,
+                            session_id=session_id,
+                            content=result.content,
+                            timestamp=now(),
+                        ),
+                    )
+                    session.message_history.append(
+                        {"role": "assistant", "content": result.content}
+                    )
+                    return
 
             # Run context 조회 (연결된 run이 있으면 진단 결과 포함)
             run_context = None
