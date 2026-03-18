@@ -147,8 +147,8 @@
     - 기대 RAG 검색 결과
 
         - search_maintenance_history: WO-20250521-024 (내륜 스폴링 BPFI, 라인A) 또는 WO-20250625-027 (내륜 스폴링 BPFI, 라인D)
-        - search_equipment_manual: EM-003 (내륜 결함 가이드)
-        - search_equipment_manual: EM-006 (베어링 교체 정비 절차서)
+        - search_equipment_manual: EM-002 (결함 종합 가이드 — 내륜 결함 메커니즘, 진행 패턴, 급속 열화 조건 포함)
+        - search_equipment_manual: EM-003 (정비 절차 및 FMEA — 베어링 교체 절차, 위험 우선순위 포함)
 
 ### 시나리오 2: 급속 열화 대응
 
@@ -214,8 +214,8 @@
 
         - search_maintenance_history: WO-20250607-026 (외륜 피팅 BPFO, 라인C) 또는 WO-20250527-025 / WO-20251007-036
         - search_maintenance_history (급속 열화 원인): WO-20250506-022 (과하중) 또는 WO-20250217-009 (윤활 부족) 또는 WO-20250412-017 (오염)
-        - search_equipment_manual: EM-002 (외륜 결함 가이드)
-        - search_equipment_manual: EM-001 (급속 열화 위험 조건)
+        - search_equipment_manual: EM-002 (결함 종합 가이드 — 외륜 결함 메커니즘 및 급속 열화 조건 포함)
+        - search_equipment_manual: EM-001 (베어링 사양서 — 설비 사양 및 운전 조건 참조)
 
 ### 시나리오 3: 대화형 상호 작용 - 정비 담당자 질의
 
@@ -240,8 +240,8 @@
 | 1 | "정비를 3일 유예할 수 있는가?" | Memory에서 현재 분석 맥락 로드. 전체 분석 결과가 아닌 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거)을 컨텍스트에 주입 | Memory + Prompt Optimization | 전체 추론 체인이 아닌 압축된 맥락 사용 |
 | 2 | - | RUL 예측값과 열화 속도를 기반으로 유예 가능 여부 판단. 유예 시 위험도 변화 및 예상 시나리오 설명 | ReAct + 도메인 지식 | |
 | 3 | (대화 N턴 이상 지속 시) | Prompt Optimization 자동 수행: 전체 대화 이력을 "분석 맥락 요약 + 최근 2~3턴 원문"으로 재구성하여 컨텍스트 윈도우 내 유지 | Prompt Optimization | 슬라이딩 윈도우 + 요약 병행 |
-| 4 | "이 결함의 근본 원인을 더 자세히 분석해줘" | deep-research Skill 로드. Deep Research 발동: Action Skills로 내부 RAG + 외부 웹 검색으로 근본 원인 심층 탐색 | Knowledge Skills (deep-research) + Action Skills | 사용자 요청에 의한 Deep Research |
-| 5 | - | Action Skills: 내부 RAG로 유사 사례, 결함 메커니즘 확인 / search_web으로 관련 논문·기술 리포트 검색 | Action Skills (RAG + Web Search) | 내부 우선, 외부 보완 |
+| 4 | "이 결함의 근본 원인을 더 자세히 분석해줘" | Deep Search Engine (Group Agent) 발동. Leader Agent가 검색 계획 수립 후, Sub-Agent들이 병렬 탐색: Internal (RAG 심층 검색), Web (Tavily 외부 검색), Academic (arXiv 논문 검색) | Deep Search Engine (Group Agent) + Action Skills | 사용자 요청에 의한 Deep Search. Leader-SubAgent Plan & Execute 패턴 |
+| 5 | - | Sub-Agent 병렬 실행 결과를 Leader Agent가 종합. 내부 RAG (유사 사례, 결함 메커니즘), 외부 웹 (기술 문서, 논문), 학술 자료를 교차 검증 | Deep Search Engine (Leader 결과 종합) | 내부 우선, 외부 보완. 교차 검증 |
 | 6 | - | 종합 분석 결과 응답. 외부 자료는 "외부 참고 (검증 필요)" 표기 | ReAct | 소스 구분 명시 |
 
 - Prompt Optimization 전략
