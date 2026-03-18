@@ -14,8 +14,15 @@ import streamlit as st
 # ui/ 디렉토리를 path에 추가 (components, styles import용)
 sys.path.insert(0, os.path.dirname(__file__))
 
+import markdown as md
+
 from api_client import stream_chat, stream_events, submit_chat, submit_event
 from styles import CHAT_PANEL_CSS, GLOBAL_CSS, SIDEBAR_CSS
+
+
+def _md_to_html(text: str) -> str:
+    """마크다운 텍스트를 HTML로 변환."""
+    return md.markdown(text, extensions=["tables", "fenced_code"])
 from components import (
     render_diagnosis_cards,
     render_equipment_info,
@@ -427,21 +434,65 @@ def _toggle_chat() -> None:
     st.session_state.chat_open = not st.session_state.chat_open
 
 
-def _render_chat_messages_html() -> str:
-    """채팅 메시지를 HTML로 렌더링."""
+def _render_chat_messages_html(*, typing: bool = False) -> str:
+    """채팅 메시지를 카카오톡 스타일 HTML로 렌더링."""
     if not st.session_state.chat_messages:
-        return '<div style="color:rgba(128,128,128,0.5);text-align:center;margin-top:40px;font-size:13px;">진단, 진동 분석, 정비 등에 대해 질문해 보세요.</div>'
-    html_parts = []
+        return (
+            '<div class="chat-empty-state">'
+            '  <div class="chat-empty-icon">P</div>'
+            '  <div class="chat-empty-text">PdM Agent에게 질문해 보세요<br>'
+            "  진단, 진동 분석, 정비 등을 도와드립니다</div>"
+            "</div>"
+        )
+    html_parts: list[str] = []
     for msg in st.session_state.chat_messages:
-        css_class = "chat-msg-user" if msg["role"] == "user" else "chat-msg-assistant"
-        content = msg["content"].replace("\n", "<br>")
-        html_parts.append(f'<div class="{css_class}">{content}</div>')
+        if msg["role"] == "user":
+            content = msg["content"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+            html_parts.append(
+                f'<div class="chat-bubble-row-user">'
+                f'  <div class="chat-msg-user">{content}</div>'
+                f"</div>"
+            )
+        else:
+            content = _md_to_html(msg["content"])
+            html_parts.append(
+                f'<div class="chat-bubble-row-assistant">'
+                f'  <div class="chat-ai-avatar"><span class="chat-ai-avatar-text">PdM</span></div>'
+                f'  <div class="chat-msg-assistant chat-md">{content}</div>'
+                f"</div>"
+            )
+    if typing:
+        html_parts.append(
+            '<div class="chat-bubble-row-assistant">'
+            '  <div class="chat-ai-avatar"><span class="chat-ai-avatar-text">PdM</span></div>'
+            '  <div class="chat-msg-assistant">'
+            '    <div class="chat-typing-indicator">'
+            '      <div class="chat-typing-dot"></div>'
+            '      <div class="chat-typing-dot"></div>'
+            '      <div class="chat-typing-dot"></div>'
+            "    </div>"
+            "  </div>"
+            "</div>"
+        )
+    # 자동 스크롤 anchor
+    html_parts.append('<div class="chat-scroll-anchor" id="chat-scroll-anchor"></div>')
     return "\n".join(html_parts)
+
+
+# 자동 스크롤 JS
+_CHAT_AUTOSCROLL_JS = """
+<script>
+(function() {
+    const el = document.getElementById('chat-scroll-anchor');
+    if (el) { el.scrollIntoView({behavior: 'smooth', block: 'end'}); }
+})();
+</script>
+"""
 
 
 # 채팅 패널 열림 상태에 따라 레이아웃 분할
 if st.session_state.chat_open:
-    main_col, chat_col = st.columns([5, 2])
+    main_col, chat_col = st.columns([3, 2])
 else:
     main_col = st.container()
     chat_col = None
@@ -702,41 +753,51 @@ def _handle_chat_submit() -> None:
 
 if st.session_state.chat_open and chat_col is not None:
     with chat_col:
-        # 헤더
-        hdr1, hdr2 = st.columns([5, 1])
-        with hdr1:
-            st.markdown("**채팅**")
-        with hdr2:
-            st.markdown('<div class="chat-close-btn">', unsafe_allow_html=True)
+        # ── 헤더: 제목 + 닫기 ──
+        hdr_col, close_col = st.columns([4, 1], vertical_alignment="center")
+        with hdr_col:
+            st.markdown(
+                '<span class="chat-header-title">PdM Agent</span>',
+                unsafe_allow_html=True,
+            )
+        with close_col:
             st.button("X", key="chat_close", on_click=_toggle_chat)
-            st.markdown("</div>", unsafe_allow_html=True)
 
-        # 메시지 영역 (max-height 고정, 스크롤)
-        chat_messages_ph = st.empty()
-        chat_messages_ph.markdown(
-            f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
+        st.markdown(
+            '<div class="chat-header-divider"></div>',
             unsafe_allow_html=True,
         )
 
-        # 입력
+        # ── 메시지 영역 ──
+        chat_messages_ph = st.empty()
+
+        def _render_full_panel(messages_html: str) -> None:
+            """채팅 메시지 영역을 렌더링."""
+            chat_messages_ph.markdown(
+                f'<div class="chat-messages">{messages_html}</div>'
+                f"{_CHAT_AUTOSCROLL_JS}",
+                unsafe_allow_html=True,
+            )
+
+        _render_full_panel(_render_chat_messages_html())
+
+        # ── 입력 영역 ──
         st.text_input(
             "질문 입력",
             key="_chat_text_input",
-            placeholder="질문을 입력하세요...",
+            placeholder="메시지를 입력하세요...",
             on_change=_handle_chat_submit,
             label_visibility="collapsed",
         )
 
-        # 보류 중인 메시지 처리
+        # ── 보류 중인 메시지 처리 ──
         pending_msg = st.session_state.pop("_pending_chat_msg", None)
         if pending_msg:
             st.session_state.chat_messages.append(
                 {"role": "user", "content": pending_msg}
             )
-            chat_messages_ph.markdown(
-                f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
-                unsafe_allow_html=True,
-            )
+            # 타이핑 인디케이터 표시
+            _render_full_panel(_render_chat_messages_html(typing=True))
 
             try:
                 chat_resp = submit_chat(
@@ -753,17 +814,19 @@ if st.session_state.chat_open and chat_col is not None:
                     evt_type = evt.get("event", "")
                     if evt_type == "chat_token":
                         assistant_text += evt.get("token", "")
+                        # 스트리밍 중: 기존 메시지 + 현재 스트리밍 텍스트
                         streaming_html = _render_chat_messages_html()
                         streaming_html += (
-                            f'\n<div class="chat-msg-assistant">'
-                            f"{assistant_text}"
-                            f'<span class="chat-streaming-dot"></span>'
+                            f'\n<div class="chat-bubble-row-assistant">'
+                            f'  <div class="chat-ai-avatar"><span class="chat-ai-avatar-text">PdM</span></div>'
+                            f'  <div class="chat-msg-assistant">'
+                            f"    {assistant_text}"
+                            f'    <span class="chat-streaming-dot"></span>'
+                            f"  </div>"
                             f"</div>"
+                            f'<div class="chat-scroll-anchor" id="chat-scroll-anchor"></div>'
                         )
-                        chat_messages_ph.markdown(
-                            f'<div class="chat-messages">{streaming_html}</div>',
-                            unsafe_allow_html=True,
-                        )
+                        _render_full_panel(streaming_html)
                     elif evt_type == "chat_completed":
                         assistant_text = evt.get("content", assistant_text)
                     elif evt_type == "chat_error":
@@ -774,10 +837,7 @@ if st.session_state.chat_open and chat_col is not None:
                 st.session_state.chat_messages.append(
                     {"role": "assistant", "content": assistant_text}
                 )
-                chat_messages_ph.markdown(
-                    f'<div class="chat-messages">{_render_chat_messages_html()}</div>',
-                    unsafe_allow_html=True,
-                )
+                _render_full_panel(_render_chat_messages_html())
             except Exception as e:
                 st.session_state.chat_messages.append(
                     {"role": "assistant", "content": f"오류: {e}"}

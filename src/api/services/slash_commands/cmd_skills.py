@@ -14,20 +14,20 @@ def handle_skills(user_id: str) -> SlashCommandResult:
     sections: list[str] = []
 
     # --- Knowledge Skills ---
-    lines = ["## 📚 Knowledge Skills\n"]
+    lines = ["#### Knowledge Skills\n"]
     for entry in SKILL_REGISTRY:
         lines.append(f"- **{entry.name}**: {entry.description}")
     sections.append("\n".join(lines))
 
     # --- Action Skills ---
-    lines = ["## ⚡ Action Skills\n"]
+    lines = ["#### Action Skills\n"]
     action_tools = get_action_tools() + get_notification_tools() + get_web_search_tools()
     for t in action_tools:
         lines.append(f"- **{t.name}**: {t.description}")
     sections.append("\n".join(lines))
 
     # --- User Skills ---
-    lines = ["## 👤 User Skills\n"]
+    lines = ["#### User Skills\n"]
     user_skills = list_user_skills(user_id)
     if user_skills:
         for skill in user_skills:
