@@ -44,17 +44,14 @@ def _route_after_review(state: DeepSearchState) -> str:
     # 안전장치: 최대 반복 횟수 초과
     if iteration_count >= max_iterations:
         logger.warning(
-            "[deep_search:route] 최대 반복 횟수 도달 (%d >= %d), "
-            "합성으로 진행",
+            "[deep_search:route] 최대 반복 횟수 도달 (%d >= %d), " "합성으로 진행",
             iteration_count,
             max_iterations,
         )
         return "synthesize"
 
     # 모든 관점이 통과했는지 확인
-    all_passed = all(
-        fb.get("passed", True) for fb in critic_feedback
-    )
+    all_passed = all(fb.get("passed", True) for fb in critic_feedback)
 
     if all_passed:
         logger.info("[deep_search:route] 모든 관점 통과, 합성 진행")
@@ -101,8 +98,7 @@ async def build_deep_search_graph(
         tools = get_action_tools() + get_web_search_tools()
 
     logger.info(
-        "[deep_search:graph] Sub-Graph 빌드 시작, "
-        "tools=%d, max_iterations=%d",
+        "[deep_search:graph] Sub-Graph 빌드 시작, " "tools=%d, max_iterations=%d",
         len(tools),
         max_iterations,
     )
@@ -165,9 +161,7 @@ async def run_deep_search(
     Returns:
         최종 DeepSearchState.
     """
-    graph = await build_deep_search_graph(
-        config, tools, max_iterations=max_iterations
-    )
+    graph = await build_deep_search_graph(config, tools, max_iterations=max_iterations)
 
     initial_state: DeepSearchState = {
         "original_query": original_query,

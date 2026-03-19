@@ -71,13 +71,15 @@ async def decompose(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
     logger.info("[deep_search:leader] 질문 분해 시작: %s", original_query[:80])
 
     try:
-        response = await llm.ainvoke([
-            SystemMessage(
-                content="당신은 베어링 예지보전 심층 분석의 Leader Agent입니다. "
-                "JSON만 출력하세요."
-            ),
-            HumanMessage(content=prompt),
-        ])
+        response = await llm.ainvoke(
+            [
+                SystemMessage(
+                    content="당신은 베어링 예지보전 심층 분석의 Leader Agent입니다. "
+                    "JSON만 출력하세요."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
     except Exception as e:
         logger.error("[deep_search:leader] 질문 분해 LLM 호출 실패: %s", e)
         # 폴백: 기본 2관점 분해
@@ -101,8 +103,7 @@ async def decompose(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
     parsed = _extract_json(response.content or "")
     if not parsed or not isinstance(parsed, list):
         logger.warning(
-            "[deep_search:leader] JSON 파싱 실패, 폴백 분해 사용. "
-            "응답: %s",
+            "[deep_search:leader] JSON 파싱 실패, 폴백 분해 사용. " "응답: %s",
             (response.content or "")[:200],
         )
         return {
@@ -156,7 +157,9 @@ async def synthesize(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
         results_parts.append(
             f"### 관점: {perspective} (신뢰도: {confidence:.1f})\n{results_text}"
         )
-    all_results_text = "\n\n---\n\n".join(results_parts) if results_parts else "검색 결과 없음"
+    all_results_text = (
+        "\n\n---\n\n".join(results_parts) if results_parts else "검색 결과 없음"
+    )
 
     # Critic 피드백을 텍스트로 정리
     feedback_parts = []
@@ -165,7 +168,9 @@ async def synthesize(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
         passed = "통과" if cf.get("passed", False) else "미통과"
         feedback = cf.get("feedback", "")
         feedback_parts.append(f"- {perspective}: {passed} — {feedback}")
-    critic_feedback_text = "\n".join(feedback_parts) if feedback_parts else "검증 미수행"
+    critic_feedback_text = (
+        "\n".join(feedback_parts) if feedback_parts else "검증 미수행"
+    )
 
     prompt = SYNTHESIS_PROMPT.format(
         original_query=original_query,
@@ -176,13 +181,15 @@ async def synthesize(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
     logger.info("[deep_search:leader] 교차 참조 합성 시작")
 
     try:
-        response = await llm.ainvoke([
-            SystemMessage(
-                content="당신은 베어링 예지보전 심층 분석의 Leader Agent입니다. "
-                "여러 관점의 결과를 교차 참조하여 종합 분석하세요."
-            ),
-            HumanMessage(content=prompt),
-        ])
+        response = await llm.ainvoke(
+            [
+                SystemMessage(
+                    content="당신은 베어링 예지보전 심층 분석의 Leader Agent입니다. "
+                    "여러 관점의 결과를 교차 참조하여 종합 분석하세요."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
         synthesis_text = response.content or ""
     except Exception as e:
         logger.error("[deep_search:leader] 합성 LLM 호출 실패: %s", e)
@@ -198,9 +205,7 @@ async def synthesize(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
             if source not in all_citations:
                 all_citations.append(source)
 
-    logger.info(
-        "[deep_search:leader] 합성 완료, 출처 %d건", len(all_citations)
-    )
+    logger.info("[deep_search:leader] 합성 완료, 출처 %d건", len(all_citations))
 
     return {
         "synthesis": synthesis_text,

@@ -57,18 +57,18 @@ async def review(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
         search_results_text=search_results_text,
     )
 
-    logger.info(
-        "[deep_search:critic] 검증 시작 (iteration %d)", iteration_count
-    )
+    logger.info("[deep_search:critic] 검증 시작 (iteration %d)", iteration_count)
 
     try:
-        response = await llm.ainvoke([
-            SystemMessage(
-                content="당신은 PdM Critic Agent입니다. "
-                "검색 결과를 검증하고 JSON만 출력하세요."
-            ),
-            HumanMessage(content=prompt),
-        ])
+        response = await llm.ainvoke(
+            [
+                SystemMessage(
+                    content="당신은 PdM Critic Agent입니다. "
+                    "검색 결과를 검증하고 JSON만 출력하세요."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         # JSON 추출
         content = response.content or ""

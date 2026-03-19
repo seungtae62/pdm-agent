@@ -106,8 +106,7 @@ async def deep_group_search(
             full_response = synthesis
 
         logger.info(
-            "[deep_group_search] Deep Group Search 완료, "
-            "출처 %d건",
+            "[deep_group_search] Deep Group Search 완료, " "출처 %d건",
             len(citations),
         )
 

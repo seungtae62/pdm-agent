@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -112,8 +113,6 @@ def _extract_sources(raw_results: str, source_type: str) -> list[dict]:
 
     # 웹 검색 결과 (텍스트 포맷)
     if source_type == "external_web":
-        import re
-
         url_pattern = r"URL:\s*(https?://\S+)"
         title_pattern = r"\[\d+\]\s*(.+)"
         urls = re.findall(url_pattern, raw_results)
@@ -134,9 +133,7 @@ def _extract_sources(raw_results: str, source_type: str) -> list[dict]:
     return sources
 
 
-async def research(
-    state: DeepSearchState, *, llm: BaseChatModel, tools: list
-) -> dict:
+async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -> dict:
     """관점별 집중 검색 수행.
 
     각 perspective에 대해:
@@ -158,18 +155,22 @@ async def research(
     reasoning_context = state.get("reasoning_context", "정보 없음")
     critic_feedback = state.get("critic_feedback", [])
 
+    if not perspectives:
+        logger.warning("[deep_search:researcher] perspectives가 비어있음, 스킵")
+        return {"search_results": []}
+
+    if not tools:
+        logger.warning("[deep_search:researcher] tools가 비어있음, 스킵")
+        return {"search_results": []}
+
     # Critic 피드백이 있으면 revision이 필요한 관점만 재검색
     if critic_feedback:
         failed_perspectives = {
-            cf["perspective"]
-            for cf in critic_feedback
-            if not cf.get("passed", True)
+            cf["perspective"] for cf in critic_feedback if not cf.get("passed", True)
         }
         if failed_perspectives:
             perspectives = [
-                p
-                for p in perspectives
-                if p.get("perspective") in failed_perspectives
+                p for p in perspectives if p.get("perspective") in failed_perspectives
             ]
             logger.info(
                 "[deep_search:researcher] Critic 피드백 기반 재검색: %s",
@@ -180,9 +181,7 @@ async def research(
     # 기존 결과 중 재검색 대상이 아닌 것 유지
     if critic_feedback:
         failed_set = {
-            cf["perspective"]
-            for cf in critic_feedback
-            if not cf.get("passed", True)
+            cf["perspective"] for cf in critic_feedback if not cf.get("passed", True)
         }
         search_results = [
             sr for sr in search_results if sr.get("perspective") not in failed_set
@@ -192,9 +191,7 @@ async def research(
         perspective = p.get("perspective", "알 수 없음")
         sub_query = p.get("sub_query", original_query)
         agent_role = p.get("agent_role", "maintenance_history")
-        search_tool_names = p.get(
-            "search_tools", _ROLE_TO_TOOLS.get(agent_role, [])
-        )
+        search_tool_names = p.get("search_tools", _ROLE_TO_TOOLS.get(agent_role, []))
 
         logger.info(
             "[deep_search:researcher] 검색 시작 — 관점: %s, 역할: %s",
@@ -208,18 +205,14 @@ async def research(
         for tool_name in search_tool_names:
             t = _find_tool(tools, tool_name)
             if t is None:
-                logger.warning(
-                    "[deep_search:researcher] Tool 미발견: %s", tool_name
-                )
+                logger.warning("[deep_search:researcher] Tool 미발견: %s", tool_name)
                 continue
 
             try:
                 result = t.invoke({"query": sub_query})
                 raw_results_parts.append(f"[{tool_name}]\n{result}")
 
-                source_type = (
-                    "external_web" if "web" in tool_name else "internal_rag"
-                )
+                source_type = "external_web" if "web" in tool_name else "internal_rag"
                 sources = _extract_sources(str(result), source_type)
                 all_sources.extend(sources)
             except Exception as e:
@@ -228,9 +221,7 @@ async def research(
                     tool_name,
                     e,
                 )
-                raw_results_parts.append(
-                    f"[{tool_name}] 검색 실패: {e}"
-                )
+                raw_results_parts.append(f"[{tool_name}] 검색 실패: {e}")
 
         raw_results = "\n\n".join(raw_results_parts)
 
@@ -244,20 +235,20 @@ async def research(
         )
 
         try:
-            response = await llm.ainvoke([
-                SystemMessage(
-                    content="당신은 PdM Research Agent입니다. "
-                    "검색 결과를 정리하고 출처를 명시하세요."
-                ),
-                HumanMessage(
-                    content=f"{research_prompt}\n\n## 검색 결과 (raw)\n{raw_results}"
-                ),
-            ])
+            response = await llm.ainvoke(
+                [
+                    SystemMessage(
+                        content="당신은 PdM Research Agent입니다. "
+                        "검색 결과를 정리하고 출처를 명시하세요."
+                    ),
+                    HumanMessage(
+                        content=f"{research_prompt}\n\n## 검색 결과 (raw)\n{raw_results}"
+                    ),
+                ]
+            )
             organized_results = response.content or raw_results
         except Exception as e:
-            logger.error(
-                "[deep_search:researcher] 결과 정리 LLM 실패: %s", e
-            )
+            logger.error("[deep_search:researcher] 결과 정리 LLM 실패: %s", e)
             organized_results = raw_results
 
         confidence = _calculate_confidence(raw_results)

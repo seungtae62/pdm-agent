@@ -7,7 +7,12 @@ from __future__ import annotations
 
 import pytest
 
-from agent.deep_search.state import DeepSearchState, SearchResult, CriticFeedback, Citation
+from agent.deep_search.state import (
+    DeepSearchState,
+    SearchResult,
+    CriticFeedback,
+    Citation,
+)
 from agent.deep_search.prompts import (
     DECOMPOSITION_PROMPT,
     RESEARCH_PROMPT,
@@ -116,23 +121,26 @@ class TestResearcherHelpers:
         # 1건
         assert _calculate_confidence(json.dumps([{"id": "1"}])) == 0.4
         # 3건
-        assert _calculate_confidence(
-            json.dumps([{"id": "1"}, {"id": "2"}, {"id": "3"}])
-        ) == 0.7
+        assert (
+            _calculate_confidence(json.dumps([{"id": "1"}, {"id": "2"}, {"id": "3"}]))
+            == 0.7
+        )
         # 5건
-        assert _calculate_confidence(
-            json.dumps([{"id": str(i)} for i in range(5)])
-        ) == 0.9
+        assert (
+            _calculate_confidence(json.dumps([{"id": str(i)} for i in range(5)])) == 0.9
+        )
 
     def test_extract_sources_rag(self):
         """RAG 결과에서 출처 추출."""
         from agent.deep_search.nodes.researcher import _extract_sources
         import json
 
-        raw = json.dumps([
-            {"id": "doc-001", "title": "정비 이력 #1", "score": 0.85},
-            {"id": "doc-002", "title": "정비 이력 #2", "score": 0.72},
-        ])
+        raw = json.dumps(
+            [
+                {"id": "doc-001", "title": "정비 이력 #1", "score": 0.85},
+                {"id": "doc-002", "title": "정비 이력 #2", "score": 0.72},
+            ]
+        )
         sources = _extract_sources(raw, "internal_rag")
         assert len(sources) == 2
         assert sources[0]["source_type"] == "internal_rag"
@@ -234,6 +242,6 @@ class TestGraphBuild:
         node_names = set(graph.nodes.keys())
         expected_nodes = {"decompose", "research", "review", "synthesize"}
         # __start__ / __end__ 노드는 LangGraph 내부 노드
-        assert expected_nodes.issubset(node_names), (
-            f"Missing nodes: {expected_nodes - node_names}"
-        )
+        assert expected_nodes.issubset(
+            node_names
+        ), f"Missing nodes: {expected_nodes - node_names}"
