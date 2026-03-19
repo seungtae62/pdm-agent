@@ -1,16 +1,19 @@
 """PdM Agent StateGraph 빌드.
 
-LangGraph StateGraph 기반으로 7개 노드를 등록하고,
+LangGraph StateGraph 기반으로 노드를 등록하고,
 조건부 엣지로 ReAct 추론 루프를 구성한다.
 Action Skills로 RAG 검색 및 알림 Tool을 제공한다.
+Deep Group Search Sub-Graph를 통한 심층 분석을 지원한다.
 
 그래프 흐름:
-    START → load_memory → reasoning → (조건부 분기)
-                                        ├─ call_tool → tool_executor → reasoning
-                                        ├─ continue_reasoning → reasoning
-                                        └─ generate_report → parse_diagnosis
-                                            → generate_report → generate_work_order
-                                            → save_memory → END
+    START → load_memory → (조건부 분기)
+                            ├─ deep_research_activated → deep_group_search → save_memory → END
+                            └─ 일반 → reasoning → (조건부 분기)
+                                                    ├─ call_tool → tool_executor → reasoning
+                                                    ├─ continue_reasoning → reasoning
+                                                    └─ generate_report → parse_diagnosis
+                                                        → generate_report → generate_work_order
+                                                        → save_memory → END
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from agent.nodes.parse_diagnosis import parse_diagnosis
 from agent.nodes.generate_report import generate_report
 from agent.nodes.generate_work_order import generate_work_order
 from agent.nodes.save_memory import save_memory
+from agent.nodes.deep_group_search import deep_group_search
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +117,7 @@ async def build_graph(
     generate_report_fn = partial(generate_report, llm=llm)
     generate_work_order_fn = partial(generate_work_order, llm=llm)
     save_memory_fn = partial(save_memory, store=memory_store)
+    deep_group_search_fn = partial(deep_group_search, config=config, tools=tools)
 
     # 그래프 빌드
     graph = StateGraph(PdMAgentState)
@@ -124,10 +129,31 @@ async def build_graph(
     graph.add_node("generate_report", generate_report_fn)
     graph.add_node("generate_work_order", generate_work_order_fn)
     graph.add_node("save_memory", save_memory_fn)
+    graph.add_node("deep_group_search", deep_group_search_fn)
 
     # 엣지
     graph.set_entry_point("load_memory")
-    graph.add_edge("load_memory", "reasoning")
+
+    # load_memory 후 조건부 분기:
+    # deep_research_activated=True → deep_group_search (사용자 요청 시에만)
+    # 그 외 → reasoning (일반 이벤트 분석)
+    def _route_after_load_memory(state: PdMAgentState) -> str:
+        if state.get("deep_research_activated", False):
+            logger.info("[route] Deep Group Search 활성화, Sub-Graph로 분기")
+            return "deep_group_search"
+        return "reasoning"
+
+    graph.add_conditional_edges(
+        "load_memory",
+        _route_after_load_memory,
+        {
+            "deep_group_search": "deep_group_search",
+            "reasoning": "reasoning",
+        },
+    )
+
+    # deep_group_search → save_memory → END
+    graph.add_edge("deep_group_search", "save_memory")
 
     # reasoning → 조건부 분기
     route_fn = partial(_route_after_reasoning, max_calls=config.max_tool_calls)
