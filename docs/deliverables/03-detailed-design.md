@@ -47,17 +47,13 @@ Agent의 정체성, 역할, 그리고 답변의 톤앤매너를 정의합니다.
     - Thought 5: 위험도 종합 판정(Normal/Watch/Warning/Critical). 필요시 `search_maintenance_history`로 유사 사례 참조. Watch 이상 시 `notify_maintenance_staff` 호출
     - **Tool 선택 기준**: 추론 과정에서 근거 보강이 필요하다고 판단될 때만 호출. 정상 상태에서는 Tool 미호출. 이벤트 분석에서는 일반 RAG 활용(1~2회)으로 충분
 
-    - **Deep Research (분석적 심층 조사):**
-        - 일반 RAG 활용(정보 조회)과 구분되는 분석적 조사 행동 패턴
-        - 발동 조건: 대화형 상호작용에서 사용자의 분석적 질문 시에만 발동 ("근본 원인 분석해줘", "유사 사례 있어?", "왜 급속 열화인가?")
+    - **Deep Search (분석적 심층 조사 — Deep Search Engine 활용):**
+        - 일반 RAG 활용(정보 조회)과 구분되는 분석적 조사 행동 패턴. **Deep Search Engine(Group Agent)을 조건부 호출하여 병렬 탐색을 수행**
+        - 발동 조건: 대화형 상호작용에서 사용자의 분석적 질문 시에만 발동 ("근본 원인 분석해줘", "유사 사례 있어?", "왜 급속 열화인가?"), 또는 RAG confidence < threshold, health_state == critical AND 유사 사례 < 2건
         - 이벤트 자동 분석에서는 발동하지 않음 (Critical 포함). 이벤트 분석은 도메인 지식 + 일반 RAG로 빠르게 처리
-        - 탐색 전략:
-            1. 가설 수립: 현재 관찰된 패턴에 기반한 가능한 원인/시나리오 도출
-            2. 내부 RAG 탐색: search_maintenance_history, search_equipment_manual, search_analysis_history로 내부 근거 확보
-            3. 외부 웹 검색: search_web으로 내부 지식의 부족분 보완 (메커니즘, 최신 사례 등)
-            4. 결과 해석 + 후속 질문: 발견 내용을 해석하고, 추가 확인 사항이 있으면 후속 쿼리 생성
-            5. 종합 분석: 내부 + 외부 결과를 교차 검증하여 결론 도출. 외부 자료는 "외부 참고 (검증 필요)" 명시
-        - 종료: 충분한 근거 확보 시 자율 종료 또는 안전장치 (tool_calls_count > 10)
+        - 실행 구조: PdM Agent `reasoning` → 트리거 조건 감지 → **Deep Search Engine 호출** → Leader Agent가 검색 계획 수립 → Sub-Agent 1(Internal: Qdrant 심층 검색) + Sub-Agent 2(Web: Tavily) + Sub-Agent 3(Academic: arXiv) **병렬 실행** → Leader가 결과 종합 → PdM Agent `reasoning`에 구조화된 근거 세트 반환
+        - 기존 순차 탐색(가설→RAG→외부검색→해석→재검색 루프)을 Leader + Sub-Agents 병렬 구조로 전환하여 탐색 깊이와 병렬성을 동시에 확보
+        - 종료: Leader가 충분한 근거 확보를 판단하여 자율 종료 또는 안전장치 (max_iterations = 3)
 
 - **Step 3 (Output Generation — 결과 구조화 및 리포트 생성):**
     - ReAct 루프 완료 후 LLM 응답에서 `diagnosis_result`를 구조화된 JSON으로 파싱 (결함 유형, 단계, 열화 속도, RUL 평가, 위험도, 권고, 불확실성 고지)
@@ -124,10 +120,24 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Knowledge Skills(도
 | response-normal | Thought 5 위험도 판정 후 Normal/Watch 시 로드 | Normal/Watch 위험도별 응답 양식, 간결 요약 구조 |
 | response-alert | Thought 5 위험도 판정 후 Warning/Critical 시 로드 | Warning/Critical 위험도별 응답 양식, 리포트 구조, 작업지시서 포함 기준 |
 
+**User Skills (Personalized Skills) 명세:**
+
+| **Skill 유형** | **저장 경로** | **매칭 조건** | **설명** |
+| --- | --- | --- | --- |
+| 리포트 형식 선호 | `skills/users/{id}/preferred-report-format.md` | `chat` | 사용자가 선호하는 리포트 구조/상세 수준 |
+| 설비 메모 | `skills/users/{id}/equipment-notes.md` | `always` | 담당 설비 특이사항, 과거 경험 메모 |
+| 분석 관점 | `skills/users/{id}/analysis-focus.md` | `anomaly_detected` | 사용자가 중시하는 분석 항목 (예: 윤활 상태 우선) |
+
+- YAML frontmatter 기반 Skill 파일, 컨텍스트별 매칭 (`always`, `chat`, `agent`, `anomaly_detected`, `alert`)
+- CRUD API: `save_user_skill()`, `delete_user_skill()`, `list_user_skills()`
+- 자동 생성: `SkillEvolver`가 대화 패턴에서 사용자 선호를 감지하여 자동 배치
+
 **Skills 점진적 로딩 예시:**
 - **정상 이벤트**: 시스템 프롬프트(페르소나 + 추론 구조) → Thought 1 조기 종료 → Skills 미로드 (토큰 절감)
 - **이상 이벤트**: 시스템 프롬프트 → fault-diagnosis 로드 → feature-interpret 로드 → response-normal 또는 response-alert 로드
-- **대화형 Deep Research**: 위 + deep-research 로드
+- **대화형 Deep Research**: 위 + deep-research 로드 → Deep Search Engine 조건부 호출
+- **Self-Evolving**: save_memory 완료 → SkillEvolver가 분석 결과 diff 감지 → Core Skills 자동 패치 (비동기)
+- **대화형 개인화**: 대화 완료 → 사용자 선호 패턴 감지 → User Skills 자동 생성 → 다음 세션부터 자동 로드
 
 ## 지식 베이스 및 메모리 전략 (Context & Memory)
 
@@ -210,7 +220,7 @@ LLM이 참조할 외부 지식과 대화/분석 이력의 관리 전략을 수�
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
 | ReAct 추론 | 5단계 Thought 구조 (결함 식별 → 단계 판정 → 열화 평가 → RUL 평가 → 종합 판단) | Thought-Action-Observation 교차 수행으로 단계적 심화 추론 구현. 각 단계에서 분기/조기종료/Tool 호출을 자율 결정하여, 정상 상태는 Thought 1 조기 종료, 이상 상태는 전체 추론 수행 |
-| Deep Research | 내부 RAG + 외부 웹 검색(search_web) 기반 분석적 조사 루프 | 가설 수립 → 내부 RAG 탐색 → 외부 웹 검색 → 결과 해석 → 후속 질문 → 재검색의 반복적 조사. 대화형 상호작용에서 사용자 요청 시에만 발동. 단일 에이전트 내에서 조사 깊이를 극대화하며, 외부 자료는 "외부 참고 (검증 필요)" 태그로 소스 신뢰도를 구분 |
+| Deep Search Engine | Deep Search Engine(Group Agent)을 조건부 호출하여 Leader + Sub-Agents 병렬 탐색 | 트리거 조건 충족 시 Leader Agent가 검색 계획을 수립하고 Sub-Agent 1(Internal: Qdrant) + Sub-Agent 2(Web: Tavily) + Sub-Agent 3(Academic: arXiv)이 병렬 탐색 수행. 대화형 상호작용에서 사용자 요청 시 또는 RAG confidence 부족/Critical 상태에서 자동 발동. 외부 자료는 "외부 참고 (검증 필요)" 태그로 소스 신뢰도를 구분 |
 
 ### RAG 검색 파이프라인
 
@@ -238,13 +248,165 @@ LLM이 참조할 외부 지식과 대화/분석 이력의 관리 전략을 수�
 | Skill 구성 | fault-diagnosis (결함 주파수 + P-F 곡선) · feature-interpret (특징량 복합 해석) · deep-research (심화 조사 절차) · response-normal (Normal/Watch 응답 양식) · response-alert (Warning/Critical 응답 양식) | 추론 단계별로 필요한 지식만 선택 로드. 새 설비 유형(모터, 펌프 등) 확장 시 Skill 파일 추가만으로 대응 가능 |
 | Action Skills-Knowledge Skills 역할 분리 | Knowledge Skills = 도메인 지식(뇌), Action Skills = 외부 실행(근육) | Knowledge Skills는 에이전트의 추론 품질을 제어하는 지식/지침, Action Skills는 외부 데이터 소스와의 실제 상호작용을 담당. 관심사 분리로 각 레이어의 독립적 확장 가능 |
 
-## 향후 확장 아키텍처 (v1.0 비전)
+## Self-Evolving Skills Engine
 
-현재 PoC의 Agent Skills 구조를 확장하여, v1.0에서 도입할 4가지 기술 차별점입니다.
+분석 결과와 실제 고장 결과를 대조하여 Skills를 자동 보정하는 자기 진화 메커니즘입니다. 정적 SKILL.md 파일에 고정된 해석 규칙을 **피드백 기반 자기 진화 시스템**으로 전환하여, Agent가 반복 분석을 수행할수록 도메인 지식이 자동으로 축적되고, 조직의 설비 운영 노하우가 명시적 자산으로 관리됩니다.
 
-| **확장 영역** | **개념** | **현재 → v1.0** |
+### Learning Loop (Core Skills 자동 보정)
+
+분석 완료 시 `save_memory` 노드에서 `SkillEvolver`를 자동 호출하여, 이전 분석 예측과 실제 결과를 대조하고 Skill 패치를 생성합니다.
+
+| **단계** | **동작** | **대상 컴포넌트** |
 | --- | --- | --- |
-| **Self-Evolving Skills** | 분석 결과와 실제 고장 결과를 대조하여 Skill 내 해석 규칙을 자동 보정하는 자기 진화 메커니즘 | 정적 SKILL.md → analysis_history 피드백 기반 자동 업데이트 |
-| **Deep Search Engine (Group Agent)** | 복수 검색 에이전트가 병렬 탐색(내부 RAG, 외부 웹, 논문 DB)하고 결과를 교차 검증하는 그룹 에이전트 | 단일 에이전트 순차 검색 → 검색 엔진만 그룹화하여 깊이+병렬성 확보 |
-| **Personalized Skills** | `skills/users/{user_id}/`에 사용자별 커스텀 Skill을 배치하여 설비 담당자별 특화 지식 자동 로드 | 전체 공유 `skills/` → `core/`(공통) + `users/`(개인화) 분리 |
-| **Skills Store** | core/users 분리 관리 + Skill 등록/공유/검증 파이프라인. users → core 승격으로 개인 노하우가 조직 표준으로 확산 | 단일 디렉토리 5개 Skill → 계층화 + 버전 관리 + 검증 파이프라인 |
+| 1. 분석 완료 | Agent가 진단 결과를 Memory에 저장 | `save_memory` 노드 |
+| 2. Trigger 발생 | 저장 시점에 `SkillEvolver` 자동 호출 (비동기) | `SkillEvolver` 클래스 |
+| 3. Diff 감지 | 이전 분석 예측 vs 실제 결과(후속 상태) 대조 | analysis_history (Qdrant) + PostgreSQL Memory |
+| 4. Skill 패치 생성 | 예측-실제 간 gap을 분석하여 해석 규칙 수정안을 LLM으로 생성 | Knowledge Skills (md) |
+| 5. Core Skills 업데이트 | 검증 후 `skills/core/` 디렉토리에 반영 | `skills/core/*.md` |
+
+**`SkillEvolver` 클래스 설계:**
+- `save_memory` 노드 실행 시 자동 호출되는 핵심 컴포넌트
+- 동작 흐름: 최근 분석 결과 조회 → 해당 설비의 실제 후속 상태 확인 → 예측-실제 간 gap 분석 → Skill 수정 제안 생성 → 검증 후 반영
+- 비동기 실행으로 분석 워크플로우의 응답 지연에 영향을 주지 않음
+
+### User Feedback Loop (User Skills 자동 생성)
+
+대화 완료 시 사용자의 선호 패턴을 분석하여 User Skills를 자동 생성합니다.
+
+- 사용자가 반복적으로 요청하는 분석 관점, 선호하는 리포트 형식, 자주 참조하는 설비 조건 등을 자동 캡처
+- 설비 담당자별 특화 지식이 `skills/users/{user_id}/` 경로에 자동 배치되어 개인화된 분석 품질 제공
+- `SkillEvolver`가 대화 패턴에서 사용자 선호를 감지하여 User Skill 파일을 자동 생성/갱신
+
+### Skills Store 구조
+
+Knowledge Skills를 `core/`(조직 공통)과 `users/`(개인화)로 계층화하여 관리합니다.
+
+```
+skills/
+├── core/                    # 조직 공통 Skills (검증됨, 전체 Agent 공유)
+│   ├── fault-diagnosis.md
+│   ├── feature-interpret.md
+│   ├── deep-research.md
+│   ├── response-normal.md
+│   └── response-alert.md
+└── users/                   # 개인화 Skills (자동 생성, 사용자별 격리)
+    ├── user-001/
+    │   ├── preferred-report-format.md
+    │   ├── equipment-notes.md
+    │   └── analysis-focus.md
+    └── user-002/
+        └── ...
+```
+
+### 승격 파이프라인: `users/` → `core/`
+
+User Skill이 일정 기준을 충족하면 Core Skills로 승격하여, 개인 노하우를 조직 표준으로 확산합니다.
+
+| **단계** | **조건** | **동작** |
+| --- | --- | --- |
+| 1. 참조 횟수 모니터링 | User Skill 참조 횟수가 threshold 초과 | 승격 후보로 플래깅 |
+| 2. 범용성 검증 | 개인 맥락 의존도 평가 + 타 사용자 적용 가능성 확인 | 관리자 승인 또는 자동 검증 파이프라인 |
+| 3. 일반화 | 개인 맥락을 제거하고 범용 규칙으로 변환 | LLM 기반 일반화 + 사람 검토 |
+| 4. Core 반영 | `skills/core/`에 신규 Skill 또는 기존 Skill 패치로 반영 | 버전 업데이트 + changelog 기록 |
+
+### Version Control
+
+각 Skill 파일에 YAML frontmatter로 버전 관리 메타데이터를 기록합니다.
+
+```yaml
+---
+version: 1.3
+updated_at: 2026-03-15T14:30:00+09:00
+updated_by: SkillEvolver
+reason: "Bearing inner race fault 임계값 조정 — 실제 고장 데이터 기반 (case #127, #134)"
+changelog:
+  - v1.3: BPFI 임계값 0.35 → 0.28 하향 (조기 감지율 향상)
+  - v1.2: RMS 가속도 해석 구간 세분화
+  - v1.1: 초기 피드백 반영
+---
+```
+
+- `version`: 현재 버전 번호 (SemVer 단순화)
+- `updated_at`: 최종 수정 시각 (ISO 8601)
+- `updated_by`: 수정 주체 (`SkillEvolver` / 관리자 이름)
+- `reason`: 수정 사유 (실제 사례 번호 포함)
+- `changelog`: 주요 변경 이력 역순 기록
+
+### 기대 효과
+
+| **효과** | **설명** |
+| --- | --- |
+| **도메인 지식 자동 축적** | 반복 분석을 통해 해석 규칙이 지속적으로 정교화. 분석 건수 증가에 비례하여 진단 정확도 향상 |
+| **조직 노하우의 명시적 자산화** | 암묵지(경험 기반 판단)가 Skill 파일로 코드화되어 인력 이동에도 지식 유실 방지 |
+| **개인화-공통화 균형** | User Skills로 담당자별 맥락을 반영하고, 승격 파이프라인을 통해 검증된 지식을 조직 전체로 확산 |
+
+---
+
+## Deep Search Engine (Group Agent)
+
+복잡한 분석 요청 시 복수 검색 에이전트가 **Plan & Execute 패턴**으로 병렬 탐색을 수행하는 Group Agent 아키텍처입니다. PdM Agent 본체는 단일 ReAct 에이전트를 유지하면서, 고난도 분석이 필요한 경우에만 Deep Search Engine을 조건부 호출합니다.
+
+### Leader-SubAgent 구조
+
+| **컴포넌트** | **역할** | **구현** |
+| --- | --- | --- |
+| **Leader Agent** | 검색 계획 수립 + 결과 종합 + 최종 판단 | LangGraph 서브그래프 오케스트레이터 |
+| **Sub-Agent 1 (Internal)** | 내부 RAG 심층 검색 (Qdrant analysis_history + 설비 문서 + 정비 이력) | Qdrant 벡터 검색 + 리랭킹 |
+| **Sub-Agent 2 (Web)** | 외부 웹 검색 (기술 문서, 제조사 매뉴얼, 기술 포럼) | Tavily Search API |
+| **Sub-Agent 3 (Academic)** | 논문 DB 검색 (arXiv, IEEE 등 학술 자료) | arXiv API + 논문 벡터 스토어 |
+
+### 실행 흐름
+
+```
+PdM Agent reasoning → 트리거 조건 감지 → Deep Search Engine 호출
+  → Leader: 검색 계획 수립 (쿼리 분해 + Sub-Agent별 전략 할당)
+    → Sub-Agent 1~N: 병렬 실행 (각각 Plan & Execute 독립 탐색)
+  → Leader: 결과 종합 (신뢰도 기반 판단)
+→ PdM Agent reasoning에 구조화된 근거 세트 반환
+```
+
+- 각 Sub-Agent는 독립적인 Plan & Execute 루프를 수행하며, 자체적으로 검색 전략을 수립하고 결과를 평가
+- Leader Agent는 모든 Sub-Agent 결과를 종합하여 신뢰도 기반 최종 판단을 생성
+- LangGraph 서브그래프로 구현되어 PdM Agent 본체의 `reasoning` 노드에서 조건부 호출
+
+### 트리거 조건
+
+| **조건** | **설명** | **판단 기준** |
+| --- | --- | --- |
+| **RAG 검색 결과 불충분** | 내부 검색으로 충분한 근거 확보 실패 | confidence score < threshold (예: 0.7) |
+| **사용자 명시적 요청** | "자세히 분석해줘", "근거를 더 찾아줘" 등 | 프롬프트 내 deep search 키워드 감지 |
+| **Critical + 유사 사례 부족** | health_state가 critical이면서 참고할 유사 사례가 희소 | health_state == "critical" AND 유사 사례 < 2건 |
+
+### 구현 설계: `deep_search_graph.py`
+
+LangGraph StateGraph 기반 서브그래프로 구현합니다.
+
+| **노드** | **동작** | **분기 조건** |
+| --- | --- | --- |
+| `plan` | Leader가 검색 쿼리 분해 + Sub-Agent별 검색 전략 할당 | 항상 `search`로 전이 |
+| `search` | Sub-Agent 1~N 병렬 실행. 각각 할당된 소스에서 Plan & Execute 수행 | 항상 `evaluate`로 전이 |
+| `evaluate` | 각 결과의 관련성, 신뢰도, 일관성 평가 | 충분 → `synthesize` / 불충분 → `plan` 재순환 |
+| `synthesize` | 평가를 통과한 결과를 종합하여 구조화된 근거 세트 생성 | 종료 → PdM Agent에 반환 |
+
+**Sub-Agent별 담당 소스:**
+
+| **Sub-Agent** | **검색 소스** | **도구** |
+| --- | --- | --- |
+| Internal Search | analysis_history, 설비 문서, 정비 이력 | Qdrant 벡터 검색 (Hybrid Search) |
+| Web Search | 기술 문서, 제조사 매뉴얼, 기술 포럼 | Tavily Search API |
+| Academic Search | 학술 논문, 기술 표준 문서 | arXiv API + 논문 벡터 스토어 |
+
+**PdM Agent 연동:**
+- Leader Agent가 종합한 결과를 PdM Agent의 `reasoning` 노드에 구조화된 형태로 반환
+- 반환 형식: 근거 목록(출처, 신뢰도, 요약) + 종합 판단 + 추가 조사 필요 여부
+- 안전장치: Deep Search Engine 내부에도 최대 재순환 횟수 제한 (max_iterations = 3)
+
+### 기대 효과
+
+| **효과** | **설명** |
+| --- | --- |
+| **단일 RAG 한계 극복** | 내부 데이터만으로 부족한 경우 외부 소스를 동시에 탐색하여 근거 보강 |
+| **다각도 근거 확보** | 내부 이력, 웹 문서, 학술 논문 등 복수 소스의 교차 검증으로 분석 근거 강화 |
+| **분석 신뢰도 향상** | 특히 Critical 상태에서 충분한 근거 없이 판단하는 위험을 최소화 |
+
+
