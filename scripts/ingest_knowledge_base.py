@@ -22,7 +22,7 @@ from pathlib import Path
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from openai import OpenAI
+from openai import AzureOpenAI, OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
@@ -362,7 +362,15 @@ def main() -> None:
         return
 
     # Real upsert
-    openai_client = OpenAI()
+    use_azure = os.getenv("USE_AZURE", "").lower() == "true"
+    if use_azure:
+        openai_client = AzureOpenAI(
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
+            api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
+            api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+        )
+    else:
+        openai_client = OpenAI()
     qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
     for name, docs in targets.items():

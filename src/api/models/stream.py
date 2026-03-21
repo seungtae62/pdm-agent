@@ -134,12 +134,15 @@ class DeepSearchStepEvent(BaseModel):
     event: Literal["deep_search_step"] = "deep_search_step"
     run_id: str
     session_id: str
-    step_type: str  # "started" | "perspective" | "researcher" | "critic" | "synthesis"
+    step_type: str  # "started" | "decompose" | "researcher" | "critic" | "voting" | "synthesis"
     role: str  # e.g., "Leader", "Researcher 1/3: 재료공학", "Critic"
     content: str
     status: str  # "thinking" | "done"
     perspective_index: int | None = None  # 0-based index for researcher
     total_perspectives: int | None = None
+    confidence: float | None = None
+    passed: bool | None = None
+    voting_weights: list[dict] | None = None
 
 
 AgentEvent = Union[
