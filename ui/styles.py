@@ -650,7 +650,7 @@ html[data-theme="dark"] .chat-msg-user {
     width: 100%;
 }
 
-/* Deep Search Pipeline (chat inline) */
+/* Deep Search Pipeline */
 .ds-pipeline {
     font-size: 13px;
     line-height: 1.6;
@@ -665,55 +665,162 @@ html[data-theme="dark"] .chat-msg-user {
     border-bottom: 1px solid #e2e8f0;
 }
 .ds-stage {
-    margin: 4px 0;
-    padding-left: 8px;
+    margin: 6px 0;
+    padding-left: 4px;
 }
 .ds-stage-header {
     font-weight: 600;
     color: #2d3748;
-    font-size: 12px;
-    margin: 4px 0 2px 0;
+    font-size: 13px;
+    margin: 6px 0 3px 0;
 }
 .ds-stage-num {
     display: inline-block;
-    width: 16px;
-    height: 16px;
-    background: #4a90d9;
+    width: 18px;
+    height: 18px;
+    background: #cbd5e0;
     color: white;
     border-radius: 50%;
     text-align: center;
-    font-size: 10px;
-    line-height: 16px;
-    margin-right: 4px;
+    font-size: 11px;
+    line-height: 18px;
+    margin-right: 5px;
+    font-weight: 700;
+}
+.ds-stage-num.ds-num-active {
+    background: #4a90d9;
+    animation: ds-pulse 1.5s ease-in-out infinite;
+}
+.ds-stage-num.ds-num-done {
+    background: #48bb78;
+}
+@keyframes ds-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+.ds-stage-spinner {
+    color: #a0aec0;
+    font-size: 12px;
+    animation: ds-pulse 1s ease-in-out infinite;
+}
+.ds-researcher-item.ds-pending {
+    border-left-color: #e2e8f0;
+    opacity: 0.5;
 }
 .ds-stage-detail {
     font-size: 12px;
     color: #718096;
-    padding-left: 24px;
-    margin: 1px 0;
+    padding-left: 28px;
+    margin: 2px 0;
 }
+/* Researcher items */
 .ds-researcher-item {
-    display: flex;
-    flex-direction: column;
-    padding: 3px 0 3px 24px;
+    padding: 4px 0 4px 28px;
     font-size: 12px;
     border-left: 2px solid #e2e8f0;
-    margin-left: 8px;
-}
-.ds-researcher-item.ds-active {
-    border-left-color: #48bb78;
+    margin-left: 12px;
+    margin-bottom: 2px;
 }
 .ds-researcher-item.ds-done {
-    border-left-color: #a0aec0;
+    border-left-color: #48bb78;
+}
+.ds-researcher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 .ds-researcher-label {
     font-weight: 600;
     color: #4a5568;
 }
+.ds-conf {
+    font-size: 11px;
+    color: #718096;
+    white-space: nowrap;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-weight: 600;
+}
+.ds-conf-bar {
+    letter-spacing: 1px;
+}
+.ds-conf.ds-conf-high, .ds-conf-bar.ds-conf-high {
+    color: #38a169;
+}
+.ds-conf.ds-conf-mid, .ds-conf-bar.ds-conf-mid {
+    color: #d69e2e;
+}
+.ds-conf.ds-conf-low, .ds-conf-bar.ds-conf-low {
+    color: #e53e3e;
+}
 .ds-researcher-preview {
     color: #a0aec0;
     font-size: 11px;
-    margin-top: 1px;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Critic items */
+.ds-critic-item {
+    font-size: 12px;
+    padding-left: 28px;
+    margin: 1px 0;
+}
+.ds-critic-item.ds-pass {
+    color: #48bb78;
+}
+.ds-critic-item.ds-revise {
+    color: #ed8936;
+}
+/* Voting */
+.ds-voting {
+    padding-left: 28px;
+    margin-top: 4px;
+}
+.ds-voting-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.ds-vote-row {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+    font-size: 12px;
+    gap: 8px;
+}
+.ds-vote-label {
+    min-width: 100px;
+    color: #4a5568;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+.ds-vote-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 60px;
+}
+.ds-vote-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.ds-vote-bar-fill.ds-vote-pass {
+    background: linear-gradient(90deg, #48bb78, #38a169);
+}
+.ds-vote-bar-fill.ds-vote-revise {
+    background: linear-gradient(90deg, #ed8936, #dd6b20);
+}
+.ds-vote-pct {
+    min-width: 36px;
+    text-align: right;
+    color: #4a5568;
+    font-weight: 600;
 }
 
 /* Chat markdown heading size limit */
