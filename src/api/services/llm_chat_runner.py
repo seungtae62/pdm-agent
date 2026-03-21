@@ -67,8 +67,14 @@ class LLMChatRunner:
             run_context = None
             if run_id:
                 run_info = run_manager.get_run(run_id)
-                if run_info and hasattr(run_info, "diagnosis_result"):
-                    run_context = run_info.diagnosis_result
+                if run_info and run_info.diagnosis_result:
+                    run_context = {
+                        "diagnosis": run_info.diagnosis_result,
+                    }
+                    if run_info.report:
+                        run_context["report"] = run_info.report
+                    if run_info.work_order:
+                        run_context["work_order"] = run_info.work_order
 
             # User skills 로드
             user_skills_text = load_user_skills(user_id, "chat")
