@@ -834,24 +834,18 @@ def _handle_chat_submit() -> None:
 if st.session_state.chat_open and chat_col is not None:
     with chat_col:
         # ── 헤더: 제목 + 닫기 ──
-        hdr_col, ds_col, close_col = st.columns([3, 2, 1], vertical_alignment="center")
+        hdr_col, ds_col, close_col = st.columns([2, 3, 1], vertical_alignment="center")
         with hdr_col:
             st.markdown(
                 '<span class="chat-header-title">PdM Agent</span>',
                 unsafe_allow_html=True,
             )
         with ds_col:
-            # Deep Search toggle
-            ds_label = (
-                "Deep Search: ON"
-                if st.session_state.get("deep_search_enabled", False)
-                else "Deep Search: OFF"
+            st.session_state.deep_search_enabled = st.toggle(
+                "Deep Search",
+                value=st.session_state.get("deep_search_enabled", False),
+                key="ds_toggle",
             )
-            if st.button(ds_label, key="ds_toggle"):
-                st.session_state.deep_search_enabled = not st.session_state.get(
-                    "deep_search_enabled", False
-                )
-                st.rerun()
         with close_col:
             st.button("X", key="chat_close", on_click=_toggle_chat)
 
@@ -886,6 +880,19 @@ if st.session_state.chat_open and chat_col is not None:
         pending_msg = st.session_state.pop("_pending_chat_msg", None)
         if pending_msg:
             ds_thinking_html = ""
+            ds_pipeline_stage = ""
+            ds_current_researcher = -1
+            # Deep Search 상태 추적 (재렌더링용)
+            ds_state = {
+                "stage": "",
+                "perspectives": "",
+                "total_perspectives": 0,
+                "researchers": [],  # [{"label": str, "confidence": float, "preview": str}]
+                "critic_summary": "",
+                "critic_items": [],  # [{"text": str, "passed": bool}]
+                "voting_weights": [],
+                "done": False,
+            }
             st.session_state.chat_messages.append(
                 {"role": "user", "content": pending_msg}
             )
@@ -938,55 +945,252 @@ if st.session_state.chat_open and chat_col is not None:
                         step_type = evt.get("step_type", "")
                         role = evt.get("role", "")
                         content = evt.get("content", "")
-                        status = evt.get("status", "")
+                        confidence = evt.get("confidence")
+                        voting_weights = evt.get("voting_weights")
 
-                        # Build thinking block HTML
+                        # -- 상태 업데이트 (append 대신 갱신) --
                         if step_type == "started":
-                            ds_thinking_html = (
-                                '<div class="ds-think-container">'
-                                '<div class="ds-think-header">'
-                                "Deep Research</div>"
-                            )
-                        elif step_type == "perspective":
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step">'
-                                f'<div class="ds-think-role">'
-                                f"{role}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            ds_state["stage"] = "started"
+                        elif step_type == "decompose":
+                            ds_state["stage"] = "decompose"
+                            total = evt.get("total_perspectives", 0)
+                            if total:
+                                ds_state["total_perspectives"] = total
+                            if content.strip():
+                                ds_state["perspectives"] = content
                         elif step_type == "researcher":
-                            status_icon = "..." if status == "thinking" else ""
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step ds-researcher">'
-                                f'<div class="ds-think-role">'
-                                f"{role} {status_icon}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            ds_state["stage"] = "research"
+                            label = role.split(": ", 1)[1] if ": " in role else role
+                            conf = confidence if confidence is not None else 0.0
+                            preview = ""
+                            if content.strip():
+                                preview = (
+                                    content[:100] + "..."
+                                    if len(content) > 100
+                                    else content
+                                )
+                            idx = evt.get("perspective_index", 0)
+                            # 같은 researcher면 업데이트, 아니면 추가
+                            found = False
+                            for r in ds_state["researchers"]:
+                                if r["label"] == label:
+                                    r["confidence"] = conf
+                                    if preview:
+                                        r["preview"] = preview
+                                    found = True
+                                    break
+                            if not found:
+                                ds_state["researchers"].append(
+                                    {
+                                        "label": label,
+                                        "confidence": conf,
+                                        "preview": preview,
+                                    }
+                                )
                         elif step_type == "critic":
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step ds-critic">'
-                                f'<div class="ds-think-role">'
-                                f"{role}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            ds_state["stage"] = "critic"
+                            lines = content.split("\n") if content else []
+                            if lines:
+                                ds_state["critic_summary"] = lines[0]
+                            items = []
+                            for line in lines[1:]:
+                                if line.strip():
+                                    passed = "[Pass]" in line
+                                    items.append(
+                                        {"text": line.strip(), "passed": passed}
+                                    )
+                            if items:
+                                ds_state["critic_items"] = items
+                        elif step_type == "voting":
+                            ds_state["stage"] = "voting"
+                            if voting_weights:
+                                ds_state["voting_weights"] = voting_weights
                         elif step_type == "synthesis":
-                            ds_thinking_html += "</div>"
+                            ds_state["stage"] = "synthesis"
+                            ds_state["done"] = True
 
-                        # Re-render with thinking block
+                        # -- 상태에서 HTML 재구성 --
+                        ds_html = '<div class="ds-pipeline">'
+                        ds_html += (
+                            '<div class="ds-pipeline-title">' "Deep Research</div>"
+                        )
+
+                        # 1. Decompose
+                        stage = ds_state["stage"]
+                        active_1 = stage == "decompose" or stage == "started"
+                        done_1 = stage not in ("started", "decompose")
+                        num_cls_1 = (
+                            " ds-num-done"
+                            if done_1
+                            else (" ds-num-active" if active_1 else "")
+                        )
+                        ds_html += '<div class="ds-stage">'
+                        ds_html += (
+                            f'<div class="ds-stage-header">'
+                            f'<span class="ds-stage-num{num_cls_1}">1</span>'
+                            f" Decompose"
+                        )
+                        if active_1 and not ds_state["perspectives"]:
+                            ds_html += ' <span class="ds-stage-spinner">...</span>'
+                        ds_html += "</div>"
+                        if ds_state["perspectives"]:
+                            ds_html += (
+                                f'<div class="ds-stage-detail">'
+                                f'{ds_state["total_perspectives"]}개 전문가 관점: '
+                                f'{ds_state["perspectives"]}</div>'
+                            )
+                        ds_html += "</div>"
+
+                        # 2. Research
+                        if (
+                            stage
+                            in (
+                                "research",
+                                "critic",
+                                "voting",
+                                "synthesis",
+                            )
+                            or ds_state["researchers"]
+                        ):
+                            active_2 = stage == "research"
+                            done_2 = stage in ("critic", "voting", "synthesis")
+                            num_cls_2 = (
+                                " ds-num-done"
+                                if done_2
+                                else (" ds-num-active" if active_2 else "")
+                            )
+                            ds_html += '<div class="ds-stage">'
+                            ds_html += (
+                                f'<div class="ds-stage-header">'
+                                f'<span class="ds-stage-num{num_cls_2}">2</span>'
+                                f" Research</div>"
+                            )
+                            total_r = ds_state["total_perspectives"] or len(
+                                ds_state["researchers"]
+                            )
+                            for i, r in enumerate(ds_state["researchers"]):
+                                conf = r["confidence"]
+                                bar_filled = int(conf * 5)
+                                # 신뢰도 수준별 색상 클래스
+                                if conf >= 0.7:
+                                    conf_cls = "ds-conf-high"
+                                elif conf >= 0.4:
+                                    conf_cls = "ds-conf-mid"
+                                else:
+                                    conf_cls = "ds-conf-low"
+                                bar_html = (
+                                    f'<span class="ds-conf-bar {conf_cls}">'
+                                    f'{"●" * bar_filled}'
+                                    f'{"○" * (5 - bar_filled)}</span>'
+                                )
+                                ds_html += '<div class="ds-researcher-item ds-done">'
+                                ds_html += '<div class="ds-researcher-header">'
+                                ds_html += (
+                                    f'<span class="ds-researcher-label">'
+                                    f"{r['label']}</span>"
+                                )
+                                ds_html += (
+                                    f'<span class="ds-conf {conf_cls}">'
+                                    f"{bar_html} conf {conf:.2f}</span>"
+                                )
+                                ds_html += "</div>"
+                                if r["preview"]:
+                                    ds_html += (
+                                        f'<div class="ds-researcher-preview">'
+                                        f'{r["preview"]}</div>'
+                                    )
+                                ds_html += "</div>"
+                            # 아직 도착하지 않은 researcher 표시
+                            remaining = total_r - len(ds_state["researchers"])
+                            if active_2 and remaining > 0:
+                                ds_html += (
+                                    '<div class="ds-researcher-item ds-pending">'
+                                    '<div class="ds-researcher-header">'
+                                    '<span class="ds-researcher-label">'
+                                    "조사 중...</span>"
+                                    '<span class="ds-conf ds-conf-low">'
+                                    '<span class="ds-conf-bar ds-conf-low">'
+                                    "○○○○○</span> conf --</span>"
+                                    "</div></div>"
+                                )
+                            ds_html += "</div>"
+
+                        # 3. Review
+                        if stage in ("critic", "voting", "synthesis"):
+                            done_3 = stage in ("voting", "synthesis")
+                            num_cls_3 = " ds-num-done" if done_3 else (" ds-num-active")
+                            ds_html += '<div class="ds-stage">'
+                            ds_html += (
+                                f'<div class="ds-stage-header">'
+                                f'<span class="ds-stage-num{num_cls_3}">3</span>'
+                                f" Review</div>"
+                            )
+                            if ds_state["critic_summary"]:
+                                ds_html += (
+                                    f'<div class="ds-stage-detail">'
+                                    f'{ds_state["critic_summary"]}</div>'
+                                )
+                            for ci in ds_state["critic_items"]:
+                                cls = "ds-pass" if ci["passed"] else "ds-revise"
+                                ds_html += (
+                                    f'<div class="ds-critic-item {cls}">'
+                                    f'{ci["text"]}</div>'
+                                )
+                            ds_html += "</div>"
+
+                        # 4. Synthesize + Voting
+                        if stage in ("voting", "synthesis"):
+                            num_cls_4 = (
+                                " ds-num-done" if ds_state["done"] else " ds-num-active"
+                            )
+                            ds_html += '<div class="ds-stage">'
+                            ds_html += (
+                                f'<div class="ds-stage-header">'
+                                f'<span class="ds-stage-num{num_cls_4}">4</span>'
+                                f" Synthesize</div>"
+                            )
+                            if ds_state["voting_weights"]:
+                                ds_html += '<div class="ds-voting">'
+                                ds_html += (
+                                    '<div class="ds-voting-title">'
+                                    "Weighted Voting</div>"
+                                )
+                                for vw in ds_state["voting_weights"]:
+                                    name = vw.get("perspective", "")
+                                    weight = vw.get("weight", 0)
+                                    bar_w = int(weight)
+                                    p_cls = (
+                                        "ds-vote-pass"
+                                        if vw.get("passed", True)
+                                        else "ds-vote-revise"
+                                    )
+                                    ds_html += '<div class="ds-vote-row">'
+                                    ds_html += (
+                                        f'<div class="ds-vote-label">' f"{name}</div>"
+                                    )
+                                    ds_html += (
+                                        f'<div class="ds-vote-bar-bg">'
+                                        f'<div class="ds-vote-bar-fill {p_cls}"'
+                                        f' style="width:{bar_w}%"></div></div>'
+                                    )
+                                    ds_html += (
+                                        f'<div class="ds-vote-pct">' f"{weight}%</div>"
+                                    )
+                                    ds_html += "</div>"
+                                ds_html += "</div>"
+                            ds_html += "</div>"
+
+                        ds_html += "</div>"
+
+                        # -- 렌더링 --
                         streaming_html = _render_chat_messages_html()
                         streaming_html += (
                             f'\n<div class="chat-bubble-row-assistant">'
                             f'  <div class="chat-ai-avatar">'
                             f'<span class="chat-ai-avatar-text">PdM</span>'
                             f"</div>"
-                            f'  <div class="chat-msg-assistant chat-md">'
-                            f"{ds_thinking_html}</div>"
+                            f'  <div class="chat-msg-assistant">'
+                            f"{ds_html}</div>"
                             f"</div>"
                             f'<div class="chat-scroll-anchor"'
                             f' id="chat-scroll-anchor"></div>'

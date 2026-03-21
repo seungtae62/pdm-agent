@@ -260,6 +260,8 @@ class LLMChatRunner:
             # 3. astream_events로 그래프 실행 및 이벤트 매핑
             current_node: str = ""
             perspectives: list[dict] = []
+            search_results: list[dict] = []
+            critic_feedback: list[dict] = []
             current_researcher_index: int = 0
 
             async for event in graph.astream_events(initial_state, version="v2"):
@@ -275,7 +277,7 @@ class LLMChatRunner:
                             DeepSearchStepEvent(
                                 run_id=run_id,
                                 session_id=session_id,
-                                step_type="perspective",
+                                step_type="decompose",
                                 role="Leader",
                                 content="",
                                 status="thinking",
@@ -349,7 +351,7 @@ class LLMChatRunner:
 
                     if token and current_node:
                         step_type_map = {
-                            "decompose": "perspective",
+                            "decompose": "decompose",
                             "research": "researcher",
                             "review": "critic",
                             "synthesize": "synthesis",
@@ -406,35 +408,88 @@ class LLMChatRunner:
                         output = event.get("data", {}).get("output", {})
                         if isinstance(output, dict):
                             perspectives = output.get("perspectives", [])
+                        total = len(perspectives)
+                        perspective_names = [
+                            p.get("perspective", p.get("name", ""))
+                            for p in perspectives
+                        ]
                         await run_manager.emit_chat_event(
                             session_id,
                             DeepSearchStepEvent(
                                 run_id=run_id,
                                 session_id=session_id,
-                                step_type="perspective",
+                                step_type="decompose",
                                 role="Leader",
-                                content="",
+                                content=", ".join(perspective_names),
                                 status="done",
+                                total_perspectives=total if total > 0 else None,
                             ),
                         )
                     elif name == "research":
+                        # research 완료 후 search_results 추출 (confidence 포함)
+                        output = event.get("data", {}).get("output", {})
+                        if isinstance(output, dict):
+                            new_results = output.get("search_results", [])
+                            if new_results:
+                                search_results = new_results
+
+                        # 현재 researcher에 대한 confidence 추출
+                        confidence_val = None
+                        if search_results and current_researcher_index < len(
+                            search_results
+                        ):
+                            sr = search_results[current_researcher_index]
+                            confidence_val = sr.get("confidence")
+
+                        total = len(perspectives) if perspectives else None
+                        role_label = "Researcher"
+                        if perspectives and current_researcher_index < len(
+                            perspectives
+                        ):
+                            p = perspectives[current_researcher_index]
+                            p_name = p.get("perspective", p.get("name", ""))
+                            role_label = f"Researcher {current_researcher_index + 1}/{total}: {p_name}"
+
                         await run_manager.emit_chat_event(
                             session_id,
                             DeepSearchStepEvent(
                                 run_id=run_id,
                                 session_id=session_id,
                                 step_type="researcher",
-                                role="Researcher",
+                                role=role_label,
                                 content="",
                                 status="done",
                                 perspective_index=current_researcher_index,
-                                total_perspectives=(
-                                    len(perspectives) if perspectives else None
-                                ),
+                                total_perspectives=total,
+                                confidence=confidence_val,
                             ),
                         )
                         current_researcher_index += 1
                     elif name == "review":
+                        # review 완료 후 critic_feedback 추출
+                        output = event.get("data", {}).get("output", {})
+                        if isinstance(output, dict):
+                            new_feedback = output.get("critic_feedback", [])
+                            if new_feedback:
+                                critic_feedback = new_feedback
+
+                        # Critic 결과 요약 생성
+                        passed_count = sum(
+                            1 for cf in critic_feedback if cf.get("passed", False)
+                        )
+                        total = len(critic_feedback)
+                        feedback_lines = []
+                        for cf in critic_feedback:
+                            p = cf.get("perspective", "")
+                            status_label = "Pass" if cf.get("passed") else "Revise"
+                            feedback_lines.append(f"{p}: [{status_label}]")
+
+                        content = (
+                            f"{passed_count}/{total} 통과\n" + "\n".join(feedback_lines)
+                            if total > 0
+                            else ""
+                        )
+
                         await run_manager.emit_chat_event(
                             session_id,
                             DeepSearchStepEvent(
@@ -442,7 +497,7 @@ class LLMChatRunner:
                                 session_id=session_id,
                                 step_type="critic",
                                 role="Critic",
-                                content="",
+                                content=content,
                                 status="done",
                             ),
                         )
@@ -452,6 +507,68 @@ class LLMChatRunner:
                         synthesis = ""
                         if isinstance(output, dict):
                             synthesis = output.get("synthesis", "")
+
+                        # ── Weighted Voting 계산 및 이벤트 ──
+                        voting_weights: list[dict] = []
+                        total_score = 0.0
+                        for sr in search_results:
+                            perspective = sr.get("perspective", "")
+                            confidence = sr.get("confidence", 0.0)
+                            # 해당 perspective의 critic feedback 찾기
+                            cf_passed = True
+                            for cf in critic_feedback:
+                                if cf.get("perspective") == perspective:
+                                    cf_passed = cf.get("passed", True)
+                                    break
+                            # Weight = confidence * critic_multiplier
+                            critic_mult = 1.0 if cf_passed else 0.5
+                            score = confidence * critic_mult
+                            total_score += score
+                            voting_weights.append(
+                                {
+                                    "perspective": perspective,
+                                    "confidence": confidence,
+                                    "passed": cf_passed,
+                                    "score": score,
+                                }
+                            )
+
+                        # Normalize to percentages
+                        for vw in voting_weights:
+                            vw["weight"] = round(
+                                (
+                                    (vw["score"] / total_score * 100)
+                                    if total_score > 0
+                                    else 0
+                                ),
+                                1,
+                            )
+
+                        # Sort by weight descending
+                        voting_weights.sort(key=lambda x: x["weight"], reverse=True)
+
+                        if voting_weights:
+                            # Emit voting event
+                            voting_lines = []
+                            for vw in voting_weights:
+                                bar_len = int(vw["weight"] / 10)
+                                bar = "\u25a0" * bar_len + "\u2591" * (10 - bar_len)
+                                voting_lines.append(
+                                    f"{bar}  {vw['perspective']}  {vw['weight']}%"
+                                )
+
+                            await run_manager.emit_chat_event(
+                                session_id,
+                                DeepSearchStepEvent(
+                                    run_id=run_id,
+                                    session_id=session_id,
+                                    step_type="voting",
+                                    role="Weighted Voting",
+                                    content="\n".join(voting_lines),
+                                    status="done",
+                                    voting_weights=voting_weights,
+                                ),
+                            )
 
                         # synthesis 완료 이벤트
                         await run_manager.emit_chat_event(
