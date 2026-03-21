@@ -13,7 +13,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 
-from openai import OpenAI
+from openai import AzureOpenAI, OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
@@ -79,7 +79,16 @@ class RAGServer:
             port=self.config.qdrant_port,
             check_compatibility=False,
         )
-        self.openai = openai_client or OpenAI()
+        if openai_client:
+            self.openai = openai_client
+        elif os.getenv("USE_AZURE", "").lower() == "true":
+            self.openai = AzureOpenAI(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
+                api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+            )
+        else:
+            self.openai = OpenAI()
 
     def _embed(self, text: str) -> list[float]:
         """텍스트를 임베딩 벡터로 변환."""
@@ -134,9 +143,7 @@ class RAGServer:
                 "score": point.score,
                 "text": (point.payload or {}).get("text", ""),
                 "metadata": {
-                    k: v
-                    for k, v in (point.payload or {}).items()
-                    if k != "text"
+                    k: v for k, v in (point.payload or {}).items() if k != "text"
                 },
             }
             for point in response.points

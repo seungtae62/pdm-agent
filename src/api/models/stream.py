@@ -128,6 +128,20 @@ class ChatErrorEvent(BaseModel):
     timestamp: str
 
 
+class DeepSearchStepEvent(BaseModel):
+    """Deep Search step streaming."""
+
+    event: Literal["deep_search_step"] = "deep_search_step"
+    run_id: str
+    session_id: str
+    step_type: str  # "started" | "perspective" | "researcher" | "critic" | "synthesis"
+    role: str  # e.g., "Leader", "Researcher 1/3: 재료공학", "Critic"
+    content: str
+    status: str  # "thinking" | "done"
+    perspective_index: int | None = None  # 0-based index for researcher
+    total_perspectives: int | None = None
+
+
 AgentEvent = Union[
     RunStartedEvent,
     NodeEnteredEvent,
@@ -142,4 +156,5 @@ AgentEvent = Union[
     ChatTokenEvent,
     ChatCompletedEvent,
     ChatErrorEvent,
+    DeepSearchStepEvent,
 ]

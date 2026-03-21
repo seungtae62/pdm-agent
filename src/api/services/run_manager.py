@@ -9,7 +9,13 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from api.models.stream import AgentEvent, ChatCompletedEvent, ChatErrorEvent, ChatTokenEvent
+from api.models.stream import (
+    AgentEvent,
+    ChatCompletedEvent,
+    ChatErrorEvent,
+    ChatTokenEvent,
+    DeepSearchStepEvent,
+)
 
 
 class RunStatus(str, Enum):
@@ -31,16 +37,18 @@ class RunInfo:
     created_at: str = ""
     completed_at: str | None = None
     error: str | None = None
-    event_queue: asyncio.Queue[AgentEvent | None] = field(
-        default_factory=asyncio.Queue
-    )
+    event_queue: asyncio.Queue[AgentEvent | None] = field(default_factory=asyncio.Queue)
+    # 분석 결과 저장 (채팅 컨텍스트 전달용)
+    diagnosis_result: dict[str, Any] = field(default_factory=dict)
+    report: str = ""
+    work_order: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.created_at:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
 
-ChatEvent = ChatTokenEvent | ChatCompletedEvent | ChatErrorEvent
+ChatEvent = ChatTokenEvent | ChatCompletedEvent | ChatErrorEvent | DeepSearchStepEvent
 
 
 @dataclass
@@ -50,9 +58,7 @@ class ChatSessionInfo:
     session_id: str
     run_id: str
     user_id: str = "default"
-    event_queue: asyncio.Queue[ChatEvent | None] = field(
-        default_factory=asyncio.Queue
-    )
+    event_queue: asyncio.Queue[ChatEvent | None] = field(default_factory=asyncio.Queue)
     message_history: list[dict[str, str]] = field(default_factory=list)
 
 
@@ -104,9 +110,7 @@ class RunManager:
     ) -> ChatSessionInfo:
         """Create a new chat session for a run."""
         session_id = str(uuid.uuid4())
-        session = ChatSessionInfo(
-            session_id=session_id, run_id=run_id, user_id=user_id
-        )
+        session = ChatSessionInfo(session_id=session_id, run_id=run_id, user_id=user_id)
         self._chat_sessions[session_id] = session
         return session
 

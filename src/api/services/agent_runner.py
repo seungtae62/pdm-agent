@@ -92,9 +92,7 @@ class MockAgentRunner:
             # reasoning
             await run_manager.emit_event(
                 run_id,
-                NodeEnteredEvent(
-                    run_id=run_id, node_name="reasoning", timestamp=now()
-                ),
+                NodeEnteredEvent(run_id=run_id, node_name="reasoning", timestamp=now()),
             )
             await asyncio.sleep(0.5)
 
@@ -155,9 +153,11 @@ class MockAgentRunner:
                         result={
                             "dominant_defect": "BPFI",
                             "severity": health,
-                            "recommendation": "즉시 점검 필요"
-                            if health == "critical"
-                            else "모니터링 강화",
+                            "recommendation": (
+                                "즉시 점검 필요"
+                                if health == "critical"
+                                else "모니터링 강화"
+                            ),
                         },
                         timestamp=now(),
                     ),
@@ -176,8 +176,10 @@ class MockAgentRunner:
             )
             await asyncio.sleep(1.0)
 
-            severity = "critical" if health == "critical" else (
-                "warning" if is_anomaly else "normal"
+            severity = (
+                "critical"
+                if health == "critical"
+                else ("warning" if is_anomaly else "normal")
             )
             diagnosis = {
                 "equipment_id": event_payload.equipment_meta.equipment_id,
@@ -188,18 +190,18 @@ class MockAgentRunner:
                 "recommended_action": (
                     "즉시 교체"
                     if severity == "critical"
-                    else "모니터링 강화"
-                    if severity == "warning"
-                    else "정상 운전 유지"
+                    else "모니터링 강화" if severity == "warning" else "정상 운전 유지"
                 ),
             }
 
             await run_manager.emit_event(
                 run_id,
-                DiagnosisEvent(
-                    run_id=run_id, diagnosis=diagnosis, timestamp=now()
-                ),
+                DiagnosisEvent(run_id=run_id, diagnosis=diagnosis, timestamp=now()),
             )
+            # RunInfo에 진단 결과 저장 (채팅 컨텍스트용)
+            run_info = run_manager.get_run(run_id)
+            if run_info:
+                run_info.diagnosis_result = diagnosis
             await asyncio.sleep(0.5)
 
             # generate_report
@@ -222,10 +224,11 @@ class MockAgentRunner:
             )
             await run_manager.emit_event(
                 run_id,
-                ReportGeneratedEvent(
-                    run_id=run_id, report=report, timestamp=now()
-                ),
+                ReportGeneratedEvent(run_id=run_id, report=report, timestamp=now()),
             )
+            # RunInfo에 리포트 저장
+            if run_info:
+                run_info.report = report
 
             # generate_work_order (only for warning/critical)
             if is_anomaly:
@@ -314,6 +317,9 @@ class MockAgentRunner:
                         timestamp=now(),
                     ),
                 )
+                # RunInfo에 작업지시서 저장
+                if run_info:
+                    run_info.work_order = work_order
 
             # save_memory
             await run_manager.emit_event(
@@ -338,9 +344,7 @@ class MockAgentRunner:
         except Exception as e:
             await run_manager.emit_event(
                 run_id,
-                ErrorEvent(
-                    run_id=run_id, message=str(e), timestamp=now()
-                ),
+                ErrorEvent(run_id=run_id, message=str(e), timestamp=now()),
             )
             run_manager.set_status(run_id, RunStatus.FAILED)
 
@@ -411,17 +415,17 @@ class LangGraphAgentRunner:
             current_node = ""  # 현재 실행 중인 노드 추적
 
             async with asyncio.timeout(300):
-                async for event in graph.astream_events(
-                    initial_state, version="v2"
-                ):
+                async for event in graph.astream_events(initial_state, version="v2"):
                     kind = event["event"]
                     name = event.get("name", "")
                     data = event.get("data", {})
 
                     # Debug: 모든 이벤트 종류 로깅
                     if kind in (
-                        "on_tool_start", "on_tool_end",
-                        "on_chain_start", "on_chain_end",
+                        "on_tool_start",
+                        "on_tool_end",
+                        "on_chain_start",
+                        "on_chain_end",
                     ):
                         logger.info(
                             f"[SSE] event | run={run_id[:8]}"
@@ -440,8 +444,7 @@ class LangGraphAgentRunner:
                             ),
                         )
                         logger.info(
-                            f"[SSE] node_entered | run={run_id[:8]}"
-                            f" | node={name}"
+                            f"[SSE] node_entered | run={run_id[:8]}" f" | node={name}"
                         )
 
                     # LLM token streaming (reasoning 노드에서만)
@@ -467,6 +470,7 @@ class LangGraphAgentRunner:
                         if isinstance(input_data, dict):
                             try:
                                 import json as _json
+
                                 _json.dumps(input_data)
                             except (TypeError, ValueError):
                                 input_data = {
@@ -475,8 +479,13 @@ class LangGraphAgentRunner:
                                     if isinstance(
                                         v,
                                         (
-                                            str, int, float, bool,
-                                            type(None), list, dict,
+                                            str,
+                                            int,
+                                            float,
+                                            bool,
+                                            type(None),
+                                            list,
+                                            dict,
                                         ),
                                     )
                                 }
@@ -492,8 +501,7 @@ class LangGraphAgentRunner:
                             ),
                         )
                         logger.info(
-                            f"[SSE] tool_call | run={run_id[:8]}"
-                            f" | tool={name}"
+                            f"[SSE] tool_call | run={run_id[:8]}" f" | tool={name}"
                         )
 
                         # ToolResultEvent: output 추출
@@ -509,6 +517,7 @@ class LangGraphAgentRunner:
                             # dict/list도 내부에 비직렬화 객체가 있을 수 있음
                             try:
                                 import json as _json
+
                                 _json.dumps(output)
                             except (TypeError, ValueError):
                                 output = str(output)
@@ -522,8 +531,7 @@ class LangGraphAgentRunner:
                             ),
                         )
                         logger.info(
-                            f"[SSE] tool_result | run={run_id[:8]}"
-                            f" | tool={name}"
+                            f"[SSE] tool_result | run={run_id[:8]}" f" | tool={name}"
                         )
 
                     # Graph completed
@@ -536,7 +544,8 @@ class LangGraphAgentRunner:
                     f" | tokens={token_char_count} chars"
                 )
 
-            # Extract results from final state
+            # Extract results from final state and store in RunInfo
+            run_info = run_manager.get_run(run_id)
             if final_state:
                 # Diagnosis
                 diagnosis = final_state.get("diagnosis_result", {})
@@ -549,6 +558,8 @@ class LangGraphAgentRunner:
                             timestamp=now(),
                         ),
                     )
+                    if run_info:
+                        run_info.diagnosis_result = diagnosis
                     logger.info(
                         f"[SSE] diagnosis | run={run_id[:8]}"
                         f" | fault={diagnosis.get('fault_type', 'unknown')}"
@@ -566,6 +577,8 @@ class LangGraphAgentRunner:
                             timestamp=now(),
                         ),
                     )
+                    if run_info:
+                        run_info.report = report
                     logger.info(
                         f"[SSE] report_generated | run={run_id[:8]}"
                         f" | length={len(report)}"
@@ -583,6 +596,8 @@ class LangGraphAgentRunner:
                             timestamp=now(),
                         ),
                     )
+                    if run_info:
+                        run_info.work_order = wo
                     logger.info(
                         f"[SSE] work_order | run={run_id[:8]}"
                         f" | priority={wo.get('priority', 'unknown')}"
@@ -590,9 +605,7 @@ class LangGraphAgentRunner:
 
             # Run completed
             severity = (
-                final_state.get("diagnosis_result", {}).get(
-                    "severity", "unknown"
-                )
+                final_state.get("diagnosis_result", {}).get("severity", "unknown")
                 if final_state
                 else "unknown"
             )
@@ -607,8 +620,7 @@ class LangGraphAgentRunner:
             )
             run_manager.set_status(run_id, RunStatus.COMPLETED)
             logger.info(
-                f"[SSE] run_completed | run={run_id[:8]}"
-                f" | summary={summary}"
+                f"[SSE] run_completed | run={run_id[:8]}" f" | summary={summary}"
             )
 
         except Exception as e:

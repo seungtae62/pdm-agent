@@ -649,5 +649,43 @@ html[data-theme="dark"] .chat-msg-user {
     height: 1px;
     width: 100%;
 }
+
+/* Deep Search Think Mode */
+.ds-think-container {
+    background: #f0f4f8;
+    border-left: 3px solid #4a90d9;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 13px;
+}
+.ds-think-header {
+    font-weight: 700;
+    color: #2c5282;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+.ds-think-step {
+    margin: 6px 0;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+}
+.ds-think-role {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+.ds-think-content {
+    color: #2d3748;
+    line-height: 1.5;
+}
+.ds-researcher {
+    border-left: 2px solid #48bb78;
+}
+.ds-critic {
+    border-left: 2px solid #ed8936;
+}
 </style>
 """
