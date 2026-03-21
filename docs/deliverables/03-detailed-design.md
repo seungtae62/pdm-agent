@@ -48,12 +48,12 @@ Agent의 정체성, 역할, 그리고 답변의 톤앤매너를 정의합니다.
     - **Tool 선택 기준**: 추론 과정에서 근거 보강이 필요하다고 판단될 때만 호출. 정상 상태에서는 Tool 미호출. 이벤트 분석에서는 일반 RAG 활용(1~2회)으로 충분
 
     - **Deep Search (분석적 심층 조사 — Deep Search Engine 활용):**
-        - 일반 RAG 활용(정보 조회)과 구분되는 분석적 조사 행동 패턴. **Deep Search Engine(Group Agent)을 조건부 호출하여 병렬 탐색을 수행**
+        - 일반 RAG 활용(정보 조회)과 구분되는 분석적 조사 행동 패턴. **STORM 스타일 Deep Search Engine을 조건부 호출하여 다관점 병렬 탐색을 수행**
         - 발동 조건: 대화형 상호작용에서 사용자의 분석적 질문 시에만 발동 ("근본 원인 분석해줘", "유사 사례 있어?", "왜 급속 열화인가?"), 또는 RAG confidence < threshold, health_state == critical AND 유사 사례 < 2건
         - 이벤트 자동 분석에서는 발동하지 않음 (Critical 포함). 이벤트 분석은 도메인 지식 + 일반 RAG로 빠르게 처리
-        - 실행 구조: PdM Agent `reasoning` → 트리거 조건 감지 → **Deep Search Engine 호출** → Leader Agent가 검색 계획 수립 → Sub-Agent 1(Internal: Qdrant 심층 검색) + Sub-Agent 2(Web: Tavily) + Sub-Agent 3(Academic: arXiv) **병렬 실행** → Leader가 결과 종합 → PdM Agent `reasoning`에 구조화된 근거 세트 반환
-        - 기존 순차 탐색(가설→RAG→외부검색→해석→재검색 루프)을 Leader + Sub-Agents 병렬 구조로 전환하여 탐색 깊이와 병렬성을 동시에 확보
-        - 종료: Leader가 충분한 근거 확보를 판단하여 자율 종료 또는 안전장치 (max_iterations = 3)
+        - 실행 구조: PdM Agent `reasoning` → 트리거 조건 감지 → **Deep Search Engine 호출** → Leader가 질의 분해(Decompose) → 3개 Research Agent 병렬 실행(`asyncio.gather()`): Maintenance Engineer(정비 이력) + Senior Analyst(분석 이력) + Equipment Specialist(설비 매뉴얼 + 웹) → **Critic이 각 결과 검증(Pass/Revise)** → Revise 판정 시 해당 perspective만 재검색(Review-Revise 루프, 최대 3회) → confidence score 기반 가중치 투표로 합성(Synthesize) → PdM Agent `reasoning`에 구조화된 근거 세트 반환
+        - STORM 스타일 다관점 분석으로 탐색 깊이와 품질 검증을 동시에 확보
+        - 종료: Critic이 모든 perspective를 Pass 판정하면 Synthesize로 전이. 안전장치 (max_revisions = 3)
 
 - **Step 3 (Output Generation — 결과 구조화 및 리포트 생성):**
     - ReAct 루프 완료 후 LLM 응답에서 `diagnosis_result`를 구조화된 JSON으로 파싱 (결함 유형, 단계, 열화 속도, RUL 평가, 위험도, 권고, 불확실성 고지)
@@ -220,7 +220,7 @@ LLM이 참조할 외부 지식과 대화/분석 이력의 관리 전략을 수�
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
 | ReAct 추론 | 5단계 Thought 구조 (결함 식별 → 단계 판정 → 열화 평가 → RUL 평가 → 종합 판단) | Thought-Action-Observation 교차 수행으로 단계적 심화 추론 구현. 각 단계에서 분기/조기종료/Tool 호출을 자율 결정하여, 정상 상태는 Thought 1 조기 종료, 이상 상태는 전체 추론 수행 |
-| Deep Search Engine | Deep Search Engine(Group Agent)을 조건부 호출하여 Leader + Sub-Agents 병렬 탐색 | 트리거 조건 충족 시 Leader Agent가 검색 계획을 수립하고 Sub-Agent 1(Internal: Qdrant) + Sub-Agent 2(Web: Tavily) + Sub-Agent 3(Academic: arXiv)이 병렬 탐색 수행. 대화형 상호작용에서 사용자 요청 시 또는 RAG confidence 부족/Critical 상태에서 자동 발동. 외부 자료는 "외부 참고 (검증 필요)" 태그로 소스 신뢰도를 구분 |
+| Deep Search Engine (STORM) | STORM 스타일 다관점 분석 엔진을 조건부 호출하여 Leader-Research-Critic-Synthesize 구조로 병렬 탐색 | 트리거 조건 충족 시 Leader가 질의를 분해하고, 3개 고정 Research Agent — Maintenance Engineer(search_maintenance_history), Senior Analyst(search_analysis_history), Equipment Specialist(search_equipment_manual + search_web) — 가 `asyncio.gather()`로 병렬 실행. Critic이 각 결과를 Pass/Revise 검증하고, Review-Revise 루프(최대 3회)를 거쳐 confidence score 기반 가중치 투표로 합성. 대화형 상호작용에서 사용자 요청 시 또는 RAG confidence 부족/Critical 상태에서 자동 발동 |
 
 ### RAG 검색 파이프라인
 
@@ -342,32 +342,64 @@ changelog:
 
 ---
 
-## Deep Search Engine (Group Agent)
+## Deep Search Engine (STORM 스타일 다관점 분석)
 
-복잡한 분석 요청 시 복수 검색 에이전트가 **Plan & Execute 패턴**으로 병렬 탐색을 수행하는 Group Agent 아키텍처입니다. PdM Agent 본체는 단일 ReAct 에이전트를 유지하면서, 고난도 분석이 필요한 경우에만 Deep Search Engine을 조건부 호출합니다.
+복잡한 분석 요청 시 **STORM 스타일 다관점 분석**을 수행하는 Group Agent 아키텍처입니다. PdM Agent 본체는 단일 ReAct 에이전트를 유지하면서, 고난도 분석이 필요한 경우에만 Deep Search Engine을 조건부 호출합니다. Leader가 질의를 분해하고, 3개 고정 Research Agent가 각자의 전문 관점에서 병렬 검색을 수행하며, Critic의 Review-Revise 루프를 거쳐 confidence score 기반 가중치 투표로 최종 합성합니다.
 
-### Leader-SubAgent 구조
+### Leader-Research-Critic-Synthesize 구조
 
 | **컴포넌트** | **역할** | **구현** |
 | --- | --- | --- |
-| **Leader Agent** | 검색 계획 수립 + 결과 종합 + 최종 판단 | LangGraph 서브그래프 오케스트레이터 |
-| **Sub-Agent 1 (Internal)** | 내부 RAG 심층 검색 (Qdrant analysis_history + 설비 문서 + 정비 이력) | Qdrant 벡터 검색 + 리랭킹 |
-| **Sub-Agent 2 (Web)** | 외부 웹 검색 (기술 문서, 제조사 매뉴얼, 기술 포럼) | Tavily Search API |
-| **Sub-Agent 3 (Academic)** | 논문 DB 검색 (arXiv, IEEE 등 학술 자료) | arXiv API + 논문 벡터 스토어 |
+| **Leader** | 사용자 질의를 분해(Decompose)하여 3개 Research Agent에 검색 지시 배포 | LangGraph 서브그래프 `decompose` 노드 |
+| **Research Agent 1: Maintenance Engineer** | 정비 이력 관점에서 유사 고장 사례, 정비 경과, 근본 원인 검색 | agent_role: `maintenance_history`, tools: `search_maintenance_history` |
+| **Research Agent 2: Senior Analyst** | 분석 이력 관점에서 과거 유사 패턴의 에이전트 판단 및 결과 검색 | agent_role: `analysis_history`, tools: `search_analysis_history` |
+| **Research Agent 3: Equipment Specialist** | 설비 매뉴얼 + 외부 기술 자료 관점에서 결함 메커니즘, 급속 열화 조건, 정비 절차 검색 | agent_role: `equipment_manual`, tools: `search_equipment_manual` + `search_web` |
+| **Critic** | 각 Research Agent 결과의 관련성, 충분성, 정확성을 검증하여 Pass/Revise 판정 | LangGraph `review` 노드 |
+| **Synthesizer** | Critic 검증을 통과한 결과를 confidence score 기반 가중치 투표로 합성 | LangGraph `synthesize` 노드 |
 
 ### 실행 흐름
 
 ```
 PdM Agent reasoning → 트리거 조건 감지 → Deep Search Engine 호출
-  → Leader: 검색 계획 수립 (쿼리 분해 + Sub-Agent별 전략 할당)
-    → Sub-Agent 1~N: 병렬 실행 (각각 Plan & Execute 독립 탐색)
-  → Leader: 결과 종합 (신뢰도 기반 판단)
-→ PdM Agent reasoning에 구조화된 근거 세트 반환
+  → START → decompose (Leader: 질의 분해)
+    → research (3개 Research Agent asyncio.gather() 병렬 실행)
+    → review (Critic: 각 결과 Pass/Revise 판정)
+      ├─ Revise → research (실패한 perspective만 재검색, 최대 3회)
+      └─ Pass → synthesize (confidence score 기반 가중치 투표 합성)
+  → END → PdM Agent reasoning에 구조화된 근거 세트 반환
 ```
 
-- 각 Sub-Agent는 독립적인 Plan & Execute 루프를 수행하며, 자체적으로 검색 전략을 수립하고 결과를 평가
-- Leader Agent는 모든 Sub-Agent 결과를 종합하여 신뢰도 기반 최종 판단을 생성
-- LangGraph 서브그래프로 구현되어 PdM Agent 본체의 `reasoning` 노드에서 조건부 호출
+- 3개 Research Agent는 `asyncio.gather()`로 동시에 실행되어 병렬성 확보
+- Critic은 각 Research Agent의 결과를 독립적으로 검증하며, Revise 판정 시 해당 perspective만 재검색
+- Review-Revise 루프는 최대 3회로 제한하여 무한 루프 방지
+- confidence score(0.0~1.0)는 검색 결과의 양과 품질 기반 휴리스틱으로 산출
+- 합성(Synthesize) 시 각 전문가의 confidence score에 비례하여 기여도(가중치)를 결정
+
+### 3개 고정 Research Agent (Perspective)
+
+| **Research Agent** | **전문 관점** | **검색 도구** | **주요 검색 대상** |
+| --- | --- | --- | --- |
+| **Maintenance Engineer** | 정비 이력 전문가 | `search_maintenance_history` | 유사 고장 사례, 정비 경과, 근본 원인, 고장까지 소요 시간 |
+| **Senior Analyst** | 분석 이력 전문가 | `search_analysis_history` | 과거 유사 패턴의 에이전트 판단, 예측 정확도, 결과 추적 |
+| **Equipment Specialist** | 설비/기술 전문가 | `search_equipment_manual` + `search_web` | 결함 메커니즘, 급속 열화 조건, 정비 절차, 외부 기술 문헌 |
+
+### Review-Revise 루프 및 Voting 메커니즘
+
+**Critic 검증 프로세스:**
+1. 각 Research Agent의 결과를 독립적으로 평가 (관련성, 충분성, 정확성)
+2. Pass 판정: 해당 perspective의 결과가 질의에 대한 충분한 근거를 제공
+3. Revise 판정: 결과가 불충분하거나 질의와의 관련성이 낮음 → 해당 perspective만 재검색 지시
+4. 최대 3회 재검색 후에도 Revise이면 현재 결과로 진행 (안전장치)
+
+**Confidence Score 산출:**
+- 검색 결과 건수, 유사도 점수, 문서 관련성을 종합한 휴리스틱 (0.0~1.0)
+- 높음 (≥0.7): 충분한 근거 확보, 합성 시 높은 가중치
+- 중간 (0.4~0.7): 부분적 근거, 보완적 참조
+- 낮음 (<0.4): 근거 부족, 합성 시 낮은 가중치 또는 "근거 부족" 명시
+
+**가중치 투표(Weighted Voting):**
+- 합성(Synthesize) 단계에서 각 전문가의 confidence score에 비례하여 최종 결과에 대한 기여도 결정
+- 예: Maintenance Engineer(0.85) + Senior Analyst(0.45) + Equipment Specialist(0.72) → 정비 이력 관점 우세 반영
 
 ### 트리거 조건
 
@@ -383,30 +415,31 @@ LangGraph StateGraph 기반 서브그래프로 구현합니다.
 
 | **노드** | **동작** | **분기 조건** |
 | --- | --- | --- |
-| `plan` | Leader가 검색 쿼리 분해 + Sub-Agent별 검색 전략 할당 | 항상 `search`로 전이 |
-| `search` | Sub-Agent 1~N 병렬 실행. 각각 할당된 소스에서 Plan & Execute 수행 | 항상 `evaluate`로 전이 |
-| `evaluate` | 각 결과의 관련성, 신뢰도, 일관성 평가 | 충분 → `synthesize` / 불충분 → `plan` 재순환 |
-| `synthesize` | 평가를 통과한 결과를 종합하여 구조화된 근거 세트 생성 | 종료 → PdM Agent에 반환 |
+| `decompose` | Leader가 사용자 질의를 분석하여 3개 Research Agent에 대한 검색 지시(sub-queries) 생성 | 항상 `research`로 전이 |
+| `research` | 3개 Research Agent가 `asyncio.gather()`로 병렬 실행. 각 perspective별 도구로 검색 수행 후 confidence score 산출 | 항상 `review`로 전이 |
+| `review` | Critic이 각 Research Agent 결과를 Pass/Revise 판정. revision_count 추적 | 모두 Pass 또는 revision_count ≥ 3 → `synthesize` / Revise 존재 → `research` (실패한 perspective만) |
+| `synthesize` | confidence score 기반 가중치 투표로 3개 관점의 결과를 종합하여 구조화된 근거 세트 생성 | 종료 → PdM Agent에 반환 |
 
-**Sub-Agent별 담당 소스:**
+**LangGraph 서브그래프 흐름:**
 
-| **Sub-Agent** | **검색 소스** | **도구** |
-| --- | --- | --- |
-| Internal Search | analysis_history, 설비 문서, 정비 이력 | Qdrant 벡터 검색 (Hybrid Search) |
-| Web Search | 기술 문서, 제조사 매뉴얼, 기술 포럼 | Tavily Search API |
-| Academic Search | 학술 논문, 기술 표준 문서 | arXiv API + 논문 벡터 스토어 |
+```
+START → decompose → research (3개 병렬) → review → (조건부)
+                                                      ├─ Revise → research (실패한 것만)
+                                                      └─ Pass → synthesize → END
+```
 
 **PdM Agent 연동:**
-- Leader Agent가 종합한 결과를 PdM Agent의 `reasoning` 노드에 구조화된 형태로 반환
-- 반환 형식: 근거 목록(출처, 신뢰도, 요약) + 종합 판단 + 추가 조사 필요 여부
-- 안전장치: Deep Search Engine 내부에도 최대 재순환 횟수 제한 (max_iterations = 3)
+- Synthesizer가 종합한 결과를 PdM Agent의 `reasoning` 노드에 구조화된 형태로 반환
+- 반환 형식: 전문가별 근거 목록(출처, confidence score, 요약) + 가중치 투표 결과 + 종합 판단
+- 안전장치: Review-Revise 최대 3회 + 전체 서브그래프 타임아웃
 
 ### 기대 효과
 
 | **효과** | **설명** |
 | --- | --- |
-| **단일 RAG 한계 극복** | 내부 데이터만으로 부족한 경우 외부 소스를 동시에 탐색하여 근거 보강 |
-| **다각도 근거 확보** | 내부 이력, 웹 문서, 학술 논문 등 복수 소스의 교차 검증으로 분석 근거 강화 |
-| **분석 신뢰도 향상** | 특히 Critical 상태에서 충분한 근거 없이 판단하는 위험을 최소화 |
+| **단일 RAG 한계 극복** | 3개 전문가 관점에서 동시에 탐색하여 단일 검색으로 놓칠 수 있는 근거 확보 |
+| **다관점 교차 검증** | 정비 이력, 분석 이력, 설비 매뉴얼/외부 기술 자료의 다관점 교차 검증으로 분석 근거 강화 |
+| **품질 보장** | Critic의 Review-Revise 루프로 검색 결과 품질을 보장하고, confidence score로 신뢰도를 정량화 |
+| **병렬 실행 효율** | `asyncio.gather()` 병렬 실행으로 순차 검색 대비 응답 시간 단축 |
 
 

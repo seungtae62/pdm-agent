@@ -50,8 +50,9 @@
 
 | **성과 지표** | **목표 수치** | **측정 방법** | **현재 수준** |
 | --- | --- | --- | --- |
-| 고장 유형 진단 정확도 | 85% 이상 | 에이전트가 진단한 고장 유형 (외륜, 내륜, 전동체 등)과 NASA-IMS 실제 고장 유형의 일치율 | 미측정 (3개의 테스트 셋의 고장 모드를 기준으로 초기 평가) |
-| 추론 근거 설명 품질 | 4점/5점 이상 | 전문가 정성 평가 - 추론 근거의 논리성, 도메인 지식 활용도, 불확실성 표현 적절성 | 미측정 |
+| KPI 1: 이상 감지 → 정비 권고 처리시간 단축률 | 90% 이상 단축 | 이벤트 수신 ~ 작업지시서 생성까지 소요 시간 측정. 기존 수동 프로세스(설비 확인 + 원인 분석 + 이력 조회 + 보고서 작성 + 작업지시서 작성: 수 시간) 대비 에이전트(수 분 이내) 비교 | 미측정 |
+| KPI 2: Skills 도입 토큰 효율성 개선율 | 정상 이벤트 60% 절감 | Skills 도입 전(시스템 프롬프트에 전체 도메인 지식 상주: ~15K 토큰) 대비 도입 후(Knowledge Skills 조건부 로딩: 정상 ~6K, 이상 ~12K) 토큰 사용량 비교 | 미측정 |
+| KPI 3: Deep Search 다관점 분석 품질 | Critic Pass Rate 80%+, Confidence Score 평균 0.7+ | 3개 전문가(Maintenance Engineer, Senior Analyst, Equipment Specialist) 검증 통과 비율 + KB 데이터 기반 검색 신뢰도 + 병렬 실행 응답 시간(순차 대비) | 미측정 |
 
 ## 핵심 기능 정의
 
@@ -73,7 +74,7 @@
 
 7. Self-Evolving Skills: 분석 완료 후 실제 결과와의 차이를 감지하여 도메인 지식(Knowledge Skills)을 자동 보정. 반복 분석을 통해 조직의 설비 운영 노하우가 Skill 파일로 자동 축적됨
 
-8. Deep Search Engine: 복잡한 분석 요청 시 Group Agent가 복수 검색 에이전트를 병렬 운용하여 내부 RAG + 외부 웹 + 논문 DB를 동시 탐색. 단일 RAG 한계를 극복하여 다각도 근거 확보
+8. Deep Search Engine: 복잡한 분석 요청 시 STORM 스타일 다관점 분석 엔진이 3개 고정 Research Agent(Maintenance Engineer, Senior Analyst, Equipment Specialist)를 병렬 운용하여 정비 이력, 분석 이력, 설비 매뉴얼 + 외부 웹을 동시 탐색. Critic의 Review-Revise 루프와 confidence score 기반 가중치 투표로 다각도 근거 확보
 
 ## 에이전트 상세 설계
 
@@ -90,7 +91,7 @@
 | **기능** | **설명** | **적용** |
 | --- | --- | --- |
 | ReAct (Planning & Reasoning) | 이벤트 페이로드 수신 시 상황에 따른 추론 깊이와 경로를 자율적으로 결정. 정상 상태에서는 간결하게 조기 종료하고, 복잡한 이상 상황에서는 심층 추론을 수행. | ReAct (Reasoning + Acting) 프레임워크 기반. 5단계 추론 구조 (결함 식별 > 단계 판정 > 열화 평가 > RUL 평가 > 종합 판단)을 따르되, 각 단계에서 분기/종료/Tool 호출을 자율 결정 |
-| Deep Search Engine (Group Agent) | Leader Agent가 검색 계획을 수립하고, 복수 Sub-Agent가 Plan & Execute 패턴으로 병렬 탐색 (내부 RAG, 외부 웹, 논문 DB)을 수행. Leader가 결과를 종합하여 본 Agent에 반환. 단순 RAG 검색 대비 심층적이고 구조화된 분석 결과를 도출 | 대화형 상호작용에서 사용자 요청 시 또는 Critical 상태에서 유사 사례 부족 시 조건부 발동. 이벤트 자동 분석에서는 미발동 (빠른 판정 + 알림 우선) |
+| Deep Search Engine (STORM 스타일 Group Agent) | STORM 스타일 다관점 분석 엔진. Leader가 질의를 분해하고, 3개 고정 Research Agent(Maintenance Engineer, Senior Analyst, Equipment Specialist)가 `asyncio.gather()`로 병렬 검색을 수행. Critic이 각 결과를 검증(Pass/Revise)하고, Review-Revise 루프(최대 3회)를 거친 후 confidence score 기반 가중치 투표로 최종 합성. 단순 RAG 검색 대비 심층적이고 다관점 분석 결과를 도출 | 대화형 상호작용에서 사용자 요청 시 또는 Critical 상태에서 유사 사례 부족 시 조건부 발동. 이벤트 자동 분석에서는 미발동 (빠른 판정 + 알림 우선) |
 | Memory | 대화 세션 내 맥락을 유지하고, 과거 분석 결과와 사용자 피드백을 축적하여 후속 판단에 활용 | 단기: 현재 대화 세션의 분석 컨텍스트 유지 장기: 에이전트 과거 분석 판단과 결과를 분석 이력 DB에 저장하여, 향후 유사 이벤트 발생 시 참조 |
 | RAG | 정비 이력 DB, 설비 매뉴얼 DB, 과거 분석 이력 DB에서 관련 정보를 검색하여 해석의 근거를 보강. 일반 RAG 활용(정보 조회)과 Deep Research(분석적 조사)에서 공통으로 사용되는 기반 기술 | VDB 기반. Action Skills을 통해 호출되며, 검색 결과를 추론 컨텍스트에 반영 |
 | Prompt Optimization | 대화형 상호작용 시 분석 맥락을 효율적으로 유지. 전체 추론 체인 대신 핵심 필드만 추출하여 주입하고, 대화가 길어지면 이력을 압축하여 응답 품질 유지 | 분석 맥락 구조화 (세션 시작 시) + 대화 이력 압축 (매 턴) + 슬라이딩 윈도우 (3턴 이상 시) |

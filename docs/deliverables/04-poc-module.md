@@ -55,7 +55,7 @@ Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 �
 | `search_equipment_manual` | 매뉴얼, FMEA, 정비 절차서 검색 (doc_type 필터) |
 | `search_analysis_history` | 에이전트 과거 분석 판단 이력 검색 |
 | `notify_maintenance_staff` | 정비 담당자 알림 (Watch 이상). PoC에서는 로깅, 프로덕션에서 이메일/Slack 확장 가능 |
-| `search_web` | Tavily API 기반 외부 웹 검색. Deep Research에서만 사용하며, 내부 RAG 보완용 |
+| `search_web` | Tavily API 기반 외부 웹 검색. Deep Search Engine에서 Equipment Specialist가 사용하며, 내부 RAG 보완용 |
 
 - RAG 검색 3종은 RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거
 - 모든 서버 인스턴스는 지연 초기화(싱글턴)로 관리
@@ -67,7 +67,7 @@ Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 �
 | --- | --- | --- |
 | `fault-diagnosis` | anomaly_detected = true | 결함 주파수 해석, P-F 곡선 4단계 |
 | `feature-interpret` | anomaly_detected = true | Kurtosis+RMS 복합 패턴, Crest Factor 전이 |
-| `deep-research` | deep_research_activated = true | 가설→RAG→외부검색→해석 루프 |
+| `deep-research` | deep_research_activated = true | STORM 스타일 다관점 분석 절차: Leader(Decompose) → 3 Research Agents(병렬) → Critic(Review-Revise) → Synthesize |
 | `response-normal` | health_state != warning/critical | Normal/Watch 응답 양식 |
 | `response-alert` | health_state = warning/critical | Warning/Critical 응답 양식 |
 
@@ -109,6 +109,38 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 - Embedding: OpenAI `text-embedding-3-small` (1536차원, Dense)
 - PostgreSQL 스키마: equipment_id, bearing_id, event_id, fault_type, fault_stage, degradation_speed, risk_level, ml_rul_hours, recommendation, tools_used(JSONB), deep_research, human_response, action_taken, resolved 등
 - `MemoryStore.load_recent()`: 설비/베어링 기준 최근 5건 조회 → `summarize_history()`로 자연어 요약
+
+### Deep Search Engine (STORM 스타일 다관점 분석)
+
+LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
+
+**서브그래프 노드 구조:**
+
+| **노드** | **역할** |
+| --- | --- |
+| `decompose` | Leader가 사용자 질의를 분석하여 3개 Research Agent에 대한 검색 지시(sub-queries) 생성 |
+| `research` | 3개 Research Agent가 `asyncio.gather()`로 병렬 실행. 각 perspective별 도구로 검색 수행 후 confidence score 산출 |
+| `review` | Critic이 각 Research Agent 결과를 Pass/Revise 판정. Revise 시 해당 perspective만 재검색 (최대 3회) |
+| `synthesize` | confidence score 기반 가중치 투표로 3개 관점의 결과를 종합하여 구조화된 근거 세트 생성 |
+
+**3개 고정 Research Agent (Perspective):**
+
+| **Research Agent** | **agent_role** | **검색 도구** |
+| --- | --- | --- |
+| Maintenance Engineer | `maintenance_history` | `search_maintenance_history` |
+| Senior Analyst | `analysis_history` | `search_analysis_history` |
+| Equipment Specialist | `equipment_manual` | `search_equipment_manual` + `search_web` |
+
+**Critic Review-Revise 루프:**
+- Critic이 각 Research Agent의 결과를 독립적으로 검증 (관련성, 충분성, 정확성)
+- Pass: 해당 perspective 결과가 충분한 근거 제공 → 합성 단계로 진행
+- Revise: 결과 불충분 → 해당 perspective만 재검색 지시 (최대 3회)
+- 모든 perspective가 Pass 또는 최대 재검색 횟수 도달 시 `synthesize`로 전이
+
+**Confidence Score 및 가중치 투표:**
+- confidence score (0.0~1.0): 검색 결과 양/품질 기반 휴리스틱으로 산출
+- 합성 시 각 전문가의 confidence score에 비례하여 기여도(가중치) 결정
+- UI에서 색상 코딩으로 시각화: 초록(≥0.7), 노랑(0.4~0.7), 빨강(<0.4)
 
 ## 주요 문제 해결 및 기술 리서치
 
