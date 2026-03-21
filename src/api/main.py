@@ -7,6 +7,10 @@ import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,6 +26,8 @@ from api.services.agent_runner import LangGraphAgentRunner, MockAgentRunner
 from api.services.chat_runner import MockChatRunner
 from api.services.run_manager import RunManager
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -29,6 +35,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.run_manager = RunManager()
 
     runner_mode = os.getenv("AGENT_RUNNER_MODE", "mock")
+    logger.info("AgentRunner mode: %s", runner_mode)
     if runner_mode == "langgraph":
         from agent.config import AgentConfig
 
