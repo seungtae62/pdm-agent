@@ -18,17 +18,19 @@ _tavily_client = None
 
 
 def _get_client():
-    """TavilyClient 인스턴스를 지연 초기화로 반환."""
+    """TavilyClient 인스턴스를 지연 초기화로 반환.
+
+    Returns:
+        TavilyClient 인스턴스. API key 미설정 시 None.
+    """
     global _tavily_client
     if _tavily_client is None:
-        from tavily import TavilyClient
-
         api_key = os.getenv("TAVILY_API_KEY")
         if not api_key:
-            raise RuntimeError(
-                "TAVILY_API_KEY 환경변수가 설정되지 않았습니다. "
-                ".env 파일을 확인하세요."
-            )
+            logger.warning("[action-skill] TAVILY_API_KEY 미설정, 웹 검색 비활성화")
+            return None
+        from tavily import TavilyClient
+
         _tavily_client = TavilyClient(api_key=api_key)
         logger.info("[action-skill] TavilyClient 초기화 완료")
     return _tavily_client
@@ -45,7 +47,18 @@ def search_web(query: str) -> str:
         query: 검색 쿼리 (영문 권장).
     """
     client = _get_client()
-    response = client.search(query, max_results=5)
+    if client is None:
+        return (
+            "웹 검색을 사용할 수 없습니다 (TAVILY_API_KEY 미설정). "
+            "내부 RAG 검색 결과와 도메인 지식을 기반으로 분석을 계속하세요."
+        )
+
+    try:
+        response = client.search(query, max_results=5)
+    except Exception as e:
+        logger.error("[action-skill] search_web 실패: %s", e)
+        return f"웹 검색 중 오류 발생: {e}. 내부 RAG 검색 결과를 기반으로 분석을 계속하세요."
+
     logger.info("[action-skill] search_web: query=%s", query)
 
     results = response.get("results", [])
