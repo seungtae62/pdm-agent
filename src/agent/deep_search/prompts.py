@@ -42,11 +42,14 @@ DECOMPOSITION_PROMPT = """\
 ]
 ```
 
-agent_role은 다음 중 하나:
-- maintenance_history: 정비 이력 중심 검색
-- analysis_history: 과거 분석 판단 이력 중심 검색
-- equipment_manual: 설비 사양/결함 가이드 중심 검색
-- external_search: 외부 웹 기술 문헌 검색
+agent_role과 search_tools는 반드시 아래 매핑을 사용하세요 (다른 이름 사용 금지):
+- maintenance_history → search_tools: ["search_maintenance_history"]
+- analysis_history → search_tools: ["search_analysis_history"]
+- equipment_manual → search_tools: ["search_equipment_manual"]
+- external_search → search_tools: ["search_web"]
+
+각 관점에 복수의 tool을 지정할 수 있습니다. 예:
+- 설비 전문가가 내부 매뉴얼 + 외부 문헌을 모두 검색: ["search_equipment_manual", "search_web"]
 """
 
 # ---------------------------------------------------------------------------
