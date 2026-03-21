@@ -841,17 +841,11 @@ if st.session_state.chat_open and chat_col is not None:
                 unsafe_allow_html=True,
             )
         with ds_col:
-            # Deep Search toggle
-            ds_label = (
-                "Deep Search: ON"
-                if st.session_state.get("deep_search_enabled", False)
-                else "Deep Search: OFF"
+            st.session_state.deep_search_enabled = st.toggle(
+                "Deep Search",
+                value=st.session_state.get("deep_search_enabled", False),
+                key="ds_toggle",
             )
-            if st.button(ds_label, key="ds_toggle"):
-                st.session_state.deep_search_enabled = not st.session_state.get(
-                    "deep_search_enabled", False
-                )
-                st.rerun()
         with close_col:
             st.button("X", key="chat_close", on_click=_toggle_chat)
 
@@ -886,6 +880,8 @@ if st.session_state.chat_open and chat_col is not None:
         pending_msg = st.session_state.pop("_pending_chat_msg", None)
         if pending_msg:
             ds_thinking_html = ""
+            ds_pipeline_stage = ""
+            ds_current_researcher = -1
             st.session_state.chat_messages.append(
                 {"role": "user", "content": pending_msg}
             )
@@ -940,52 +936,103 @@ if st.session_state.chat_open and chat_col is not None:
                         content = evt.get("content", "")
                         status = evt.get("status", "")
 
-                        # Build thinking block HTML
                         if step_type == "started":
-                            ds_thinking_html = (
-                                '<div class="ds-think-container">'
-                                '<div class="ds-think-header">'
-                                "Deep Research</div>"
+                            ds_thinking_html = '<div class="ds-pipeline">'
+                            ds_thinking_html += (
+                                '<div class="ds-pipeline-title">' "Deep Research</div>"
                             )
+                            ds_pipeline_stage = "decompose"
+                            ds_current_researcher = -1
                         elif step_type == "perspective":
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step">'
-                                f'<div class="ds-think-role">'
-                                f"{role}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            if ds_pipeline_stage == "decompose":
+                                ds_thinking_html += '<div class="ds-stage">'
+                                ds_thinking_html += (
+                                    '<div class="ds-stage-header">'
+                                    '<span class="ds-stage-num">1</span>'
+                                    " 관점 분해</div>"
+                                )
+                                ds_pipeline_stage = "perspective"
+                            if content.strip():
+                                ds_thinking_html += (
+                                    f'<div class="ds-stage-detail">' f"{content}</div>"
+                                )
                         elif step_type == "researcher":
-                            status_icon = "..." if status == "thinking" else ""
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step ds-researcher">'
-                                f'<div class="ds-think-role">'
-                                f"{role} {status_icon}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            if ds_pipeline_stage in ("perspective", "decompose"):
+                                if ds_pipeline_stage == "decompose":
+                                    ds_thinking_html += '<div class="ds-stage">'
+                                    ds_thinking_html += (
+                                        '<div class="ds-stage-header">'
+                                        '<span class="ds-stage-num">1</span>'
+                                        " 관점 분해</div>"
+                                    )
+                                ds_thinking_html += "</div>"
+                                ds_thinking_html += '<div class="ds-stage">'
+                                ds_thinking_html += (
+                                    '<div class="ds-stage-header">'
+                                    '<span class="ds-stage-num">2</span>'
+                                    " 관점별 조사</div>"
+                                )
+                                ds_pipeline_stage = "research"
+                            if "Researcher" in role and "/" in role:
+                                ds_current_researcher += 1
+                                researcher_label = (
+                                    role.split(": ", 1)[1] if ": " in role else role
+                                )
+                                status_cls = (
+                                    "ds-active" if status == "thinking" else "ds-done"
+                                )
+                                ds_thinking_html += (
+                                    f'<div class="ds-researcher-item' f' {status_cls}">'
+                                )
+                                ds_thinking_html += (
+                                    f'<span class="ds-researcher-label">'
+                                    f"{researcher_label}</span>"
+                                )
+                                if content.strip():
+                                    short = (
+                                        content[:120] + "..."
+                                        if len(content) > 120
+                                        else content
+                                    )
+                                    ds_thinking_html += (
+                                        f'<span class="ds-researcher-preview">'
+                                        f"{short}</span>"
+                                    )
+                                ds_thinking_html += "</div>"
                         elif step_type == "critic":
-                            ds_thinking_html += (
-                                f'<div class="ds-think-step ds-critic">'
-                                f'<div class="ds-think-role">'
-                                f"{role}</div>"
-                                f'<div class="ds-think-content">'
-                                f"{content}</div>"
-                                f"</div>"
-                            )
+                            if ds_pipeline_stage == "research":
+                                ds_thinking_html += "</div>"
+                                ds_thinking_html += '<div class="ds-stage">'
+                                ds_thinking_html += (
+                                    '<div class="ds-stage-header">'
+                                    '<span class="ds-stage-num">3</span>'
+                                    " 검증</div>"
+                                )
+                                ds_pipeline_stage = "critic"
+                            if content.strip():
+                                short = content[:100]
+                                ds_thinking_html += (
+                                    f'<div class="ds-stage-detail">' f"{short}</div>"
+                                )
                         elif step_type == "synthesis":
-                            ds_thinking_html += "</div>"
+                            if ds_pipeline_stage in ("critic", "research"):
+                                ds_thinking_html += "</div>"
+                            ds_thinking_html += '<div class="ds-stage">'
+                            ds_thinking_html += (
+                                '<div class="ds-stage-header">'
+                                '<span class="ds-stage-num">4</span>'
+                                " 종합 분석</div>"
+                            )
+                            ds_thinking_html += "</div></div>"
+                            ds_pipeline_stage = "synthesis"
 
-                        # Re-render with thinking block
                         streaming_html = _render_chat_messages_html()
                         streaming_html += (
                             f'\n<div class="chat-bubble-row-assistant">'
                             f'  <div class="chat-ai-avatar">'
                             f'<span class="chat-ai-avatar-text">PdM</span>'
                             f"</div>"
-                            f'  <div class="chat-msg-assistant chat-md">'
+                            f'  <div class="chat-msg-assistant">'
                             f"{ds_thinking_html}</div>"
                             f"</div>"
                             f'<div class="chat-scroll-anchor"'

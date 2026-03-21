@@ -650,42 +650,83 @@ html[data-theme="dark"] .chat-msg-user {
     width: 100%;
 }
 
-/* Deep Search Think Mode */
-.ds-think-container {
-    background: #f0f4f8;
-    border-left: 3px solid #4a90d9;
-    border-radius: 8px;
-    padding: 12px;
-    margin: 8px 0;
+/* Deep Search Pipeline (chat inline) */
+.ds-pipeline {
     font-size: 13px;
+    line-height: 1.6;
+    color: #4a5568;
 }
-.ds-think-header {
+.ds-pipeline-title {
     font-weight: 700;
     color: #2c5282;
-    margin-bottom: 8px;
-    font-size: 14px;
+    font-size: 13px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
 }
-.ds-think-step {
-    margin: 6px 0;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
+.ds-stage {
+    margin: 4px 0;
+    padding-left: 8px;
 }
-.ds-think-role {
+.ds-stage-header {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 12px;
+    margin: 4px 0 2px 0;
+}
+.ds-stage-num {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #4a90d9;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 10px;
+    line-height: 16px;
+    margin-right: 4px;
+}
+.ds-stage-detail {
+    font-size: 12px;
+    color: #718096;
+    padding-left: 24px;
+    margin: 1px 0;
+}
+.ds-researcher-item {
+    display: flex;
+    flex-direction: column;
+    padding: 3px 0 3px 24px;
+    font-size: 12px;
+    border-left: 2px solid #e2e8f0;
+    margin-left: 8px;
+}
+.ds-researcher-item.ds-active {
+    border-left-color: #48bb78;
+}
+.ds-researcher-item.ds-done {
+    border-left-color: #a0aec0;
+}
+.ds-researcher-label {
     font-weight: 600;
     color: #4a5568;
-    margin-bottom: 4px;
-    font-size: 12px;
 }
-.ds-think-content {
-    color: #2d3748;
-    line-height: 1.5;
+.ds-researcher-preview {
+    color: #a0aec0;
+    font-size: 11px;
+    margin-top: 1px;
 }
-.ds-researcher {
-    border-left: 2px solid #48bb78;
+
+/* Chat markdown heading size limit */
+.chat-md h1, .chat-md h2 {
+    font-size: 15px !important;
+    font-weight: 700;
+    margin: 8px 0 4px 0;
+    line-height: 1.4;
 }
-.ds-critic {
-    border-left: 2px solid #ed8936;
+.chat-md h3 {
+    font-size: 14px !important;
+    font-weight: 600;
+    margin: 6px 0 3px 0;
 }
 </style>
 """
