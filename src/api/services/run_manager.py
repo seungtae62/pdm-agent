@@ -14,6 +14,7 @@ from api.models.stream import (
     ChatCompletedEvent,
     ChatErrorEvent,
     ChatTokenEvent,
+    DeepSearchStepEvent,
 )
 
 
@@ -47,7 +48,7 @@ class RunInfo:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
 
-ChatEvent = ChatTokenEvent | ChatCompletedEvent | ChatErrorEvent
+ChatEvent = ChatTokenEvent | ChatCompletedEvent | ChatErrorEvent | DeepSearchStepEvent
 
 
 @dataclass

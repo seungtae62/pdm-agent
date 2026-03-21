@@ -23,6 +23,8 @@ from styles import CHAT_PANEL_CSS, GLOBAL_CSS, SIDEBAR_CSS
 def _md_to_html(text: str) -> str:
     """마크다운 텍스트를 HTML로 변환."""
     return md.markdown(text, extensions=["tables", "fenced_code"])
+
+
 from components import (
     render_diagnosis_cards,
     render_equipment_info,
@@ -99,19 +101,31 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
             "snapshot_timestamp": "2026-03-14T10:00:00+09:00",
             "time_domain": {
                 "ch1_x": {
-                    "rms": 0.08, "peak": 0.25, "peak_to_peak": 0.50,
-                    "crest_factor": 3.1, "kurtosis": 3.0, "skewness": 0.01,
-                    "standard_deviation": 0.08, "mean": 0.001, "shape_factor": 1.25,
+                    "rms": 0.08,
+                    "peak": 0.25,
+                    "peak_to_peak": 0.50,
+                    "crest_factor": 3.1,
+                    "kurtosis": 3.0,
+                    "skewness": 0.01,
+                    "standard_deviation": 0.08,
+                    "mean": 0.001,
+                    "shape_factor": 1.25,
                 },
             },
             "frequency_domain": {
                 "ch1_x": {
-                    "bpfo_amplitude": 0.005, "bpfi_amplitude": 0.004,
-                    "bsf_amplitude": 0.003, "ftf_amplitude": 0.002,
-                    "bpfo_harmonics_2x": 0.002, "bpfi_harmonics_2x": 0.001,
-                    "spectral_energy_total": 0.1, "spectral_energy_high_freq_band": 0.01,
-                    "dominant_frequency_hz": 33.3, "sideband_presence": False,
-                    "sideband_spacing_hz": 0.0, "sideband_count": 0,
+                    "bpfo_amplitude": 0.005,
+                    "bpfi_amplitude": 0.004,
+                    "bsf_amplitude": 0.003,
+                    "ftf_amplitude": 0.002,
+                    "bpfo_harmonics_2x": 0.002,
+                    "bpfi_harmonics_2x": 0.001,
+                    "spectral_energy_total": 0.1,
+                    "spectral_energy_high_freq_band": 0.01,
+                    "dominant_frequency_hz": 33.3,
+                    "sideband_presence": False,
+                    "sideband_spacing_hz": 0.0,
+                    "sideband_count": 0,
                 },
             },
         },
@@ -169,19 +183,31 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
             "snapshot_timestamp": "2026-03-14T10:00:00+09:00",
             "time_domain": {
                 "ch1_x": {
-                    "rms": 0.15, "peak": 0.55, "peak_to_peak": 1.10,
-                    "crest_factor": 3.7, "kurtosis": 4.2, "skewness": 0.3,
-                    "standard_deviation": 0.15, "mean": 0.002, "shape_factor": 1.35,
+                    "rms": 0.15,
+                    "peak": 0.55,
+                    "peak_to_peak": 1.10,
+                    "crest_factor": 3.7,
+                    "kurtosis": 4.2,
+                    "skewness": 0.3,
+                    "standard_deviation": 0.15,
+                    "mean": 0.002,
+                    "shape_factor": 1.35,
                 },
             },
             "frequency_domain": {
                 "ch1_x": {
-                    "bpfo_amplitude": 0.008, "bpfi_amplitude": 0.045,
-                    "bsf_amplitude": 0.006, "ftf_amplitude": 0.003,
-                    "bpfo_harmonics_2x": 0.003, "bpfi_harmonics_2x": 0.020,
-                    "spectral_energy_total": 0.25, "spectral_energy_high_freq_band": 0.05,
-                    "dominant_frequency_hz": 296.9, "sideband_presence": True,
-                    "sideband_spacing_hz": 33.3, "sideband_count": 2,
+                    "bpfo_amplitude": 0.008,
+                    "bpfi_amplitude": 0.045,
+                    "bsf_amplitude": 0.006,
+                    "ftf_amplitude": 0.003,
+                    "bpfo_harmonics_2x": 0.003,
+                    "bpfi_harmonics_2x": 0.020,
+                    "spectral_energy_total": 0.25,
+                    "spectral_energy_high_freq_band": 0.05,
+                    "dominant_frequency_hz": 296.9,
+                    "sideband_presence": True,
+                    "sideband_spacing_hz": 33.3,
+                    "sideband_count": 2,
                 },
             },
         },
@@ -239,19 +265,31 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
             "snapshot_timestamp": "2026-03-14T10:00:00+09:00",
             "time_domain": {
                 "ch1_x": {
-                    "rms": 0.35, "peak": 1.40, "peak_to_peak": 2.80,
-                    "crest_factor": 4.0, "kurtosis": 6.5, "skewness": 0.8,
-                    "standard_deviation": 0.35, "mean": 0.005, "shape_factor": 1.50,
+                    "rms": 0.35,
+                    "peak": 1.40,
+                    "peak_to_peak": 2.80,
+                    "crest_factor": 4.0,
+                    "kurtosis": 6.5,
+                    "skewness": 0.8,
+                    "standard_deviation": 0.35,
+                    "mean": 0.005,
+                    "shape_factor": 1.50,
                 },
             },
             "frequency_domain": {
                 "ch1_x": {
-                    "bpfo_amplitude": 0.012, "bpfi_amplitude": 0.120,
-                    "bsf_amplitude": 0.015, "ftf_amplitude": 0.005,
-                    "bpfo_harmonics_2x": 0.005, "bpfi_harmonics_2x": 0.055,
-                    "spectral_energy_total": 0.60, "spectral_energy_high_freq_band": 0.18,
-                    "dominant_frequency_hz": 296.9, "sideband_presence": True,
-                    "sideband_spacing_hz": 33.3, "sideband_count": 4,
+                    "bpfo_amplitude": 0.012,
+                    "bpfi_amplitude": 0.120,
+                    "bsf_amplitude": 0.015,
+                    "ftf_amplitude": 0.005,
+                    "bpfo_harmonics_2x": 0.005,
+                    "bpfi_harmonics_2x": 0.055,
+                    "spectral_energy_total": 0.60,
+                    "spectral_energy_high_freq_band": 0.18,
+                    "dominant_frequency_hz": 296.9,
+                    "sideband_presence": True,
+                    "sideband_spacing_hz": 33.3,
+                    "sideband_count": 4,
                 },
             },
         },
@@ -315,19 +353,31 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
             "snapshot_timestamp": "2026-03-14T10:00:00+09:00",
             "time_domain": {
                 "ch1_x": {
-                    "rms": 0.80, "peak": 3.50, "peak_to_peak": 7.00,
-                    "crest_factor": 4.4, "kurtosis": 12.0, "skewness": 1.5,
-                    "standard_deviation": 0.80, "mean": 0.010, "shape_factor": 1.65,
+                    "rms": 0.80,
+                    "peak": 3.50,
+                    "peak_to_peak": 7.00,
+                    "crest_factor": 4.4,
+                    "kurtosis": 12.0,
+                    "skewness": 1.5,
+                    "standard_deviation": 0.80,
+                    "mean": 0.010,
+                    "shape_factor": 1.65,
                 },
             },
             "frequency_domain": {
                 "ch1_x": {
-                    "bpfo_amplitude": 0.250, "bpfi_amplitude": 0.030,
-                    "bsf_amplitude": 0.040, "ftf_amplitude": 0.010,
-                    "bpfo_harmonics_2x": 0.120, "bpfi_harmonics_2x": 0.010,
-                    "spectral_energy_total": 1.50, "spectral_energy_high_freq_band": 0.55,
-                    "dominant_frequency_hz": 236.4, "sideband_presence": True,
-                    "sideband_spacing_hz": 33.3, "sideband_count": 6,
+                    "bpfo_amplitude": 0.250,
+                    "bpfi_amplitude": 0.030,
+                    "bsf_amplitude": 0.040,
+                    "ftf_amplitude": 0.010,
+                    "bpfo_harmonics_2x": 0.120,
+                    "bpfi_harmonics_2x": 0.010,
+                    "spectral_energy_total": 1.50,
+                    "spectral_energy_high_freq_band": 0.55,
+                    "dominant_frequency_hz": 236.4,
+                    "sideband_presence": True,
+                    "sideband_spacing_hz": 33.3,
+                    "sideband_count": 6,
                 },
             },
         },
@@ -344,6 +394,7 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
 
 # ──────────────────────────── 세션 상태 초기화 ────────────────────────────
 
+
 def _init_session_state() -> None:
     """세션 상태 기본값 초기화."""
     defaults = {
@@ -357,6 +408,7 @@ def _init_session_state() -> None:
         "chat_open": False,
         "chat_messages": [],  # list of {"role": "user"|"assistant", "content": str}
         "chat_session_id": None,
+        "deep_search_enabled": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -429,6 +481,7 @@ if reset_btn:
 
 # ──────────────────────────── 메인 영역 레이아웃 ────────────────────────────
 
+
 # 채팅 패널 토글 콜백
 def _toggle_chat() -> None:
     st.session_state.chat_open = not st.session_state.chat_open
@@ -447,7 +500,13 @@ def _render_chat_messages_html(*, typing: bool = False) -> str:
     html_parts: list[str] = []
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
-            content = msg["content"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+            content = (
+                msg["content"]
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\n", "<br>")
+            )
             html_parts.append(
                 f'<div class="chat-bubble-row-user">'
                 f'  <div class="chat-msg-user">{content}</div>'
@@ -511,6 +570,7 @@ with main_col:
 
 # ──────────────────────────── 분석 실행 ────────────────────────────
 
+
 def _run_analysis() -> None:
     """에이전트 분석 실행 (SSE 스트리밍)."""
     _reset_session_state()
@@ -534,12 +594,14 @@ def _run_analysis() -> None:
         """이전 thought를 완료하고 새 thought 시작."""
         nonlocal current_text, in_reasoning
         if in_reasoning and current_text:
-            thoughts.append({
-                "type": "thought",
-                "text": current_text,
-                "tool_calls": [],
-                "status": "done",
-            })
+            thoughts.append(
+                {
+                    "type": "thought",
+                    "text": current_text,
+                    "tool_calls": [],
+                    "status": "done",
+                }
+            )
         current_text = ""
         in_reasoning = True
         _render_live()
@@ -548,12 +610,14 @@ def _run_analysis() -> None:
         """현재 thought를 완료 처리."""
         nonlocal current_text, in_reasoning
         if in_reasoning and current_text:
-            thoughts.append({
-                "type": "thought",
-                "text": current_text,
-                "tool_calls": [],
-                "status": "done",
-            })
+            thoughts.append(
+                {
+                    "type": "thought",
+                    "text": current_text,
+                    "tool_calls": [],
+                    "status": "done",
+                }
+            )
         current_text = ""
         in_reasoning = False
 
@@ -582,11 +646,13 @@ def _run_analysis() -> None:
                         _finish_current_thought()
                     # 산출물 생성 노드를 타임라인에 표시
                     if node_name in ("generate_report", "generate_work_order"):
-                        thoughts.append({
-                            "type": "node",
-                            "name": node_name,
-                            "status": "thinking",
-                        })
+                        thoughts.append(
+                            {
+                                "type": "node",
+                                "name": node_name,
+                                "status": "thinking",
+                            }
+                        )
                         _render_live()
 
             elif event_type == "reasoning_token":
@@ -603,13 +669,15 @@ def _run_analysis() -> None:
                     "result": None,
                 }
                 # Tool 호출을 별도 타임라인 step으로 추가
-                thoughts.append({
-                    "type": "skill",
-                    "name": pending_tool["name"],
-                    "arguments": pending_tool["arguments"],
-                    "result": None,
-                    "status": "thinking",
-                })
+                thoughts.append(
+                    {
+                        "type": "skill",
+                        "name": pending_tool["name"],
+                        "arguments": pending_tool["arguments"],
+                        "result": None,
+                        "status": "thinking",
+                    }
+                )
                 _render_live()
 
             elif event_type == "tool_result":
@@ -634,7 +702,10 @@ def _run_analysis() -> None:
             elif event_type == "report_generated":
                 st.session_state.report = event.get("report", "")
                 for step in reversed(thoughts):
-                    if step.get("type") == "node" and step.get("name") == "generate_report":
+                    if (
+                        step.get("type") == "node"
+                        and step.get("name") == "generate_report"
+                    ):
                         step["status"] = "done"
                         break
                 _render_live()
@@ -642,7 +713,10 @@ def _run_analysis() -> None:
             elif event_type == "work_order_generated":
                 st.session_state.work_order = event.get("work_order", {})
                 for step in reversed(thoughts):
-                    if step.get("type") == "node" and step.get("name") == "generate_work_order":
+                    if (
+                        step.get("type") == "node"
+                        and step.get("name") == "generate_work_order"
+                    ):
                         step["status"] = "done"
                         break
                 _render_live()
@@ -709,7 +783,9 @@ with main_col:
                         sys.path.insert(0, src_path)
                     from utils.pdf import generate_work_order_pdf_bytes
 
-                    pdf_bytes = generate_work_order_pdf_bytes(st.session_state.work_order)
+                    pdf_bytes = generate_work_order_pdf_bytes(
+                        st.session_state.work_order
+                    )
                     wo_number = st.session_state.work_order.get(
                         "wo_number", "work_order"
                     )
@@ -732,7 +808,11 @@ with main_col:
 
     elif st.session_state.status == "failed":
         error_msg = st.session_state.get("error_msg", "")
-        st.error(f"분석 실패: {error_msg}" if error_msg else "분석 실패. API 서버 연결을 확인하세요.")
+        st.error(
+            f"분석 실패: {error_msg}"
+            if error_msg
+            else "분석 실패. API 서버 연결을 확인하세요."
+        )
         # 실패 시에도 추론 과정이 있으면 표시
         if st.session_state.thoughts:
             st.markdown("### 에이전트 추론 과정")
@@ -754,12 +834,24 @@ def _handle_chat_submit() -> None:
 if st.session_state.chat_open and chat_col is not None:
     with chat_col:
         # ── 헤더: 제목 + 닫기 ──
-        hdr_col, close_col = st.columns([4, 1], vertical_alignment="center")
+        hdr_col, ds_col, close_col = st.columns([3, 2, 1], vertical_alignment="center")
         with hdr_col:
             st.markdown(
                 '<span class="chat-header-title">PdM Agent</span>',
                 unsafe_allow_html=True,
             )
+        with ds_col:
+            # Deep Search toggle
+            ds_label = (
+                "Deep Search: ON"
+                if st.session_state.get("deep_search_enabled", False)
+                else "Deep Search: OFF"
+            )
+            if st.button(ds_label, key="ds_toggle"):
+                st.session_state.deep_search_enabled = not st.session_state.get(
+                    "deep_search_enabled", False
+                )
+                st.rerun()
         with close_col:
             st.button("X", key="chat_close", on_click=_toggle_chat)
 
@@ -793,6 +885,7 @@ if st.session_state.chat_open and chat_col is not None:
         # ── 보류 중인 메시지 처리 ──
         pending_msg = st.session_state.pop("_pending_chat_msg", None)
         if pending_msg:
+            ds_thinking_html = ""
             st.session_state.chat_messages.append(
                 {"role": "user", "content": pending_msg}
             )
@@ -800,12 +893,14 @@ if st.session_state.chat_open and chat_col is not None:
             _render_full_panel(_render_chat_messages_html(typing=True))
 
             try:
+                _deep_search = st.session_state.get("deep_search_enabled", False)
                 try:
                     chat_resp = submit_chat(
                         api_url,
                         st.session_state.run_id,
                         pending_msg,
                         st.session_state.chat_session_id,
+                        deep_search=_deep_search,
                     )
                 except Exception:
                     # run_id가 유효하지 않으면 run_id 없이 재시도
@@ -816,6 +911,7 @@ if st.session_state.chat_open and chat_col is not None:
                         None,
                         pending_msg,
                         None,
+                        deep_search=_deep_search,
                     )
                 session_id = chat_resp["session_id"]
                 st.session_state.chat_session_id = session_id
@@ -836,6 +932,64 @@ if st.session_state.chat_open and chat_col is not None:
                             f"  </div>"
                             f"</div>"
                             f'<div class="chat-scroll-anchor" id="chat-scroll-anchor"></div>'
+                        )
+                        _render_full_panel(streaming_html)
+                    elif evt_type == "deep_search_step":
+                        step_type = evt.get("step_type", "")
+                        role = evt.get("role", "")
+                        content = evt.get("content", "")
+                        status = evt.get("status", "")
+
+                        # Build thinking block HTML
+                        if step_type == "started":
+                            ds_thinking_html = (
+                                '<div class="ds-think-container">'
+                                '<div class="ds-think-header">'
+                                "Deep Research</div>"
+                            )
+                        elif step_type == "perspective":
+                            ds_thinking_html += (
+                                f'<div class="ds-think-step">'
+                                f'<div class="ds-think-role">'
+                                f"{role}</div>"
+                                f'<div class="ds-think-content">'
+                                f"{content}</div>"
+                                f"</div>"
+                            )
+                        elif step_type == "researcher":
+                            status_icon = "..." if status == "thinking" else ""
+                            ds_thinking_html += (
+                                f'<div class="ds-think-step ds-researcher">'
+                                f'<div class="ds-think-role">'
+                                f"{role} {status_icon}</div>"
+                                f'<div class="ds-think-content">'
+                                f"{content}</div>"
+                                f"</div>"
+                            )
+                        elif step_type == "critic":
+                            ds_thinking_html += (
+                                f'<div class="ds-think-step ds-critic">'
+                                f'<div class="ds-think-role">'
+                                f"{role}</div>"
+                                f'<div class="ds-think-content">'
+                                f"{content}</div>"
+                                f"</div>"
+                            )
+                        elif step_type == "synthesis":
+                            ds_thinking_html += "</div>"
+
+                        # Re-render with thinking block
+                        streaming_html = _render_chat_messages_html()
+                        streaming_html += (
+                            f'\n<div class="chat-bubble-row-assistant">'
+                            f'  <div class="chat-ai-avatar">'
+                            f'<span class="chat-ai-avatar-text">PdM</span>'
+                            f"</div>"
+                            f'  <div class="chat-msg-assistant chat-md">'
+                            f"{ds_thinking_html}</div>"
+                            f"</div>"
+                            f'<div class="chat-scroll-anchor"'
+                            f' id="chat-scroll-anchor"></div>'
                         )
                         _render_full_panel(streaming_html)
                     elif evt_type == "chat_completed":

@@ -12,6 +12,7 @@ class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str
     user_id: str = "default"
+    deep_search: bool = False
 
 
 class ChatResponse(BaseModel):

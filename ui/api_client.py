@@ -37,9 +37,9 @@ def _parse_sse_stream(resp: requests.Response) -> Generator[dict, None, None]:
             continue
 
         if line.startswith("event:"):
-            event_type = line[len("event:"):].strip()
+            event_type = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_lines.append(line[len("data:"):].strip())
+            data_lines.append(line[len("data:") :].strip())
 
     # 마지막 이벤트 처리 (빈 줄 없이 스트림 종료된 경우)
     if data_lines:
@@ -84,6 +84,7 @@ def submit_chat(
     run_id: str | None,
     message: str,
     session_id: str | None = None,
+    deep_search: bool = False,
 ) -> dict:
     """POST /api/chat 으로 채팅 메시지 제출.
 
@@ -95,6 +96,8 @@ def submit_chat(
         body["run_id"] = run_id
     if session_id:
         body["session_id"] = session_id
+    if deep_search:
+        body["deep_search"] = True
 
     resp = requests.post(
         f"{api_url}/api/chat",

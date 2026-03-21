@@ -20,6 +20,8 @@ class ChatRunner(Protocol):
         session_id: str,
         message: str,
         run_manager: RunManager,
+        *,
+        deep_search: bool = False,
     ) -> None:
         """Process a chat message and stream response."""
         ...
@@ -126,6 +128,8 @@ class MockChatRunner:
         session_id: str,
         message: str,
         run_manager: RunManager,
+        *,
+        deep_search: bool = False,
     ) -> None:
         """Simulate chat response streaming."""
         now = lambda: datetime.now(timezone.utc).isoformat()

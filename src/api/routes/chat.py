@@ -51,6 +51,7 @@ async def submit_chat(
         session.session_id,
         req.message,
         run_manager,
+        deep_search=req.deep_search,
     )
 
     return ChatResponse(session_id=session.session_id, status="accepted")
