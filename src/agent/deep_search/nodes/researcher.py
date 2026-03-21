@@ -3,10 +3,12 @@
 각 perspective에 대해 해당 도구를 사용하여 검색을 수행하고,
 confidence score를 산출한다.
 기존 Action Skills(rag_search, web_search)를 재사용한다.
+병렬 실행(asyncio.gather)으로 모든 관점을 동시에 검색한다.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -133,10 +135,117 @@ def _extract_sources(raw_results: str, source_type: str) -> list[dict]:
     return sources
 
 
-async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -> dict:
-    """관점별 집중 검색 수행.
+async def _research_one_perspective(
+    p: dict,
+    *,
+    original_query: str,
+    reasoning_context: str,
+    llm: BaseChatModel,
+    tools: list,
+) -> dict:
+    """단일 관점의 검색을 수행.
 
-    각 perspective에 대해:
+    Tool 호출(동기)은 ``asyncio.to_thread``로 감싸고,
+    LLM 호출(비동기)은 그대로 ``ainvoke``한다.
+
+    Args:
+        p: perspective dict (perspective, sub_query, agent_role, search_tools).
+        original_query: 사용자 원본 질문.
+        reasoning_context: 추론 맥락.
+        llm: LangChain ChatModel.
+        tools: 기존 Action Skills Tool 리스트.
+
+    Returns:
+        검색 결과 dict.
+    """
+    perspective = p.get("perspective", "알 수 없음")
+    sub_query = p.get("sub_query", original_query)
+    agent_role = p.get("agent_role", "maintenance_history")
+    search_tool_names = p.get("search_tools", _ROLE_TO_TOOLS.get(agent_role, []))
+
+    logger.info(
+        "[deep_search:researcher] 검색 시작 — 관점: %s, 역할: %s",
+        perspective,
+        agent_role,
+    )
+
+    # Tool 호출 (동기 → asyncio.to_thread)
+    raw_results_parts: list[str] = []
+    all_sources: list[dict] = []
+    for tool_name in search_tool_names:
+        t = _find_tool(tools, tool_name)
+        if t is None:
+            logger.warning("[deep_search:researcher] Tool 미발견: %s", tool_name)
+            continue
+
+        try:
+            result = await asyncio.to_thread(t.invoke, {"query": sub_query})
+            raw_results_parts.append(f"[{tool_name}]\n{result}")
+
+            source_type = "external_web" if "web" in tool_name else "internal_rag"
+            sources = _extract_sources(str(result), source_type)
+            all_sources.extend(sources)
+        except Exception as e:
+            logger.error(
+                "[deep_search:researcher] Tool 호출 실패 %s: %s",
+                tool_name,
+                e,
+            )
+            raw_results_parts.append(f"[{tool_name}] 검색 실패: {e}")
+
+    raw_results = "\n\n".join(raw_results_parts)
+
+    # LLM으로 검색 결과 정리 (비동기)
+    research_prompt = RESEARCH_PROMPT.format(
+        perspective=perspective,
+        sub_query=sub_query,
+        agent_role=agent_role,
+        original_query=original_query,
+        reasoning_context=reasoning_context,
+    )
+
+    try:
+        response = await llm.ainvoke(
+            [
+                SystemMessage(
+                    content="당신은 PdM Research Agent입니다. "
+                    "검색 결과를 정리하고 출처를 명시하세요."
+                ),
+                HumanMessage(
+                    content=f"{research_prompt}\n\n## 검색 결과 (raw)\n{raw_results}"
+                ),
+            ]
+        )
+        organized_results = response.content or raw_results
+    except Exception as e:
+        logger.error("[deep_search:researcher] 결과 정리 LLM 실패: %s", e)
+        organized_results = raw_results
+
+    confidence = _calculate_confidence(raw_results)
+
+    logger.info(
+        "[deep_search:researcher] 검색 완료 — 관점: %s, "
+        "confidence: %.1f, 출처: %d건",
+        perspective,
+        confidence,
+        len(all_sources),
+    )
+
+    return {
+        "perspective": perspective,
+        "sub_query": sub_query,
+        "agent_role": agent_role,
+        "results": organized_results,
+        "confidence": confidence,
+        "sources": all_sources,
+        "needs_revision": False,
+    }
+
+
+async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -> dict:
+    """관점별 집중 검색 수행 (병렬 실행).
+
+    각 perspective에 대해 ``asyncio.gather``로 동시에:
     1. 해당 agent_role에 맞는 Tool로 검색
     2. LLM으로 결과 정리
     3. confidence score 산출
@@ -187,90 +296,20 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
             sr for sr in search_results if sr.get("perspective") not in failed_set
         ]
 
-    for p in perspectives:
-        perspective = p.get("perspective", "알 수 없음")
-        sub_query = p.get("sub_query", original_query)
-        agent_role = p.get("agent_role", "maintenance_history")
-        search_tool_names = p.get("search_tools", _ROLE_TO_TOOLS.get(agent_role, []))
-
-        logger.info(
-            "[deep_search:researcher] 검색 시작 — 관점: %s, 역할: %s",
-            perspective,
-            agent_role,
-        )
-
-        # Tool 호출
-        raw_results_parts = []
-        all_sources = []
-        for tool_name in search_tool_names:
-            t = _find_tool(tools, tool_name)
-            if t is None:
-                logger.warning("[deep_search:researcher] Tool 미발견: %s", tool_name)
-                continue
-
-            try:
-                result = t.invoke({"query": sub_query})
-                raw_results_parts.append(f"[{tool_name}]\n{result}")
-
-                source_type = "external_web" if "web" in tool_name else "internal_rag"
-                sources = _extract_sources(str(result), source_type)
-                all_sources.extend(sources)
-            except Exception as e:
-                logger.error(
-                    "[deep_search:researcher] Tool 호출 실패 %s: %s",
-                    tool_name,
-                    e,
-                )
-                raw_results_parts.append(f"[{tool_name}] 검색 실패: {e}")
-
-        raw_results = "\n\n".join(raw_results_parts)
-
-        # LLM으로 검색 결과 정리
-        research_prompt = RESEARCH_PROMPT.format(
-            perspective=perspective,
-            sub_query=sub_query,
-            agent_role=agent_role,
-            original_query=original_query,
-            reasoning_context=reasoning_context,
-        )
-
-        try:
-            response = await llm.ainvoke(
-                [
-                    SystemMessage(
-                        content="당신은 PdM Research Agent입니다. "
-                        "검색 결과를 정리하고 출처를 명시하세요."
-                    ),
-                    HumanMessage(
-                        content=f"{research_prompt}\n\n## 검색 결과 (raw)\n{raw_results}"
-                    ),
-                ]
+    # 모든 관점을 병렬로 검색
+    new_results = await asyncio.gather(
+        *(
+            _research_one_perspective(
+                p,
+                original_query=original_query,
+                reasoning_context=reasoning_context,
+                llm=llm,
+                tools=tools,
             )
-            organized_results = response.content or raw_results
-        except Exception as e:
-            logger.error("[deep_search:researcher] 결과 정리 LLM 실패: %s", e)
-            organized_results = raw_results
-
-        confidence = _calculate_confidence(raw_results)
-
-        search_results.append(
-            {
-                "perspective": perspective,
-                "sub_query": sub_query,
-                "agent_role": agent_role,
-                "results": organized_results,
-                "confidence": confidence,
-                "sources": all_sources,
-                "needs_revision": False,
-            }
+            for p in perspectives
         )
+    )
 
-        logger.info(
-            "[deep_search:researcher] 검색 완료 — 관점: %s, "
-            "confidence: %.1f, 출처: %d건",
-            perspective,
-            confidence,
-            len(all_sources),
-        )
+    search_results.extend(new_results)
 
     return {"search_results": search_results}

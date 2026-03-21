@@ -19,6 +19,37 @@ from agent.deep_search.state import DeepSearchState
 logger = logging.getLogger(__name__)
 
 
+def _fallback_perspectives(original_query: str) -> list[dict]:
+    """고정 3관점 폴백을 반환.
+
+    Args:
+        original_query: 사용자 원본 질문.
+
+    Returns:
+        3개 관점 dict 리스트.
+    """
+    return [
+        {
+            "perspective": "정비 엔지니어",
+            "sub_query": original_query,
+            "agent_role": "maintenance_history",
+            "search_tools": ["search_maintenance_history"],
+        },
+        {
+            "perspective": "신뢰성 엔지니어",
+            "sub_query": original_query,
+            "agent_role": "analysis_history",
+            "search_tools": ["search_analysis_history"],
+        },
+        {
+            "perspective": "설비 전문가",
+            "sub_query": original_query,
+            "agent_role": "equipment_manual",
+            "search_tools": ["search_equipment_manual", "search_web"],
+        },
+    ]
+
+
 def _extract_json(text: str) -> list | dict | None:
     """LLM 응답에서 JSON을 추출.
 
@@ -82,45 +113,21 @@ async def decompose(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
         )
     except Exception as e:
         logger.error("[deep_search:leader] 질문 분해 LLM 호출 실패: %s", e)
-        # 폴백: 기본 2관점 분해
+        # 폴백: 고정 3관점 분해
         return {
-            "perspectives": [
-                {
-                    "perspective": "정비 엔지니어",
-                    "sub_query": original_query,
-                    "agent_role": "maintenance_history",
-                    "search_tools": ["search_maintenance_history"],
-                },
-                {
-                    "perspective": "설비 전문가",
-                    "sub_query": original_query,
-                    "agent_role": "equipment_manual",
-                    "search_tools": ["search_equipment_manual"],
-                },
-            ]
+            "perspectives": _fallback_perspectives(original_query),
         }
 
     parsed = _extract_json(response.content or "")
-    if not parsed or not isinstance(parsed, list):
+    if not parsed or not isinstance(parsed, list) or len(parsed) != 3:
         logger.warning(
-            "[deep_search:leader] JSON 파싱 실패, 폴백 분해 사용. " "응답: %s",
+            "[deep_search:leader] JSON 파싱 실패 또는 관점 수 불일치 "
+            "(expected 3, got %s), 폴백 분해 사용. 응답: %s",
+            len(parsed) if isinstance(parsed, list) else "N/A",
             (response.content or "")[:200],
         )
         return {
-            "perspectives": [
-                {
-                    "perspective": "정비 엔지니어",
-                    "sub_query": original_query,
-                    "agent_role": "maintenance_history",
-                    "search_tools": ["search_maintenance_history"],
-                },
-                {
-                    "perspective": "설비 전문가",
-                    "sub_query": original_query,
-                    "agent_role": "equipment_manual",
-                    "search_tools": ["search_equipment_manual"],
-                },
-            ]
+            "perspectives": _fallback_perspectives(original_query),
         }
 
     logger.info(

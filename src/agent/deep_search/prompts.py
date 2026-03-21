@@ -19,8 +19,7 @@ DECOMPOSITION_PROMPT = """\
 - **신뢰성 엔지니어 관점**: 과거 분석 이력, 유사 결함 패턴 비교, 통계적 경향
 - **설비 전문가 관점**: 설비 사양, 결함 메커니즘, FMEA, 외부 기술 문헌
 
-관점은 2~4개를 생성하되, 질문의 복잡도에 따라 조절하세요.
-단순한 질문이면 2개, 복잡한 교차 분석이 필요하면 4개까지 가능합니다.
+반드시 아래 3개 관점을 모두 생성하세요. 관점 수를 변경하지 마세요.
 
 ## 사용자 질문
 {original_query}
@@ -38,18 +37,23 @@ DECOMPOSITION_PROMPT = """\
     "agent_role": "maintenance_history",
     "search_tools": ["search_maintenance_history"]
   }},
-  ...
+  {{
+    "perspective": "신뢰성 엔지니어",
+    "sub_query": "유사 결함 패턴 비교 및 과거 분석 이력 확인",
+    "agent_role": "analysis_history",
+    "search_tools": ["search_analysis_history"]
+  }},
+  {{
+    "perspective": "설비 전문가",
+    "sub_query": "설비 사양, 결함 메커니즘 및 외부 기술 문헌 확인",
+    "agent_role": "equipment_manual",
+    "search_tools": ["search_equipment_manual", "search_web"]
+  }}
 ]
 ```
 
-agent_role과 search_tools는 반드시 아래 매핑을 사용하세요 (다른 이름 사용 금지):
-- maintenance_history → search_tools: ["search_maintenance_history"]
-- analysis_history → search_tools: ["search_analysis_history"]
-- equipment_manual → search_tools: ["search_equipment_manual"]
-- external_search → search_tools: ["search_web"]
-
-각 관점에 복수의 tool을 지정할 수 있습니다. 예:
-- 설비 전문가가 내부 매뉴얼 + 외부 문헌을 모두 검색: ["search_equipment_manual", "search_web"]
+agent_role과 search_tools는 반드시 위 3개 관점의 매핑을 그대로 사용하세요.
+sub_query만 사용자 질문에 맞게 조정하세요.
 """
 
 # ---------------------------------------------------------------------------
