@@ -800,12 +800,23 @@ if st.session_state.chat_open and chat_col is not None:
             _render_full_panel(_render_chat_messages_html(typing=True))
 
             try:
-                chat_resp = submit_chat(
-                    api_url,
-                    st.session_state.run_id,
-                    pending_msg,
-                    st.session_state.chat_session_id,
-                )
+                try:
+                    chat_resp = submit_chat(
+                        api_url,
+                        st.session_state.run_id,
+                        pending_msg,
+                        st.session_state.chat_session_id,
+                    )
+                except Exception:
+                    # run_id가 유효하지 않으면 run_id 없이 재시도
+                    st.session_state.run_id = None
+                    st.session_state.chat_session_id = None
+                    chat_resp = submit_chat(
+                        api_url,
+                        None,
+                        pending_msg,
+                        None,
+                    )
                 session_id = chat_resp["session_id"]
                 st.session_state.chat_session_id = session_id
 
