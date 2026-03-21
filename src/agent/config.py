@@ -33,6 +33,12 @@ class AgentConfig:
     embedding_model: str = DEFAULT_EMBEDDING_MODEL
     openai_api_key: str = ""
 
+    # Azure OpenAI
+    use_azure: bool = False
+    azure_openai_endpoint: str = ""
+    azure_openai_api_key: str = ""
+    azure_openai_api_version: str = "2024-12-01-preview"
+
     # Qdrant
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
@@ -62,6 +68,12 @@ class AgentConfig:
             llm_model=os.getenv("LLM_MODEL", DEFAULT_LLM_MODEL),
             embedding_model=os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL),
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            use_azure=os.getenv("USE_AZURE", "").lower() == "true",
+            azure_openai_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
+            azure_openai_api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
+            azure_openai_api_version=os.getenv(
+                "AZURE_OPENAI_API_VERSION", "2024-12-01-preview"
+            ),
             qdrant_host=os.getenv("QDRANT_HOST", "localhost"),
             qdrant_port=int(os.getenv("QDRANT_PORT", "6333")),
             postgres_host=os.getenv("POSTGRES_HOST", "localhost"),
@@ -69,7 +81,9 @@ class AgentConfig:
             postgres_db=os.getenv("POSTGRES_DB", "pdm_agent"),
             postgres_user=os.getenv("POSTGRES_USER", "pdm_agent"),
             postgres_password=os.getenv("POSTGRES_PASSWORD", ""),
-            max_tool_calls=int(os.getenv("PDM_AGENT_MAX_TOOL_CALLS", str(DEFAULT_MAX_TOOL_CALLS))),
+            max_tool_calls=int(
+                os.getenv("PDM_AGENT_MAX_TOOL_CALLS", str(DEFAULT_MAX_TOOL_CALLS))
+            ),
             rag_top_k=int(os.getenv("PDM_RAG_TOP_K", str(DEFAULT_RAG_TOP_K))),
             rag_mcp_server_path=os.getenv(
                 "RAG_MCP_SERVER_PATH",
@@ -101,6 +115,7 @@ def create_chat_model(config: AgentConfig | None = None):
     환경변수 LLM_MODEL 값에 따라 적절한 provider의 ChatModel을 반환한다.
 
     지원 형식:
+    - USE_AZURE=true → AzureChatOpenAI
     - "gpt-4o", "gpt-4o-mini" → ChatOpenAI
     - "anthropic/claude-3-opus" → ChatAnthropic (langchain-anthropic 필요)
     - 기본값: ChatOpenAI
@@ -116,10 +131,23 @@ def create_chat_model(config: AgentConfig | None = None):
 
     model_id = config.llm_model
 
+    # Azure OpenAI
+    if config.use_azure and config.azure_openai_api_key:
+        from langchain_openai import AzureChatOpenAI
+
+        return AzureChatOpenAI(
+            azure_endpoint=config.azure_openai_endpoint,
+            api_key=config.azure_openai_api_key,
+            api_version=config.azure_openai_api_version,
+            model=model_id,
+        )
+
+    # Anthropic
     if model_id.startswith("anthropic/") or model_id.startswith("claude"):
         model_name = model_id.replace("anthropic/", "")
         try:
             from langchain_anthropic import ChatAnthropic
+
             return ChatAnthropic(model=model_name)
         except ImportError:
             raise ImportError(
@@ -129,6 +157,7 @@ def create_chat_model(config: AgentConfig | None = None):
 
     # 기본: OpenAI
     from langchain_openai import ChatOpenAI
+
     return ChatOpenAI(
         model=model_id,
         api_key=config.openai_api_key,
