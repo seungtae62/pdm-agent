@@ -15,9 +15,9 @@ DECOMPOSITION_PROMPT = """\
 각 관점에서 독립적으로 탐색할 수 있는 하위 질문(sub-query)을 생성하세요.
 
 ## 관점 가이드
-- **정비 엔지니어 관점**: 정비 이력, 수리 기록, 윤활유 교체 시기, 과거 조치 사항
-- **신뢰성 엔지니어 관점**: 과거 분석 이력, 유사 결함 패턴 비교, 통계적 경향
-- **설비 전문가 관점**: 설비 사양, 결함 메커니즘, FMEA, 외부 기술 문헌
+- **Maintenance Engineer**: 정비 이력, 수리 기록, 윤활유 교체 시기, 과거 조치 사항
+- **Senior Analyst**: 과거 분석 이력, 유사 결함 패턴 비교, 이전 진단 판단 검토
+- **Equipment Specialist**: 설비 사양, 결함 메커니즘, FMEA, 외부 기술 문헌
 
 반드시 아래 3개 관점을 모두 생성하세요. 관점 수를 변경하지 마세요.
 
@@ -32,19 +32,19 @@ DECOMPOSITION_PROMPT = """\
 ```json
 [
   {{
-    "perspective": "정비 엔지니어",
+    "perspective": "Maintenance Engineer",
     "sub_query": "이 베어링의 최근 정비 이력과 윤활유 교체 시기를 확인",
     "agent_role": "maintenance_history",
     "search_tools": ["search_maintenance_history"]
   }},
   {{
-    "perspective": "신뢰성 엔지니어",
-    "sub_query": "유사 결함 패턴 비교 및 과거 분석 이력 확인",
+    "perspective": "Senior Analyst",
+    "sub_query": "유사 결함 패턴 비교 및 과거 분석/진단 이력 확인",
     "agent_role": "analysis_history",
     "search_tools": ["search_analysis_history"]
   }},
   {{
-    "perspective": "설비 전문가",
+    "perspective": "Equipment Specialist",
     "sub_query": "설비 사양, 결함 메커니즘 및 외부 기술 문헌 확인",
     "agent_role": "equipment_manual",
     "search_tools": ["search_equipment_manual", "search_web"]
@@ -114,7 +114,7 @@ CRITIC_PROMPT = """\
 ```json
 [
   {{
-    "perspective": "정비 엔지니어",
+    "perspective": "Maintenance Engineer",
     "passed": true,
     "feedback": "정비 이력이 충분히 확보됨",
     "unsourced_claims": []

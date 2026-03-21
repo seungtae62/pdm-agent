@@ -30,19 +30,19 @@ def _fallback_perspectives(original_query: str) -> list[dict]:
     """
     return [
         {
-            "perspective": "정비 엔지니어",
+            "perspective": "Maintenance Engineer",
             "sub_query": original_query,
             "agent_role": "maintenance_history",
             "search_tools": ["search_maintenance_history"],
         },
         {
-            "perspective": "신뢰성 엔지니어",
+            "perspective": "Senior Analyst",
             "sub_query": original_query,
             "agent_role": "analysis_history",
             "search_tools": ["search_analysis_history"],
         },
         {
-            "perspective": "설비 전문가",
+            "perspective": "Equipment Specialist",
             "sub_query": original_query,
             "agent_role": "equipment_manual",
             "search_tools": ["search_equipment_manual", "search_web"],
