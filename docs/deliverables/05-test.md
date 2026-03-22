@@ -1,8 +1,4 @@
-# 05. 테스트 및 품질 검증
-
-> PdM Agent — 예지보전 AI 에이전트
-
-## 주요 문제 해결 및 기술 리서치 (테스트 단계)
+### 주요 문제 해결 및 기술 리서치 (테스트 단계)
 
 | **이슈** | **문제** | **해결** |
 | --- | --- | --- |
@@ -10,7 +6,7 @@
 | **속도/지연** | 기존 MCP stdio transport Skills 호출당 2~3초 오버헤드 | Action Skills(in-process 직접 호출)로 전환하여 MCP 프로토콜 오버헤드 제거 + asyncio 비동기 처리 + 실시간 토큰 스트리밍 |
 | **보안/가드레일** | 대화형 상호작용에서 시스템 프롬프트 내 도메인 지식 노출 위험 + LLM 수치 계산 시도 | 내부 지침 질문 거부 규칙 + 수치 계산 요청 시 "Edge 영역" 안내 반환 |
 
-## LLM 답변 품질 평가 및 개선
+### LLM 답변 품질 평가 및 개선
 
 **KPI 1: 이상 감지 → 정비 권고 처리시간 단축률:**
 
@@ -55,7 +51,7 @@
 | 결과 | 평균 4.2/5. Warning/Critical에서 높은 점수. Normal은 조기 종료 설계 의도와 부합 |
 | 개선 | response-normal Skill에 Thought 1 교차 확인 요약 포함 |
 
-## 성능 및 비용 최적화
+### 성능 및 비용 최적화
 
 | **항목** | **결과** |
 | --- | --- |
@@ -63,7 +59,7 @@
 | **토큰 사용량** | 정상: ~6K (Core Skills 미로드) / 이상: ~12K (필요 Core Skills만 조건부 로딩). 전체 상시 로드(~15K) 대비 정상에서 60% 절감. MCP 기반 Tool 호출에서 Action Skills(in-process 직접 호출)로 전환하여 프로토콜 오버헤드 제거 |
 | **Deep Search 응답 시간** | `asyncio.gather()` 병렬 실행으로 순차 대비 응답 시간 단축. 3개 Research Agent 동시 검색 |
 
-## Deep Search Engine 테스트
+### Deep Search Engine 테스트
 
 | **항목** | **검증 내용** | **결과** |
 | --- | --- | --- |
@@ -74,7 +70,7 @@
 | **가중치 투표** | confidence score에 비례한 합성 기여도 결정 정상 여부 | 정상 동작. 높은 confidence perspective의 결과가 합성에 우세 반영 |
 | **트리거 조건** | 사용자 명시적 요청, Critical + 유사 사례 부족 시 정상 발동 | 정상 발동 확인 |
 
-## 예외 처리 및 가드레일
+### 예외 처리 및 가드레일
 
 | **항목** | **검증 내용** |
 | --- | --- |
@@ -83,7 +79,7 @@
 | **불확실성 명시** | 이력 없는 신규 설비 분석 시 uncertainty_notes에 "단일 시점 분석만으로 판단" 정상 출력 확인 |
 | **LLM 실패 처리** | API 타임아웃 시 에러 메시지 반환 후 그래프 정상 종료 (graceful degradation) |
 
-## 참조 논문 및 기술 레퍼런스
+### 참조 논문 및 기술 레퍼런스
 
 | **참조** | **제목** | **활용** |
 | --- | --- | --- |
@@ -92,7 +88,7 @@
 | Wang et al., 2023 | "Voyager: An Open-Ended Embodied Agent with Large Language Models" | Self-Evolving Skills(자동 skill 축적) 컨셉 참조 |
 | AgentSkills.io | Agent Skills Open Standard | Skills 모듈화 표준 참조 |
 
-## 기타 문제 해결 사례
+### 기타 문제 해결 사례
 
 | **이슈** | **문제** | **해결** |
 | --- | --- | --- |

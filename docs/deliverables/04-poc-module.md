@@ -1,14 +1,10 @@
-# 04. PoC 모듈 구현
-
-> PdM Agent — 예지보전 AI 에이전트
-
-## 아키텍처 다이어그램
+### 아키텍처 다이어그램
 
 ![PdM Agent v1.0 Architecture](images/pdm-agent_v1.0.png)
 
-## 핵심 구현 내용
+### 핵심 구현 내용
 
-### 에이전트 워크플로우
+#### 에이전트 워크플로우
 
 LangGraph 7노드 StateGraph로 E2E 워크플로우 구현:
 
@@ -24,7 +20,7 @@ LangGraph 7노드 StateGraph로 E2E 워크플로우 구현:
 
 안전장치: `tool_calls_count > max_tool_calls` (기본 10, 환경변수 `PDM_AGENT_MAX_TOOL_CALLS`로 설정) 시 강제 `parse_diagnosis` 전이로 무한 루프 방지
 
-### 도구(Tool) 및 함수 연동
+#### 도구(Tool) 및 함수 연동
 
 Agent Skills를 Action Skills(외부 데이터 조회), Core Skills(도메인 판단 지침), User Skills(사용자 개인화)의 3원 구조로 구성:
 
@@ -62,7 +58,7 @@ Agent Skills를 Action Skills(외부 데이터 조회), Core Skills(도메인 �
 - CRUD API 제공: `save_user_skill()`, `delete_user_skill()`, `list_user_skills()`
 - 에이전트와 대화형 채팅 모두에서 사용자별 Skill 자동 로드
 
-### API 레이어
+#### API 레이어
 
 FastAPI 기반 REST API + SSE 실시간 스트리밍:
 
@@ -78,7 +74,7 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 - `AgentRunner` 프로토콜로 `LangGraphAgentRunner`(실제) / `MockAgentRunner`(데모) 교체 가능
 - 대화형 채팅은 `LLMChatRunner`가 에이전트 그래프와 독립적으로 LLM 직접 호출
 
-### 데이터 및 메모리
+#### 데이터 및 메모리
 
 | **저장소** | **구성** | **용도** |
 | --- | --- | --- |
@@ -91,7 +87,7 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 - PostgreSQL 스키마: equipment_id, bearing_id, event_id, fault_type, fault_stage, degradation_speed, risk_level, ml_rul_hours, recommendation, tools_used(JSONB), deep_research, human_response, action_taken, resolved 등
 - `MemoryStore.load_recent()`: 설비/베어링 기준 최근 5건 조회 → `summarize_history()`로 자연어 요약
 
-### Deep Search Engine (STORM 스타일 다관점 분석)
+#### Deep Search Engine (STORM 스타일 다관점 분석)
 
 LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
 
@@ -123,7 +119,7 @@ LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
 - 합성 시 각 전문가의 confidence score에 비례하여 기여도(가중치) 결정
 - UI에서 색상 코딩으로 시각화: 초록(≥0.7), 노랑(0.4~0.7), 빨강(<0.4)
 
-## 주요 문제 해결 및 기술 리서치
+### 주요 문제 해결 및 기술 리서치
 
 | **이슈** | **문제** | **해결** |
 | --- | --- | --- |
@@ -135,7 +131,7 @@ LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
 | **SSE 노드 구분** | `astream_events`에서 모든 노드의 LLM 출력이 섞임 | `current_node` 변수로 노드 추적, reasoning에서만 토큰 스트리밍 emit |
 | **비동기 큐** | FastAPI→Streamlit SSE 스트리밍의 큐 관리 및 연결 종료 처리 | `RunManager`에서 run_id별 `asyncio.Queue` 관리 + `asyncio.timeout(300)` 안전장치 |
 
-## 핵심 동작 검증
+### 핵심 동작 검증
 
 **검증 시나리오: SC-003 (결함 진행 구간 — Warning)**
 

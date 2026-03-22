@@ -1,8 +1,4 @@
-# 03. 상세 설계
-
-> PdM Agent — 예지보전 AI 에이전트
-
-## Agent 페르소나 및 시스템 프롬프트 (Identity)
+### Agent 페르소나 및 시스템 프롬프트 (Identity)
 
 | **항목** | **정의 내용** |
 | --- | --- |
@@ -24,9 +20,9 @@
 | Deep Research 절차 | Core Skills | deep-research Skill로 분리. 대화형 상호작용에서 사용자 요청 시에만 로드 |
 | 대화형 상호작용 규칙 | 시스템 프롬프트 | 분석 맥락 유지, Prompt Optimization 적용 조건 |
 
-## 워크플로우 및 오케스트레이션 (Workflow & Logic)
+### 워크플로우 및 오케스트레이션 (Workflow & Logic)
 
-### 처리 로직
+#### 처리 로직
 
 - **Step 1 (Input Analysis — 이벤트 수신 및 맥락 로드):**
     - Edge 시스템에서 이벤트 페이로드(JSON)를 수신
@@ -48,7 +44,7 @@
     - Normal/Watch 위험도: 간결한 상태 확인 또는 모니터링 강화 권고 응답
     - 모든 판단 결과를 Long-term Memory(PostgreSQL)에 저장하고, analysis_history VDB에 벡터 적재
 
-### 상태 관리
+#### 상태 관리
 
 LangGraph StateGraph 기반으로 워크플로우 상태를 관리합니다.
 
@@ -61,7 +57,7 @@ LangGraph StateGraph 기반으로 워크플로우 상태를 관리합니다.
 - **안전장치**: Skills 호출 횟수가 10회 초과 시 강제로 결과 파싱 단계로 전이하여 무한 루프 방지
 - **조건부 실행**: 작업지시서 생성은 Warning/Critical 위험도에서만 실행, Normal/Watch에서는 건너뜀
 
-## 도구(Tools) 및 지식 관리 명세 (Capability)
+### 도구(Tools) 및 지식 관리 명세 (Capability)
 
 Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(도메인 판단 지침), **User Skills**(사용자 개인화)의 3원 구조로 구성된다.
 
@@ -92,9 +88,9 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 - 자동 생성: `SkillEvolver`가 대화 패턴에서 사용자 선호를 감지하여 자동 배치
 
 
-## 지식 베이스 및 메모리 전략 (Context & Memory)
+### 지식 베이스 및 메모리 전략 (Context & Memory)
 
-### RAG 전략
+#### RAG 전략
 
 - **참조 데이터 소스:**
 
@@ -139,7 +135,7 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 
 - **Vector DB:** Qdrant (Docker 자체 호스팅, Dense + Sparse 듀얼 인덱스 지원)
 
-### 대화 메모리
+#### 대화 메모리
 
 - **메모리 유형:** Short-term Memory + Long-term Memory 이원 구조
 
@@ -162,16 +158,16 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 | 대화 이력 압축 | 이전 턴 질문-응답 쌍을 핵심 결론 중심으로 요약 | 매 턴 누적 시 |
 | 슬라이딩 윈도우 | 최근 2~3턴은 원문 유지, 이전 턴은 요약으로 대체하여 컨텍스트 윈도우 효율적 활용 | 대화 3턴 이상 시 |
 
-## 핵심 에이전트 기술 스택
+### 핵심 에이전트 기술 스택
 
-### 추론 전략
+#### 추론 전략
 
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
 | ReAct 추론 | 5단계 Thought 구조 (결함 식별 → 단계 판정 → 열화 평가 → RUL 평가 → 종합 판단) | Thought-Action-Observation 교차 수행으로 단계적 심화 추론 구현. 각 단계에서 분기/조기종료/Tool 호출을 자율 결정하여, 정상 상태는 Thought 1 조기 종료, 이상 상태는 전체 추론 수행 |
 | Deep Search Engine (STORM) | STORM(Survey of Tailored Research on Open-domain Modeling) 기법 기반 다관점 분석 엔진을 조건부 호출하여 Leader-Research-Critic-Synthesize 구조로 병렬 탐색 | 트리거 조건 충족 시 Leader가 질의를 분해하고, 3개 고정 Research Agent가 각각 독립적으로 검색을 수행. Critic이 각 결과를 Pass/Revise 검증하고, Review-Revise 루프(최대 3회)를 거쳐 confidence score 기반 가중치 투표로 합성 |
 
-### RAG 검색 파이프라인
+#### RAG 검색 파이프라인
 
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
@@ -180,14 +176,14 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 | Reranker | Cross-encoder (ms-marco-MiniLM-L-12-v2) | Hybrid Search Top-k 후보를 query-document 쌍 단위로 정밀 재정렬. 1차 검색의 recall과 Reranker의 precision을 결합하여 최종 검색 품질 극대화 |
 | Embedding 이원 구조 | Dense: OpenAI text-embedding-3-small (1536dim) / Sparse: BM25 + kiwipiepy 형태소 분석 | Dense로 의미적 유사도를, Sparse로 키워드 정확 매칭을 분담. Qdrant의 Dense + Sparse 듀얼 인덱스로 단일 Collection 내에서 두 방식 동시 지원 |
 
-### Skills 호출 아키텍처
+#### Skills 호출 아키텍처
 
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
 | Action Skills 구성 | RAG 검색 3종 (maintenance_history · equipment_manual · analysis_history) · web_search (외부 검색) · notification (알림) | 기능별 분리로 독립 관리 가능. search_web은 Deep Research 전용, notify_maintenance_staff는 Watch 이상 시 호출 |
 | MCP → Action Skills 전환 | MCP stdio transport 기반 Tool 호출에서 Action Skills(in-process 직접 호출)로 전환 | MCP 프로토콜의 서브프로세스 오버헤드(Tool 호출당 2~3초)를 제거하여 응답 지연 해소. RAGServer를 in-process 싱글턴으로 직접 호출 |
 
-### 도메인 지식 관리 (Skills)
+#### 도메인 지식 관리 (Skills)
 
 > Agent Skills 오픈 표준([agentskills.io](https://agentskills.io))을 채택하여, 시스템 프롬프트에 고정되던 도메인 지식을 모듈화합니다.
 
@@ -197,11 +193,11 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 | Skill 구성 | fault-diagnosis (결함 주파수 + P-F 곡선) · feature-interpret (특징량 복합 해석) · deep-research (심화 조사 절차) · response-normal (Normal/Watch 응답 양식) · response-alert (Warning/Critical 응답 양식) | 추론 단계별로 필요한 지식만 선택 로드. 새 설비 유형(모터, 펌프 등) 확장 시 Skill 파일 추가만으로 대응 가능 |
 | Action Skills-Core Skills 역할 분리 | Core Skills = 도메인 지식(뇌), Action Skills = 외부 실행(근육) | Core Skills는 에이전트의 추론 품질을 제어하는 지식/지침, Action Skills는 외부 데이터 소스와의 실제 상호작용을 담당. 관심사 분리로 각 레이어의 독립적 확장 가능 |
 
-## Self-Evolving Skills Engine
+### Self-Evolving Skills Engine
 
 Agent가 운영 과정에서 Skills를 자동으로 확장·개인화하는 자기 진화 메커니즘입니다. 현재는 User Skills 자동 생성과 Action Skills 확장이 핵심이며, Core Skills 갱신은 추후 방향성으로 설계되어 있습니다.
 
-### User Feedback Loop (User Skills 자동 생성)
+#### User Feedback Loop (User Skills 자동 생성)
 
 현재 구현된 Self-Evolving의 핵심 기능입니다. 대화 완료 시 `SkillEvolver`가 사용자의 반복 요청 패턴(분석 관점, 리포트 형식, 설비 조건 등)을 자동으로 감지하여 `skills/users/{user_id}/` 경로에 User Skills를 생성합니다. 다음 세션부터 자동 로드되어 담당자별 맥락에 맞는 개인화된 분석 품질을 제공합니다.
 
@@ -209,14 +205,14 @@ Agent가 운영 과정에서 Skills를 자동으로 확장·개인화하는 자�
 - **생성 프로세스**: 대화 패턴 분석 → 사용자 선호 추출 → YAML frontmatter 기반 Skill 파일 자동 생성 → `skills/users/{user_id}/`에 배치
 - **관리**: CRUD API(`save_user_skill()`, `delete_user_skill()`, `list_user_skills()`)로 조회·수정·삭제 가능
 
-### Action Skills 자동 확장
+#### Action Skills 자동 확장
 
 새로운 외부 데이터 소스나 도구가 필요할 때, Action Skills를 추가하여 Agent의 실행 능력을 확장할 수 있습니다. 예를 들어 새로운 설비 관리 시스템 API 연동, 추가 문서 저장소 검색, 새로운 알림 채널 통합 등을 Action Skills 파일 추가만으로 대응할 수 있습니다.
 
 - **확장 방식**: Python `@tool` 데코레이터 기반 함수를 `skills/actions/` 디렉토리에 추가
 - **독립 배포**: 각 Action Skill은 독립적인 모듈로 관리되어, 기존 Skills에 영향 없이 추가·제거 가능
 
-### Core Skills 갱신 방향성
+#### Core Skills 갱신 방향성
 
 Core Skills는 현재 자동 보정 대상이 아닙니다. 도메인 판단 지침의 자동 수정은 안전성 검증이 필수적이므로, 다음과 같은 단계적 접근을 계획하고 있습니다:
 
@@ -224,7 +220,7 @@ Core Skills는 현재 자동 보정 대상이 아닙니다. 도메인 판단 지
 - **Human-in-the-Loop 검토**: 파악된 내용은 도메인 전문가가 검토 후 Core Skills에 반영하는 방식으로 운영
 - **안전성 확보**: 자동 갱신이 아닌 전문가 승인 기반으로 운영하여, 잘못된 해석 규칙이 반영되는 위험을 방지
 
-### Skills Store 구조
+#### Skills Store 구조
 
 ```
 skills/
@@ -247,7 +243,7 @@ skills/
         └── ...
 ```
 
-### 기대 효과
+#### 기대 효과
 
 | **효과** | **설명** |
 | --- | --- |
@@ -258,11 +254,11 @@ skills/
 
 ---
 
-## Deep Search Engine (STORM 스타일 다관점 분석)
+### Deep Search Engine (STORM 스타일 다관점 분석)
 
 복잡한 분석 요청 시 **STORM 스타일 다관점 분석**을 수행하는 Group Agent 아키텍처입니다. PdM Agent 본체는 단일 ReAct 에이전트를 유지하면서, 고난도 분석이 필요한 경우에만 Deep Search Engine을 조건부 호출합니다. Leader가 질의를 분해하고, 3개 고정 Research Agent가 각자의 전문 관점에서 병렬 검색을 수행하며, Critic의 Review-Revise 루프를 거쳐 confidence score 기반 가중치 투표로 최종 합성합니다.
 
-### Leader-Research-Critic-Synthesize 구조
+#### Leader-Research-Critic-Synthesize 구조
 
 | **컴포넌트** | **역할** | **구현** |
 | --- | --- | --- |
@@ -273,11 +269,11 @@ skills/
 | **Critic** | 각 Research Agent 결과의 관련성, 충분성, 정확성을 검증하여 Pass/Revise 판정 | LangGraph `review` 노드 |
 | **Synthesizer** | Critic 검증을 통과한 결과를 confidence score 기반 가중치 투표로 합성 | LangGraph `synthesize` 노드 |
 
-### 실행 흐름
+#### 실행 흐름
 
 PdM Agent의 추론 과정에서 트리거 조건이 충족되면 Deep Search Engine을 호출합니다. Leader가 질의를 분해(Decompose)하고, 3개 Research Agent가 병렬로 검색을 수행합니다. Critic이 각 결과를 Pass/Revise 판정하며, Revise 시 해당 perspective만 재검색합니다 (최대 3회). 모든 결과가 Pass되면 confidence score 기반 가중치 투표로 합성(Synthesize)하여 PdM Agent에 구조화된 근거 세트를 반환합니다.
 
-### 3개 고정 Research Agent (Perspective)
+#### 3개 고정 Research Agent (Perspective)
 
 | **Research Agent** | **전문 관점** | **검색 도구** | **주요 검색 대상** |
 | --- | --- | --- | --- |
@@ -285,7 +281,7 @@ PdM Agent의 추론 과정에서 트리거 조건이 충족되면 Deep Search En
 | **Senior Analyst** | 분석 이력 전문가 | `search_analysis_history` | 과거 유사 패턴의 에이전트 판단, 예측 정확도, 결과 추적 |
 | **Equipment Specialist** | 설비/기술 전문가 | `search_equipment_manual` + `search_web` | 결함 메커니즘, 급속 열화 조건, 정비 절차, 외부 기술 문헌 |
 
-### Review-Revise 루프 및 Voting 메커니즘
+#### Review-Revise 루프 및 Voting 메커니즘
 
 **Critic 검증 프로세스:**
 1. 각 Research Agent의 결과를 독립적으로 평가 (관련성, 충분성, 정확성)
@@ -303,14 +299,14 @@ PdM Agent의 추론 과정에서 트리거 조건이 충족되면 Deep Search En
 - 합성(Synthesize) 단계에서 각 전문가의 confidence score에 비례하여 최종 결과에 대한 기여도 결정
 - 예: Maintenance Engineer(0.85) + Senior Analyst(0.45) + Equipment Specialist(0.72) → 정비 이력 관점 우세 반영
 
-### 트리거 조건
+#### 트리거 조건
 
 | **조건** | **설명** | **판단 기준** | **구현 상태** |
 | --- | --- | --- | --- |
 | **사용자 명시적 요청** | UI에서 Deep Search 토글 On/Off로 사용자가 직접 활성화 | 사용자 설정 기반 | 현재 구현 |
 | **RAG 검색 결과 불충분 + 유사 사례 부족** | 내부 RAG 검색으로 충분한 근거 확보 실패 시, 에이전트가 자동으로 Deep Search를 발동 | confidence score < threshold + 유사 사례 < 2건 | 추후 확장 |
 
-### 기대 효과
+#### 기대 효과
 
 | **효과** | **설명** |
 | --- | --- |
