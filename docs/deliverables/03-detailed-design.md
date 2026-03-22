@@ -63,10 +63,11 @@ LangGraph StateGraph 기반으로 워크플로우 상태를 관리합니다.
 
 ## 도구(Tools) 및 지식 관리 명세 (Capability)
 
-Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메인 지식)**의 이원 구조로 구성됩니다.
+Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(도메인 판단 지침), **User Skills**(사용자 개인화)의 3원 구조로 구성된다.
 
 - **Action Skills**: 외부 데이터 소스 및 알림 시스템과의 실제 상호작용을 담당
-- **Core Skills**: 도메인 지식을 SKILL.md 파일로 모듈화하여, 조건부 로딩으로 필요 시에만 점진적으로 로드
+- **Core Skills**: 도메인 지식을 SKILL.md 파일로 모듈화하여, 조건부 로딩으로 필요 시에만 점진적으로 로드. Core Skills는 단순한 참조 지식(Knowledge)이 아닌, 에이전트의 행동 패턴을 변경하는 실행 가능한 지침이다. 로드 여부에 따라 에이전트의 판단 절차와 응답 형태가 달라진다. 예를 들어 fault-diagnosis Skill이 로드되지 않으면 에이전트는 결함 판별 행동을 수행하지 않고 조기 종료한다. 또한 Core Skills는 컴포넌트 단위로 모듈화되어 있어, 베어링 외에 모터, 펌프 등 다른 설비 유형의 Skill을 추가하면 동일 에이전트가 복합 장비를 진단할 수 있다. 컴포넌트 간 상관 분석 Skill(예: 모터 전류 불균형 → 구동측 베어링 편심 하중 영향)을 추가하면 개별 부품이 아닌 장비 전체 맥락에서의 진단이 가능하다.
+- **User Skills**: 사용자별 개인화 지식을 YAML frontmatter 기반 Skill 파일로 관리하여, 담당자별 맥락에 맞는 분석 품질 제공
 
 **Action Skills 명세:**
 
@@ -77,16 +78,6 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메�
 | search_analysis_history | 에이전트의 과거 분석 판단 이력을 의미적으로 검색. 유사 패턴의 과거 판단과 결과를 참조하여 일관성 유지 | query: str, equipment_id?: str, bearing_id?: str, top_k?: int | 과거 분석 결과 리스트 (유사도 순) |
 | notify_maintenance_staff | 정비 담당자에게 분석 결과 및 정비 권고 알림을 전송 | message: str, risk_level: str, equipment_id: str | 전송 성공/실패 상태 |
 | search_web | 외부 인터넷에서 베어링/설비 관련 기술 문헌, 논문, 산업 리포트를 검색. Deep Research에서만 사용하며, 내부 RAG 검색을 보완하는 외부 지식 획득용 | query: str | 검색 결과 리스트 (제목, 요약, URL). "외부 참고 자료 (검증 필요)" 태그 포함 |
-
-**Core Skills 명세:**
-
-| **Skill 이름** | **로드 조건** | **내용** |
-| --- | --- | --- |
-| fault-diagnosis | 이상 감지 시 자동 로드 | 베어링 결함 주파수 해석 (BPFO, BPFI, BSF, FTF), P-F 곡선 4단계 정의, 고조파/사이드밴드 해석 기준 |
-| feature-interpret | 이상 감지 시 자동 로드 | Kurtosis + RMS 복합 패턴, Crest Factor 전이 패턴, 고주파 에너지 초기 지표 등 특징량 해석 규칙 |
-| deep-research | Deep Search 발동 시 로드 | 가설 수립 → 내부 RAG → 외부 검색 → 해석 → 재검색의 탐색 절차, 외부 자료 신뢰도 태깅 규칙 |
-| response-normal | 정상/관찰 판정 시 로드 | Normal/Watch 위험도별 응답 양식, 간결 요약 구조 |
-| response-alert | 경고/위험 판정 시 로드 | Warning/Critical 위험도별 응답 양식, 리포트 구조, 작업지시서 포함 기준 |
 
 **User Skills (Personalized Skills) 명세:**
 
@@ -100,12 +91,6 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메�
 - CRUD API: `save_user_skill()`, `delete_user_skill()`, `list_user_skills()`
 - 자동 생성: `SkillEvolver`가 대화 패턴에서 사용자 선호를 감지하여 자동 배치
 
-**Skills 조건부 로딩 예시:**
-- **정상 이벤트**: 시스템 프롬프트(페르소나 + 추론 구조) → Thought 1 조기 종료 → Core Skills 미로드 (토큰 절감)
-- **이상 이벤트**: 시스템 프롬프트 → fault-diagnosis 로드 → feature-interpret 로드 → response-normal 또는 response-alert 로드
-- **대화형 Deep Research**: 위 + deep-research 로드 → Deep Search Engine 조건부 호출
-- **Self-Evolving**: save_memory 완료 → SkillEvolver가 분석 결과 diff 감지 → Core Skills 자동 패치 (비동기)
-- **대화형 개인화**: 대화 완료 → 사용자 선호 패턴 감지 → User Skills 자동 생성 → 다음 세션부터 자동 로드
 
 ## 지식 베이스 및 메모리 전략 (Context & Memory)
 
@@ -149,7 +134,7 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메�
     | --- | --- | --- |
     | 1단계 — Metadata Filtering | Qdrant Payload Filter | `equipment_id`, `bearing_id`, `doc_type` 등으로 후보 문서 사전 필터링 |
     | 2단계 — Hybrid Search | Dense + Sparse → RRF 결합 | Dense 유사도와 Sparse BM25 점수를 Reciprocal Rank Fusion으로 결합하여 최종 스코어 산출 |
-    | 3단계 — Reranker | Cross-encoder (모델 선정중) | Top-k 후보를 Cross-encoder로 재정렬하여 정밀도 향상 |
+    | 3단계 — Reranker | Cross-encoder (ms-marco-MiniLM-L-12-v2) | Top-k 후보를 Cross-encoder로 재정렬하여 정밀도 향상 |
     | 결과 | Top-k 반환 (기본 k=3) | 최종 상위 k건을 Agent 컨텍스트에 주입 |
 
 - **Vector DB:** Qdrant (Docker 자체 호스팅, Dense + Sparse 듀얼 인덱스 지원)
@@ -192,7 +177,7 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메�
 | --- | --- | --- |
 | Hybrid Search | Dense (OpenAI text-embedding-3-small, 1536dim) + Sparse (BM25 + kiwipiepy) → RRF (Reciprocal Rank Fusion) 결합 | 의미적 유사도(Dense)와 키워드 매칭(Sparse)을 RRF로 결합. 한국어 형태소 분석(kiwipiepy)으로 설비 코드, ISO 14224 코드 등 도메인 고유명사 검색 정밀도 확보 |
 | Metadata Filtering | Qdrant Payload Filter (equipment_id, bearing_id, doc_type) | 검색 전 후보 문서를 설비/베어링/문서유형 기준으로 사전 필터링하여 검색 범위 축소. 불필요한 문서 노이즈 제거 및 정밀도 향상 |
-| Reranker | Cross-encoder (모델 선정 중) | Hybrid Search Top-k 후보를 query-document 쌍 단위로 정밀 재정렬. 1차 검색의 recall과 Reranker의 precision을 결합하여 최종 검색 품질 극대화 |
+| Reranker | Cross-encoder (ms-marco-MiniLM-L-12-v2) | Hybrid Search Top-k 후보를 query-document 쌍 단위로 정밀 재정렬. 1차 검색의 recall과 Reranker의 precision을 결합하여 최종 검색 품질 극대화 |
 | Embedding 이원 구조 | Dense: OpenAI text-embedding-3-small (1536dim) / Sparse: BM25 + kiwipiepy 형태소 분석 | Dense로 의미적 유사도를, Sparse로 키워드 정확 매칭을 분담. Qdrant의 Dense + Sparse 듀얼 인덱스로 단일 Collection 내에서 두 방식 동시 지원 |
 
 ### Skills 호출 아키텍처
@@ -200,6 +185,7 @@ Agent의 능력은 **Action Skills(실행형 도구)**와 **Core Skills(도메�
 | **기술** | **구현** | **선정 사유** |
 | --- | --- | --- |
 | Action Skills 구성 | RAG 검색 3종 (maintenance_history · equipment_manual · analysis_history) · web_search (외부 검색) · notification (알림) | 기능별 분리로 독립 관리 가능. search_web은 Deep Research 전용, notify_maintenance_staff는 Watch 이상 시 호출 |
+| MCP → Action Skills 전환 | MCP stdio transport 기반 Tool 호출에서 Action Skills(in-process 직접 호출)로 전환 | MCP 프로토콜의 서브프로세스 오버헤드(Tool 호출당 2~3초)를 제거하여 응답 지연 해소. RAGServer를 in-process 싱글턴으로 직접 호출 |
 
 ### 도메인 지식 관리 (Skills)
 

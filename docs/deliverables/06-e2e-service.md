@@ -4,18 +4,18 @@
 
 ## 최종 아키텍처 요약
 
-- **아키텍처:** LangGraph 단일 에이전트(ReAct) + Agent Skills(Knowledge 5종 + Action 5종) + Deep Search Engine(STORM 스타일 서브그래프) + FastAPI SSE + Streamlit UI
+- **아키텍처:** LangGraph 단일 에이전트(ReAct) + Agent Skills(Core Skills 5종 + Action Skills 5종 + User Skills) + Deep Search Engine(STORM 스타일 서브그래프) + FastAPI SSE + Streamlit UI
 - **산출물:** Edge 이벤트 수신 → 결함 진단 → 리포트/작업지시서 생성 → 대화형 상호작용 (Deep Search 포함)
 - **Agent 흐름:** `load_memory` → `reasoning` ↔ `tool_executor` → `parse_diagnosis` → `generate_report` → (조건부) `generate_work_order` → `save_memory`
 - **Deep Search 흐름:** `decompose` → `research` (3개 병렬) → `review` (Critic Pass/Revise) → `synthesize` (confidence score 가중치 투표)
-- **Skills 이원 구조:** Knowledge Skills(md, 프롬프트 주입)이 추론 품질을 제어하고, Action Skills(Python @tool, 서버 직접 호출)이 외부 데이터 조회를 수행
+- **Skills 3원 구조:** Action Skills(외부 데이터 조회), Core Skills(도메인 판단 지침, md 프롬프트 주입), User Skills(사용자 개인화)로 구성. Core Skills가 추론 품질을 제어하고, Action Skills(Python @tool, 서버 직접 호출)가 외부 데이터 조회를 수행
 
 ## KPI 달성도 (Plan vs Actual)
 
 | **KPI** | **목표** | **실제** | **비고** |
 | --- | --- | --- | --- |
 | KPI 1: 이상 감지 → 정비 권고 처리시간 단축률 | 90% 이상 단축 | 수 분 내 완료 (기존 수동 수 시간 대비 90%+ 단축) | 이벤트 수신 ~ 작업지시서 생성까지 E2E 측정 |
-| KPI 2: Skills 도입 토큰 효율성 개선율 | 정상 이벤트 60% 절감 | 정상 ~6K (도입 전 ~15K 대비 60% 절감), 이상 ~12K | Knowledge Skills 조건부 로딩으로 달성 |
+| KPI 2: Skills 도입 토큰 효율성 개선율 | 정상 이벤트 60% 절감 | 정상 ~6K (도입 전 ~15K 대비 60% 절감), 이상 ~12K | Core Skills 조건부 로딩으로 달성 |
 | KPI 3: Deep Search 다관점 분석 품질 | Critic Pass Rate 80%+, Confidence Score 평균 0.7+ | Critic Pass Rate 목표 충족, KB 기반 Confidence Score 0.7+ | 병렬 실행으로 순차 대비 응답 시간 단축 |
 
 ## 창출된 핵심 가치
@@ -29,7 +29,7 @@
 **기술:**
 
 - Edge(수치 계산) / Agent(해석) 역할 분리로 독립적 발전 가능
-- Skills 이원 구조 — Knowledge Skills(도메인 지식 모듈화) + Action Skills(실행형 도구). 새 설비 확장 시 Skill 추가만으로 대응
+- Skills 3원 구조 — Action Skills(외부 데이터 조회) + Core Skills(도메인 판단 지침) + User Skills(사용자 개인화). 새 설비 확장 시 Skill 추가만으로 대응
 - Action Skills가 RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거
 - LangGraph → FastAPI SSE → Streamlit 실시간 스트리밍 파이프라인
 
@@ -57,7 +57,7 @@
 | 1. 분석 완료 | Agent가 진단 결과를 Memory에 저장 | `save_memory` 노드 |
 | 2. Trigger 발생 | 저장 시점에 `SkillEvolver` 자동 호출 | `SkillEvolver` 클래스 |
 | 3. Diff 감지 | 이전 분석 예측 vs 실제 결과 대조 | analysis_history (Qdrant) |
-| 4. Skill 패치 생성 | 해석 규칙 수정안을 LLM으로 생성 | Knowledge Skills (md) |
+| 4. Skill 패치 생성 | 해석 규칙 수정안을 LLM으로 생성 | Core Skills (md) |
 | 5. Core Skills 업데이트 | 검증 후 `core/` 디렉토리에 반영 | `skills/core/*.md` |
 
 **User Feedback Loop (User Skills 자동 생성)**

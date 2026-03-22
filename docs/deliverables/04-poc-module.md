@@ -2,15 +2,7 @@
 
 > PdM Agent — 예지보전 AI 에이전트
 
-## 기술 차별점 (Niche 영역)
-
-**Agent Skills 기반 사용자 개인화 에이전트**
-
-- `skills/core/`(조직 공통)와 `skills/users/`(사용자별 맞춤) 분리로 동일 에이전트가 사용자에 따라 다른 도메인 지식을 로드
-- Edge 산출 결과(`anomaly_detected`, `health_state`)를 State에 반영하여 필요한 Skill만 조건부 로드 (Progressive Disclosure)
-- 정상 이벤트에서는 결함 진단 Skill 미로드 → 토큰 약 60% 절감
-
-**아키텍처 다이어그램:**
+## 아키텍처 다이어그램
 
 ![PdM Agent v1.0 Architecture](images/pdm-agent_v1.0.png)
 
@@ -23,29 +15,18 @@ LangGraph 7노드 StateGraph로 E2E 워크플로우 구현:
 | **노드** | **역할** |
 | --- | --- |
 | `load_memory` | PostgreSQL에서 동일 설비/베어링 최근 5건 분석 이력 조회 → 자연어 요약으로 컨텍스트 주입 |
-| `reasoning` | 시스템 프롬프트 + 페이로드 + Memory + Knowledge Skills + Action Skills(bind_tools)로 ReAct 추론. 이상 이벤트에서 Tool 미호출 시 자동 유도(nudging), 진단 JSON 미포함 시 재요청 |
+| `reasoning` | 시스템 프롬프트 + 페이로드 + Memory + Core Skills + Action Skills(bind_tools)로 ReAct 추론. 이상 이벤트에서 Tool 미호출 시 자동 유도(nudging), 진단 JSON 미포함 시 재요청 |
 | `tool_executor` | LLM이 호출한 Action Skill 실행 후 reasoning으로 복귀 (추론 루프). tool_calls_count 누적 |
 | `parse_diagnosis` | LLM 응답에서 진단 JSON 추출 (코드블록 → raw JSON → fallback 기본값). fault_type 필수 검증 |
 | `generate_report` | Normal/Watch: 간결 요약. Warning/Critical: LLM 기반 상세 리포트 (결함 요약, 근거, RUL, 권고, 불확실성) |
 | `generate_work_order` | Warning/Critical에서만 실행. 자재/공구 레퍼런스 라이브러리 프롬프트로 구조화 JSON 생성. 결정적 필드(wo_number, 설비, 일자)는 코드에서 오버라이드 |
 | `save_memory` | 진단 결과를 PostgreSQL 영구 저장 (정상 포함). Tool 사용 이력, Deep Research 플래그 기록 |
 
-**조건부 분기:**
-
-```
-START → load_memory → reasoning → (조건부 분기)
-                                    ├─ call_tool → tool_executor → reasoning (루프)
-                                    ├─ continue_reasoning → reasoning
-                                    └─ generate_report → parse_diagnosis → generate_report
-                                          ├─ Warning/Critical → generate_work_order → save_memory → END
-                                          └─ Normal/Watch → save_memory → END
-```
-
 안전장치: `tool_calls_count > max_tool_calls` (기본 10, 환경변수 `PDM_AGENT_MAX_TOOL_CALLS`로 설정) 시 강제 `parse_diagnosis` 전이로 무한 루프 방지
 
 ### 도구(Tool) 및 함수 연동
 
-Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 도구)로 이원 구조화:
+Agent Skills를 Action Skills(외부 데이터 조회), Core Skills(도메인 판단 지침), User Skills(사용자 개인화)의 3원 구조로 구성:
 
 **Action Skills** (LangChain `@tool`, 서버 직접 호출):
 
@@ -61,7 +42,7 @@ Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 �
 - 모든 서버 인스턴스는 지연 초기화(싱글턴)로 관리
 - Tool 결과는 JSON 문자열로 반환
 
-**Knowledge Skills** (md, 조건부 프롬프트 주입):
+**Core Skills** (md, 조건부 프롬프트 주입):
 
 | **Skill** | **로드 조건** | **내용** |
 | --- | --- | --- |
@@ -146,7 +127,7 @@ LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
 
 | **이슈** | **문제** | **해결** |
 | --- | --- | --- |
-| **프롬프트 토큰** | 시스템 프롬프트에 전체 도메인 지식 포함 → 정상 이벤트에서도 15K 토큰 소비 | Knowledge Skills로 분리 + State 기반 조건부 로딩. 정상 이벤트 토큰 60% 절감 (15K→6K) |
+| **프롬프트 토큰** | 시스템 프롬프트에 전체 도메인 지식 포함 → 정상 이벤트에서도 15K 토큰 소비 | Core Skills로 분리 + State 기반 조건부 로딩. 정상 이벤트 토큰 60% 절감 (15K→6K) |
 | **JSON 출력** | LLM이 진단 JSON을 누락하거나 비표준 형식으로 출력 | `parse_diagnosis`에 다중 파싱 (코드블록→raw JSON→fallback). reasoning에서 JSON 미포함 시 재요청 메시지 자동 주입 |
 | **Tool 호출 유도** | 이상 이벤트에서 LLM이 Tool 호출 없이 분석을 종료하는 경우 발생 | reasoning 노드에서 `anomaly_detected=true`이고 `tool_calls_count=0`일 때 search_maintenance_history 호출을 유도하는 nudge 메시지 자동 주입 |
 | **Tool 연동** | MCP stdio transport의 서브프로세스 오버헤드 (Tool 호출당 2~3초) | Action Skills로 전환 — RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거 |

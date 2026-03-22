@@ -68,7 +68,7 @@
 | 1 | - | 센서 데이터 실시간 수집 및 전처리 | Edge 시스템 | 실시간 스트리밍 |
 | 2 | - | 정량 분석 수행 - Feature 산출, 추세 연산 후 이벤트 페이로드 생성 | Edge 시스템 | anomaly_detected = true |
 | 3 | - | Memory에서 해당 설비 이전 판단 이력 조회 | Memory (장기) | 5일차 이력 확인 |
-| 4 | - | ReAct Thought 1: anomaly_detected = true 확인. fault-diagnosis Skill 로드. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + Knowledge Skills (fault-diagnosis) | 결함 유형 식별 |
+| 4 | - | ReAct Thought 1: anomaly_detected = true 확인. fault-diagnosis Skill 로드. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + Core Skills (fault-diagnosis) | 결함 유형 식별 |
 | 5 | - | ReAct Thought 2: Kurtosis 상승 시작 + RMS 소폭 상승 확인. Memory의 5일차 정상 대비 변화 확인. | ReAct + 도메인 지식 + Memory | 결함 진행 단계 판정 |
 | 6 | - | ReAct Thought 3: Edge 추세 데이터 (slope, trend_direction) 해석. 열화 속도 정상 범위 내 판단. | ReAct + 도메인 지식 | 비정상 가속 아님 |
 | 7 | - | ReAct Thought 4: RUL 예측값과 에이전트 단계 판정 일관성 확인. | ReAct + Memory | RUL 예측 평가 |
