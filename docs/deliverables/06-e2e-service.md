@@ -29,7 +29,7 @@
 **기술:**
 
 - Edge(수치 계산) / Agent(해석) 역할 분리로 독립적 발전 가능
-- Skills 3원 구조 — Action Skills(외부 데이터 조회) + Core Skills(도메인 판단 지침) + User Skills(사용자 개인화). 새 설비 확장 시 Skill 추가만으로 대응
+- Skills 3원 구조 — Action Skills(외부 데이터 조회) + Core Skills(도메인 판단 지침) + User Skills(사용자 개인화). Core Skills는 컴포넌트 단위로 모듈화되어 있어, 베어링 외에 모터·펌프 등 다른 설비 유형의 Skill을 추가하면 동일 에이전트가 복합 장비를 진단할 수 있다. 컴포넌트 간 상관 분석 Skill(예: 모터 전류 불균형 → 구동측 베어링 편심 하중 영향)을 추가하면 개별 부품이 아닌 장비 전체 맥락에서의 진단이 가능
 - Action Skills가 RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거
 - LangGraph → FastAPI SSE → Streamlit 실시간 스트리밍 파이프라인
 
@@ -134,11 +134,10 @@ START → decompose → research (3개 병렬, asyncio.gather) → review → (�
 
 ### 트리거 조건
 
-| **조건** | **설명** | **판단 기준** |
-| --- | --- | --- |
-| **RAG 검색 결과 불충분** | 내부 검색으로 충분한 근거 확보 실패 | confidence score < threshold (예: 0.7) |
-| **사용자 명시적 요청** | "자세히 분석해줘", "근거를 더 찾아줘" 등 | 프롬프트 내 deep search 키워드 감지 |
-| **Critical + 유사 사례 부족** | health_state가 critical이면서 참고할 유사 사례가 희소 | health_state == "critical" AND 유사 사례 < 2건 |
+| **조건** | **설명** | **판단 기준** | **구현 상태** |
+| --- | --- | --- | --- |
+| **사용자 명시적 요청** | UI에서 Deep Search 토글 On/Off로 사용자가 직접 활성화 | 사용자 설정 기반 | 현재 구현 |
+| **RAG 검색 결과 불충분 + 유사 사례 부족** | 내부 RAG 검색으로 충분한 근거 확보 실패 시, 에이전트가 자동으로 Deep Search를 발동 | confidence score < threshold + 유사 사례 < 2건 | 추후 확장 |
 
 ### 구현 설계
 
