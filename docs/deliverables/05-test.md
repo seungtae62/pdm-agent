@@ -83,6 +83,15 @@
 | **불확실성 명시** | 이력 없는 신규 설비 분석 시 uncertainty_notes에 "단일 시점 분석만으로 판단" 정상 출력 확인 |
 | **LLM 실패 처리** | API 타임아웃 시 에러 메시지 반환 후 그래프 정상 종료 (graceful degradation) |
 
+## 참조 논문 및 기술 레퍼런스
+
+| **참조** | **제목** | **활용** |
+| --- | --- | --- |
+| Shao et al., 2024 | "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models" (STORM). arXiv:2402.14207 | Deep Search Engine의 다관점 분석 구조 |
+| Qian et al., 2024 | "CREATOR: Tool Creation for Disentangling Abstract and Concrete Reasoning of Large Language Models" | Action Skills 자동 생성 컨셉 참조 |
+| Wang et al., 2023 | "Voyager: An Open-Ended Embodied Agent with Large Language Models" | Self-Evolving Skills(자동 skill 축적) 컨셉 참조 |
+| AgentSkills.io | Agent Skills Open Standard | Skills 모듈화 표준 참조 |
+
 ## 기타 문제 해결 사례
 
 | **이슈** | **문제** | **해결** |

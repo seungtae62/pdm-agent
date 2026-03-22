@@ -199,33 +199,46 @@ Agent의 능력은 **Action Skills**(외부 데이터 조회), **Core Skills**(�
 
 ## Self-Evolving Skills Engine
 
-분석 결과와 실제 고장 결과를 대조하여 Core Skills를 자동 보정하는 자기 진화 메커니즘입니다.
+Agent가 운영 과정에서 Skills를 자동으로 확장·개인화하는 자기 진화 메커니즘입니다. 현재는 User Skills 자동 생성과 Action Skills 확장이 핵심이며, Core Skills 갱신은 추후 방향성으로 설계되어 있습니다.
 
-### Learning Loop (Core Skills 자동 보정)
+### User Feedback Loop (User Skills 자동 생성)
 
-| **단계** | **동작** | **대상 컴포넌트** |
-| --- | --- | --- |
-| 1. 분석 완료 | Agent가 진단 결과를 Memory에 저장 | `save_memory` 노드 |
-| 2. Trigger 발생 | 저장 시점에 `SkillEvolver` 자동 호출 (비동기) | `SkillEvolver` |
-| 3. Diff 감지 | 이전 분석 예측 vs 실제 결과(후속 상태) 대조 | analysis_history + PostgreSQL Memory |
-| 4. Skill 패치 생성 | 예측-실제 간 gap 분석 → 해석 규칙 수정안 LLM 생성 | Core Skills (md) |
-| 5. Core Skills 업데이트 | 검증 후 `skills/core/` 디렉토리에 반영 | `skills/core/*.md` |
+현재 구현된 Self-Evolving의 핵심 기능입니다. 대화 완료 시 `SkillEvolver`가 사용자의 반복 요청 패턴(분석 관점, 리포트 형식, 설비 조건 등)을 자동으로 감지하여 `skills/users/{user_id}/` 경로에 User Skills를 생성합니다. 다음 세션부터 자동 로드되어 담당자별 맥락에 맞는 개인화된 분석 품질을 제공합니다.
 
-### User Feedback Loop
+- **감지 대상**: 반복적으로 요청하는 분석 관점, 선호하는 리포트 형식, 자주 참조하는 설비 조건, 특정 위험도 판정 기준 등
+- **생성 프로세스**: 대화 패턴 분석 → 사용자 선호 추출 → YAML frontmatter 기반 Skill 파일 자동 생성 → `skills/users/{user_id}/`에 배치
+- **관리**: CRUD API(`save_user_skill()`, `delete_user_skill()`, `list_user_skills()`)로 조회·수정·삭제 가능
 
-대화 완료 시 사용자의 반복 요청 패턴(분석 관점, 리포트 형식, 설비 조건 등)을 감지하여 `skills/users/{user_id}/` 경로에 User Skills를 자동 생성. 다음 세션부터 자동 로드되어 개인화된 분석 품질을 제공합니다.
+### Action Skills 자동 확장
+
+새로운 외부 데이터 소스나 도구가 필요할 때, Action Skills를 추가하여 Agent의 실행 능력을 확장할 수 있습니다. 예를 들어 새로운 설비 관리 시스템 API 연동, 추가 문서 저장소 검색, 새로운 알림 채널 통합 등을 Action Skills 파일 추가만으로 대응할 수 있습니다.
+
+- **확장 방식**: Python `@tool` 데코레이터 기반 함수를 `skills/actions/` 디렉토리에 추가
+- **독립 배포**: 각 Action Skill은 독립적인 모듈로 관리되어, 기존 Skills에 영향 없이 추가·제거 가능
+
+### Core Skills 갱신 방향성
+
+Core Skills는 현재 자동 보정 대상이 아닙니다. 도메인 판단 지침의 자동 수정은 안전성 검증이 필수적이므로, 다음과 같은 단계적 접근을 계획하고 있습니다:
+
+- **추후 Deep Search Engine 활용**: 월 1회 정도 최신 논문/기술 문헌을 자동 탐색하여, Core Skills에 추가 가능한 새로운 도메인 지식(새 결함 패턴, 개선된 해석 기준 등)을 파악
+- **Human-in-the-Loop 검토**: 파악된 내용은 도메인 전문가가 검토 후 Core Skills에 반영하는 방식으로 운영
+- **안전성 확보**: 자동 갱신이 아닌 전문가 승인 기반으로 운영하여, 잘못된 해석 규칙이 반영되는 위험을 방지
 
 ### Skills Store 구조
 
 ```
 skills/
-├── core/                    # 조직 공통 Skills (검증됨, 전체 Agent 공유)
+├── actions/                 # Action Skills (외부 데이터 조회, Python @tool)
+│   ├── rag_search.py
+│   ├── web_search.py
+│   └── notification.py
+├── core/                    # Core Skills (도메인 판단 지침, md)
 │   ├── fault-diagnosis.md
 │   ├── feature-interpret.md
 │   ├── deep-research.md
 │   ├── response-normal.md
 │   └── response-alert.md
-└── users/                   # 개인화 Skills (자동 생성, 사용자별 격리)
+└── users/                   # User Skills (사용자 개인화, md)
     ├── user-001/
     │   ├── preferred-report-format.md
     │   ├── equipment-notes.md
@@ -238,9 +251,10 @@ skills/
 
 | **효과** | **설명** |
 | --- | --- |
-| **도메인 지식 자동 축적** | 반복 분석을 통해 해석 규칙이 지속적으로 정교화. 분석 건수 증가에 비례하여 진단 정확도 향상 |
+| **개인화된 분석 품질** | User Skills 자동 생성으로 담당자별 맥락을 반영하여 개인화된 분석 경험 제공 |
+| **확장 가능한 실행 능력** | Action Skills 추가로 새로운 외부 데이터 소스·도구를 유연하게 통합 |
 | **조직 노하우의 명시적 자산화** | 암묵지(경험 기반 판단)가 Skill 파일로 코드화되어 인력 이동에도 지식 유실 방지 |
-| **개인화된 분석 품질** | User Skills로 담당자별 맥락을 반영하여 개인화된 분석 경험 제공 |
+| **안전한 도메인 지식 갱신** | Core Skills는 Human-in-the-Loop으로 검증 후 반영하여 신뢰성 확보 |
 
 ---
 

@@ -86,7 +86,7 @@
 | RAG | 정비 이력 DB, 설비 매뉴얼 DB, 과거 분석 이력 DB에서 관련 정보를 검색하여 해석의 근거를 보강. 일반 RAG 활용(정보 조회)과 Deep Research(분석적 조사)에서 공통으로 사용되는 기반 기술 | VDB 기반. Action Skills을 통해 호출되며, 검색 결과를 추론 컨텍스트에 반영 |
 | Prompt Optimization | 대화형 상호작용 시 분석 맥락을 효율적으로 유지. 전체 추론 체인 대신 핵심 필드만 추출하여 주입하고, 대화가 길어지면 이력을 압축하여 응답 품질 유지 | 분석 맥락 구조화 (세션 시작 시) + 대화 이력 압축 (매 턴) + 슬라이딩 윈도우 (3턴 이상 시) |
 | Self-Evolving Skills | 분석 결과와 실제 고장 결과를 대조하여 Knowledge Skills 내 해석 규칙을 자동 보정하는 자기 진화 메커니즘. SkillEvolver가 save_memory 시점에 자동 호출되어 Core Skills를 점진적으로 개선. 대화에서 축적된 사용자 맥락은 User Skills로 자동 생성 | SkillEvolver가 분석 완료 후 실제 결과와의 차이를 감지하여 Knowledge Skills를 자동 보정. 반복 분석을 통해 조직의 설비 운영 노하우가 Skill 파일로 자동 축적 |
-| Personalized Skills | skills/users/{user_id}/ 경로에 사용자별 커스텀 Skill을 자동 배치. 설비 담당자별 특화 지식 (자주 참조하는 분석 관점, 선호 리포트 형식 등)이 자동 로드되어 개인화된 분석 품질 제공 | 대화에서 축적된 사용자 맥락이 User Skills로 자동 생성. 검증된 User Skill은 Core Skills로 승격 가능 |
+| Personalized Skills | skills/users/{user_id}/ 경로에 사용자별 커스텀 Skill을 자동 배치. 설비 담당자별 특화 지식 (자주 참조하는 분석 관점, 선호 리포트 형식 등)이 자동 로드되어 개인화된 분석 품질 제공 | 대화에서 축적된 사용자 맥락이 User Skills로 자동 생성되어 개인화된 분석 품질 제공 |
 
 ### 에이전트 베어링 도메인 지식 체계
 

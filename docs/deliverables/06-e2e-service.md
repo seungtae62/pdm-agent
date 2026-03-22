@@ -44,81 +44,59 @@
 
 ### 개념
 
-분석 결과와 실제 고장 결과를 대조하여 Skills를 자동 보정하는 메커니즘. 현재 정적 SKILL.md 파일에 하드코딩된 해석 규칙을 **피드백 기반 자기 진화 시스템**으로 전환한다. Agent가 반복 분석을 수행할수록 도메인 지식이 자동으로 축적되며, 조직의 설비 운영 노하우가 명시적 자산으로 관리된다.
+Agent가 운영 과정에서 Skills를 자동으로 확장·개인화하는 자기 진화 메커니즘. 현재는 User Skills 자동 생성과 Action Skills 확장이 핵심이며, Core Skills 갱신은 추후 방향성으로 설계되어 있다.
 
 ### 아키텍처
 
-**Learning Loop (Core Skills 자동 보정)**
-
-분석 완료 → `save_memory` 노드에서 trigger → 실제 고장 결과와 분석 결과 diff 감지 → Core Skills 업데이트
-
-| **단계** | **동작** | **대상** |
-| --- | --- | --- |
-| 1. 분석 완료 | Agent가 진단 결과를 Memory에 저장 | `save_memory` 노드 |
-| 2. Trigger 발생 | 저장 시점에 `SkillEvolver` 자동 호출 | `SkillEvolver` 클래스 |
-| 3. Diff 감지 | 이전 분석 예측 vs 실제 결과 대조 | analysis_history (Qdrant) |
-| 4. Skill 패치 생성 | 해석 규칙 수정안을 LLM으로 생성 | Core Skills (md) |
-| 5. Core Skills 업데이트 | 검증 후 `core/` 디렉토리에 반영 | `skills/core/*.md` |
-
 **User Feedback Loop (User Skills 자동 생성)**
 
-대화 완료 → 사용자 선호 패턴 분석 → User Skills 자동 생성
+현재 구현된 Self-Evolving의 핵심 기능. 대화 완료 시 `SkillEvolver`가 사용자의 반복 요청 패턴을 자동으로 감지하여 User Skills를 생성한다.
 
-- 사용자가 반복적으로 요청하는 분석 관점, 선호하는 리포트 형식, 자주 참조하는 설비 조건 등을 자동으로 캡처
-- 설비 담당자별 특화 지식이 `skills/users/{user_id}/` 경로에 자동 배치되어 개인화된 분석 품질 제공
+- 감지 대상: 반복적으로 요청하는 분석 관점, 선호하는 리포트 형식, 자주 참조하는 설비 조건 등
+- 생성 프로세스: 대화 패턴 분석 → 사용자 선호 추출 → YAML frontmatter 기반 Skill 파일 자동 생성 → `skills/users/{user_id}/`에 배치
+- 다음 세션부터 자동 로드되어 담당자별 맥락에 맞는 개인화된 분석 품질 제공
+
+**Action Skills 자동 확장**
+
+새로운 외부 데이터 소스나 도구가 필요할 때, Action Skills를 추가하여 Agent의 실행 능력을 확장할 수 있다. Python `@tool` 데코레이터 기반 함수를 `skills/actions/` 디렉토리에 추가하는 방식으로 기존 Skills에 영향 없이 독립적으로 관리된다.
+
+**Core Skills 갱신 방향성 (추후)**
+
+Core Skills는 현재 자동 보정 대상이 아니다. 추후 다음과 같은 단계적 접근을 계획하고 있다:
+
+- Deep Search Engine을 활용하여 월 1회 정도 최신 논문/기술 문헌을 자동 탐색, Core Skills에 추가 가능한 새로운 도메인 지식을 파악
+- 파악된 내용은 Human-in-the-Loop으로 도메인 전문가가 검토 후 Core Skills에 반영
+- 자동 갱신이 아닌 전문가 승인 기반으로 운영하여 안전성 확보
 
 **Skills Store 구조**
 
 ```
 skills/
-├── core/                    # 조직 공통 Skills (검증됨, 전체 Agent 공유)
-│   ├── vibration-analysis.md
-│   ├── bearing-fault-rules.md
-│   └── ...
-└── users/                   # 개인화 Skills (자동 생성, 사용자별 격리)
+├── actions/                 # Action Skills (외부 데이터 조회, Python @tool)
+│   ├── rag_search.py
+│   ├── web_search.py
+│   └── notification.py
+├── core/                    # Core Skills (도메인 판단 지침, md)
+│   ├── fault-diagnosis.md
+│   ├── feature-interpret.md
+│   ├── deep-research.md
+│   ├── response-normal.md
+│   └── response-alert.md
+└── users/                   # User Skills (사용자 개인화, md)
     ├── user-001/
     │   ├── preferred-report-format.md
-    │   └── equipment-notes.md
+    │   ├── equipment-notes.md
+    │   └── analysis-focus.md
     └── user-002/
         └── ...
 ```
 
-**승격 파이프라인: `users/` → `core/`**
-
-- User Skill이 일정 횟수 이상 참조되고, 다른 사용자에게도 유효한 인사이트를 포함할 경우 `core/`로 승격
-- 승격 조건: 참조 횟수 threshold 충족 + 관리자 승인 또는 자동 검증 파이프라인 통과
-- 승격 시 개인 맥락을 제거하고 범용 규칙으로 일반화
-
-### 구현 설계
-
-**`SkillEvolver` 클래스**
-
-- `save_memory` 노드 실행 시 자동 호출
-- 분석 결과 diff를 감지하여 Skill 패치를 생성하는 핵심 컴포넌트
-- 동작 흐름: 최근 분석 결과 조회 → 해당 설비의 실제 후속 상태 확인 → 예측-실제 간 gap 분석 → Skill 수정 제안 생성 → 검증 후 반영
-
-**Version Control**
-
-각 Skill 파일에 YAML frontmatter로 버전 관리 메타데이터를 기록한다:
-
-```yaml
----
-version: 1.3
-updated_at: 2026-03-15T14:30:00+09:00
-updated_by: SkillEvolver
-reason: "Bearing inner race fault 임계값 조정 — 실제 고장 데이터 기반 (case #127, #134)"
-changelog:
-  - v1.3: BPFI 임계값 0.35 → 0.28 하향 (조기 감지율 향상)
-  - v1.2: RMS 가속도 해석 구간 세분화
-  - v1.1: 초기 피드백 반영
----
-```
-
 ### 기대 효과
 
-- **도메인 지식 자동 축적**: 반복 분석을 통해 해석 규칙이 지속적으로 정교화
+- **개인화된 분석 품질**: User Skills 자동 생성으로 담당자별 맥락을 반영하여 개인화된 분석 경험 제공
+- **확장 가능한 실행 능력**: Action Skills 추가로 새로운 외부 데이터 소스·도구를 유연하게 통합
 - **조직 노하우의 명시적 자산화**: 암묵지(경험 기반 판단)가 Skill 파일로 코드화되어 인력 이동에도 지식 유실 방지
-- **개인화와 공통화의 균형**: User Skills로 개인 맥락 반영, Core Skills 승격으로 조직 전체 품질 향상
+- **안전한 도메인 지식 갱신**: Core Skills는 Human-in-the-Loop으로 검증 후 반영하여 신뢰성 확보
 
 ---
 
