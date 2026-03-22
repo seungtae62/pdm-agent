@@ -285,33 +285,28 @@ class LLMChatRunner:
                         )
                     elif name == "research":
                         current_node = "research"
-                        # 관점 정보는 decompose 완료 후 state에서 가져옴
+                        # 병렬 실행: 모든 perspective를 동시에 "thinking" 상태로 전송
                         total = len(perspectives) if perspectives else 0
-                        role_label = (
-                            f"Researcher {current_researcher_index + 1}/{total}"
-                            if total > 0
-                            else "Researcher"
-                        )
-                        if perspectives and current_researcher_index < len(
-                            perspectives
-                        ):
-                            p = perspectives[current_researcher_index]
+                        for idx, p in enumerate(perspectives):
                             p_name = p.get("perspective", p.get("name", ""))
-                            if p_name:
-                                role_label += f": {p_name}"
-                        await run_manager.emit_chat_event(
-                            session_id,
-                            DeepSearchStepEvent(
-                                run_id=run_id,
-                                session_id=session_id,
-                                step_type="researcher",
-                                role=role_label,
-                                content="",
-                                status="thinking",
-                                perspective_index=current_researcher_index,
-                                total_perspectives=total if total > 0 else None,
-                            ),
-                        )
+                            role_label = (
+                                f"Researcher {idx + 1}/{total}: {p_name}"
+                                if p_name
+                                else f"Researcher {idx + 1}/{total}"
+                            )
+                            await run_manager.emit_chat_event(
+                                session_id,
+                                DeepSearchStepEvent(
+                                    run_id=run_id,
+                                    session_id=session_id,
+                                    step_type="researcher",
+                                    role=role_label,
+                                    content="",
+                                    status="thinking",
+                                    perspective_index=idx,
+                                    total_perspectives=total,
+                                ),
+                            )
                     elif name == "review":
                         current_node = "review"
                         await run_manager.emit_chat_event(
@@ -426,45 +421,35 @@ class LLMChatRunner:
                             ),
                         )
                     elif name == "research":
-                        # research 완료 후 search_results 추출 (confidence 포함)
+                        # research 완료 후 search_results 추출 (병렬 실행 결과)
                         output = event.get("data", {}).get("output", {})
                         if isinstance(output, dict):
                             new_results = output.get("search_results", [])
                             if new_results:
                                 search_results = new_results
 
-                        # 현재 researcher에 대한 confidence 추출
-                        confidence_val = None
-                        if search_results and current_researcher_index < len(
-                            search_results
-                        ):
-                            sr = search_results[current_researcher_index]
+                        # 병렬 실행: 모든 perspective 결과를 개별 이벤트로 발송
+                        total = len(perspectives) if perspectives else len(search_results)
+                        for idx, sr in enumerate(search_results):
+                            p_name = sr.get("perspective", "")
                             confidence_val = sr.get("confidence")
+                            role_label = f"Researcher {idx + 1}/{total}: {p_name}"
 
-                        total = len(perspectives) if perspectives else None
-                        role_label = "Researcher"
-                        if perspectives and current_researcher_index < len(
-                            perspectives
-                        ):
-                            p = perspectives[current_researcher_index]
-                            p_name = p.get("perspective", p.get("name", ""))
-                            role_label = f"Researcher {current_researcher_index + 1}/{total}: {p_name}"
-
-                        await run_manager.emit_chat_event(
-                            session_id,
-                            DeepSearchStepEvent(
-                                run_id=run_id,
-                                session_id=session_id,
-                                step_type="researcher",
-                                role=role_label,
-                                content="",
-                                status="done",
-                                perspective_index=current_researcher_index,
-                                total_perspectives=total,
-                                confidence=confidence_val,
-                            ),
-                        )
-                        current_researcher_index += 1
+                            await run_manager.emit_chat_event(
+                                session_id,
+                                DeepSearchStepEvent(
+                                    run_id=run_id,
+                                    session_id=session_id,
+                                    step_type="researcher",
+                                    role=role_label,
+                                    content="",
+                                    status="done",
+                                    perspective_index=idx,
+                                    total_perspectives=total,
+                                    confidence=confidence_val,
+                                ),
+                            )
+                        current_researcher_index = len(search_results)
                     elif name == "review":
                         # review 완료 후 critic_feedback 추출
                         output = event.get("data", {}).get("output", {})
