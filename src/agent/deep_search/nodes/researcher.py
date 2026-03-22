@@ -3,10 +3,12 @@
 각 perspective에 대해 해당 도구를 사용하여 검색을 수행하고,
 confidence score를 산출한다.
 기존 Action Skills(rag_search, web_search)를 재사용한다.
+asyncio.gather()로 3개 관점을 병렬 실행한다.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -187,7 +189,8 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
             sr for sr in search_results if sr.get("perspective") not in failed_set
         ]
 
-    for p in perspectives:
+    async def _research_one_perspective(p: dict) -> dict:
+        """단일 perspective에 대한 검색을 수행한다."""
         perspective = p.get("perspective", "알 수 없음")
         sub_query = p.get("sub_query", original_query)
         agent_role = p.get("agent_role", "maintenance_history")
@@ -199,7 +202,7 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
             agent_role,
         )
 
-        # Tool 호출
+        # Tool 호출 (sync tool.invoke를 asyncio.to_thread로 감싸서 비동기 실행)
         raw_results_parts = []
         all_sources = []
         for tool_name in search_tool_names:
@@ -209,7 +212,7 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
                 continue
 
             try:
-                result = t.invoke({"query": sub_query})
+                result = await asyncio.to_thread(t.invoke, {"query": sub_query})
                 raw_results_parts.append(f"[{tool_name}]\n{result}")
 
                 source_type = "external_web" if "web" in tool_name else "internal_rag"
@@ -253,18 +256,6 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
 
         confidence = _calculate_confidence(raw_results)
 
-        search_results.append(
-            {
-                "perspective": perspective,
-                "sub_query": sub_query,
-                "agent_role": agent_role,
-                "results": organized_results,
-                "confidence": confidence,
-                "sources": all_sources,
-                "needs_revision": False,
-            }
-        )
-
         logger.info(
             "[deep_search:researcher] 검색 완료 — 관점: %s, "
             "confidence: %.1f, 출처: %d건",
@@ -272,5 +263,27 @@ async def research(state: DeepSearchState, *, llm: BaseChatModel, tools: list) -
             confidence,
             len(all_sources),
         )
+
+        return {
+            "perspective": perspective,
+            "sub_query": sub_query,
+            "agent_role": agent_role,
+            "results": organized_results,
+            "confidence": confidence,
+            "sources": all_sources,
+            "needs_revision": False,
+        }
+
+    # 3개 관점 병렬 실행
+    parallel_results = await asyncio.gather(
+        *[_research_one_perspective(p) for p in perspectives],
+        return_exceptions=True,
+    )
+
+    for r in parallel_results:
+        if isinstance(r, Exception):
+            logger.error("[deep_search:researcher] 병렬 검색 예외: %s", r)
+            continue
+        search_results.append(r)
 
     return {"search_results": search_results}
