@@ -1,51 +1,28 @@
-# 04. PoC 모듈 구현
-
-> PdM Agent — 예지보전 AI 에이전트
-
-## 기술 차별점 (Niche 영역)
-
-**Agent Skills 기반 사용자 개인화 에이전트**
-
-- `skills/core/`(조직 공통)와 `skills/users/`(사용자별 맞춤) 분리로 동일 에이전트가 사용자에 따라 다른 도메인 지식을 로드
-- Edge 산출 결과(`anomaly_detected`, `health_state`)를 State에 반영하여 필요한 Skill만 조건부 로드 (Progressive Disclosure)
-- 정상 이벤트에서는 결함 진단 Skill 미로드 → 토큰 약 60% 절감
-
-**아키텍처 다이어그램:**
+### 아키텍처 다이어그램
 
 ![PdM Agent v1.0 Architecture](images/pdm-agent_v1.0.png)
 
-## 핵심 구현 내용
+### 핵심 구현 내용
 
-### 에이전트 워크플로우
+#### 에이전트 워크플로우
 
 LangGraph 7노드 StateGraph로 E2E 워크플로우 구현:
 
 | **노드** | **역할** |
 | --- | --- |
 | `load_memory` | PostgreSQL에서 동일 설비/베어링 최근 5건 분석 이력 조회 → 자연어 요약으로 컨텍스트 주입 |
-| `reasoning` | 시스템 프롬프트 + 페이로드 + Memory + Knowledge Skills + Action Skills(bind_tools)로 ReAct 추론. 이상 이벤트에서 Tool 미호출 시 자동 유도(nudging), 진단 JSON 미포함 시 재요청 |
+| `reasoning` | 시스템 프롬프트 + 페이로드 + Memory + Core Skills + Action Skills(bind_tools)로 ReAct 추론. 이상 이벤트에서 Tool 미호출 시 자동 유도(nudging), 진단 JSON 미포함 시 재요청 |
 | `tool_executor` | LLM이 호출한 Action Skill 실행 후 reasoning으로 복귀 (추론 루프). tool_calls_count 누적 |
 | `parse_diagnosis` | LLM 응답에서 진단 JSON 추출 (코드블록 → raw JSON → fallback 기본값). fault_type 필수 검증 |
 | `generate_report` | Normal/Watch: 간결 요약. Warning/Critical: LLM 기반 상세 리포트 (결함 요약, 근거, RUL, 권고, 불확실성) |
 | `generate_work_order` | Warning/Critical에서만 실행. 자재/공구 레퍼런스 라이브러리 프롬프트로 구조화 JSON 생성. 결정적 필드(wo_number, 설비, 일자)는 코드에서 오버라이드 |
 | `save_memory` | 진단 결과를 PostgreSQL 영구 저장 (정상 포함). Tool 사용 이력, Deep Research 플래그 기록 |
 
-**조건부 분기:**
-
-```
-START → load_memory → reasoning → (조건부 분기)
-                                    ├─ call_tool → tool_executor → reasoning (루프)
-                                    ├─ continue_reasoning → reasoning
-                                    └─ generate_report → parse_diagnosis → generate_report
-                                          ├─ Warning/Critical → generate_work_order → save_memory → END
-                                          └─ Normal/Watch → save_memory → END
-```
-
 안전장치: `tool_calls_count > max_tool_calls` (기본 10, 환경변수 `PDM_AGENT_MAX_TOOL_CALLS`로 설정) 시 강제 `parse_diagnosis` 전이로 무한 루프 방지
 
-### 도구(Tool) 및 함수 연동
+#### 도구(Tool) 및 함수 연동
 
-Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 도구)로 이원 구조화:
+Agent Skills를 Action Skills(외부 데이터 조회), Core Skills(도메인 판단 지침), User Skills(사용자 개인화)의 3원 구조로 구성:
 
 **Action Skills** (LangChain `@tool`, 서버 직접 호출):
 
@@ -55,19 +32,19 @@ Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 �
 | `search_equipment_manual` | 매뉴얼, FMEA, 정비 절차서 검색 (doc_type 필터) |
 | `search_analysis_history` | 에이전트 과거 분석 판단 이력 검색 |
 | `notify_maintenance_staff` | 정비 담당자 알림 (Watch 이상). PoC에서는 로깅, 프로덕션에서 이메일/Slack 확장 가능 |
-| `search_web` | Tavily API 기반 외부 웹 검색. Deep Research에서만 사용하며, 내부 RAG 보완용 |
+| `search_web` | Tavily API 기반 외부 웹 검색. Deep Search Engine에서 Equipment Specialist가 사용하며, 내부 RAG 보완용 |
 
 - RAG 검색 3종은 RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거
 - 모든 서버 인스턴스는 지연 초기화(싱글턴)로 관리
 - Tool 결과는 JSON 문자열로 반환
 
-**Knowledge Skills** (md, 조건부 프롬프트 주입):
+**Core Skills** (md, 조건부 프롬프트 주입):
 
 | **Skill** | **로드 조건** | **내용** |
 | --- | --- | --- |
 | `fault-diagnosis` | anomaly_detected = true | 결함 주파수 해석, P-F 곡선 4단계 |
 | `feature-interpret` | anomaly_detected = true | Kurtosis+RMS 복합 패턴, Crest Factor 전이 |
-| `deep-research` | deep_research_activated = true | 가설→RAG→외부검색→해석 루프 |
+| `deep-research` | deep_research_activated = true | STORM 스타일 다관점 분석 절차: Leader(Decompose) → 3 Research Agents(병렬) → Critic(Review-Revise) → Synthesize |
 | `response-normal` | health_state != warning/critical | Normal/Watch 응답 양식 |
 | `response-alert` | health_state = warning/critical | Warning/Critical 응답 양식 |
 
@@ -81,7 +58,7 @@ Agent Skills를 Knowledge Skills(도메인 지식)과 Action Skills(실행형 �
 - CRUD API 제공: `save_user_skill()`, `delete_user_skill()`, `list_user_skills()`
 - 에이전트와 대화형 채팅 모두에서 사용자별 Skill 자동 로드
 
-### API 레이어
+#### API 레이어
 
 FastAPI 기반 REST API + SSE 실시간 스트리밍:
 
@@ -97,7 +74,7 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 - `AgentRunner` 프로토콜로 `LangGraphAgentRunner`(실제) / `MockAgentRunner`(데모) 교체 가능
 - 대화형 채팅은 `LLMChatRunner`가 에이전트 그래프와 독립적으로 LLM 직접 호출
 
-### 데이터 및 메모리
+#### 데이터 및 메모리
 
 | **저장소** | **구성** | **용도** |
 | --- | --- | --- |
@@ -110,11 +87,43 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 - PostgreSQL 스키마: equipment_id, bearing_id, event_id, fault_type, fault_stage, degradation_speed, risk_level, ml_rul_hours, recommendation, tools_used(JSONB), deep_research, human_response, action_taken, resolved 등
 - `MemoryStore.load_recent()`: 설비/베어링 기준 최근 5건 조회 → `summarize_history()`로 자연어 요약
 
-## 주요 문제 해결 및 기술 리서치
+#### Deep Search Engine (STORM 스타일 다관점 분석)
+
+LangGraph 서브그래프로 구현된 STORM 스타일 다관점 분석 엔진:
+
+**서브그래프 노드 구조:**
+
+| **노드** | **역할** |
+| --- | --- |
+| `decompose` | Leader가 사용자 질의를 분석하여 3개 Research Agent에 대한 검색 지시(sub-queries) 생성 |
+| `research` | 3개 Research Agent가 `asyncio.gather()`로 병렬 실행. 각 perspective별 도구로 검색 수행 후 confidence score 산출 |
+| `review` | Critic이 각 Research Agent 결과를 Pass/Revise 판정. Revise 시 해당 perspective만 재검색 (최대 3회) |
+| `synthesize` | confidence score 기반 가중치 투표로 3개 관점의 결과를 종합하여 구조화된 근거 세트 생성 |
+
+**3개 고정 Research Agent (Perspective):**
+
+| **Research Agent** | **agent_role** | **검색 도구** |
+| --- | --- | --- |
+| Maintenance Engineer | `maintenance_history` | `search_maintenance_history` |
+| Senior Analyst | `analysis_history` | `search_analysis_history` |
+| Equipment Specialist | `equipment_manual` | `search_equipment_manual` + `search_web` |
+
+**Critic Review-Revise 루프:**
+- Critic이 각 Research Agent의 결과를 독립적으로 검증 (관련성, 충분성, 정확성)
+- Pass: 해당 perspective 결과가 충분한 근거 제공 → 합성 단계로 진행
+- Revise: 결과 불충분 → 해당 perspective만 재검색 지시 (최대 3회)
+- 모든 perspective가 Pass 또는 최대 재검색 횟수 도달 시 `synthesize`로 전이
+
+**Confidence Score 및 가중치 투표:**
+- confidence score (0.0~1.0): 검색 결과 양/품질 기반 휴리스틱으로 산출
+- 합성 시 각 전문가의 confidence score에 비례하여 기여도(가중치) 결정
+- UI에서 색상 코딩으로 시각화: 초록(≥0.7), 노랑(0.4~0.7), 빨강(<0.4)
+
+### 주요 문제 해결 및 기술 리서치
 
 | **이슈** | **문제** | **해결** |
 | --- | --- | --- |
-| **프롬프트 토큰** | 시스템 프롬프트에 전체 도메인 지식 포함 → 정상 이벤트에서도 15K 토큰 소비 | Knowledge Skills로 분리 + State 기반 조건부 로딩. 정상 이벤트 토큰 60% 절감 (15K→6K) |
+| **프롬프트 토큰** | 시스템 프롬프트에 전체 도메인 지식 포함 → 정상 이벤트에서도 15K 토큰 소비 | Core Skills로 분리 + State 기반 조건부 로딩. 정상 이벤트 토큰 60% 절감 (15K→6K) |
 | **JSON 출력** | LLM이 진단 JSON을 누락하거나 비표준 형식으로 출력 | `parse_diagnosis`에 다중 파싱 (코드블록→raw JSON→fallback). reasoning에서 JSON 미포함 시 재요청 메시지 자동 주입 |
 | **Tool 호출 유도** | 이상 이벤트에서 LLM이 Tool 호출 없이 분석을 종료하는 경우 발생 | reasoning 노드에서 `anomaly_detected=true`이고 `tool_calls_count=0`일 때 search_maintenance_history 호출을 유도하는 nudge 메시지 자동 주입 |
 | **Tool 연동** | MCP stdio transport의 서브프로세스 오버헤드 (Tool 호출당 2~3초) | Action Skills로 전환 — RAGServer를 in-process 직접 호출하여 프로토콜 오버헤드 제거 |
@@ -122,7 +131,7 @@ FastAPI 기반 REST API + SSE 실시간 스트리밍:
 | **SSE 노드 구분** | `astream_events`에서 모든 노드의 LLM 출력이 섞임 | `current_node` 변수로 노드 추적, reasoning에서만 토큰 스트리밍 emit |
 | **비동기 큐** | FastAPI→Streamlit SSE 스트리밍의 큐 관리 및 연결 종료 처리 | `RunManager`에서 run_id별 `asyncio.Queue` 관리 + `asyncio.timeout(300)` 안전장치 |
 
-## 핵심 동작 검증
+### 핵심 동작 검증
 
 **검증 시나리오: SC-003 (결함 진행 구간 — Warning)**
 

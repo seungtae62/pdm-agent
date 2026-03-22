@@ -1,14 +1,10 @@
-# 02. 사용자 시나리오
+### 핵심 사용자 시나리오
 
-> PdM Agent — 예지보전 AI 에이전트
-
-## 핵심 사용자 시나리오
-
-### 시나리오 1: 베어링 점진적 열화 감지 및 추적
+#### 시나리오 1: 베어링 점진적 열화 감지 및 추적
 
 > 각 시점 개별 분석 (시점A: 5일차 정상 구간 / 시점B: 15일차 의심 전이 구간 / 시점C: 25일차 결함 진행 구간)
 
-### 시나리오 1-A: 점진적 열화 감지 및 추적 - 정상구간
+#### 시나리오 1-A: 점진적 열화 감지 및 추적 - 정상구간
 
 - ID : [SC-001]
 
@@ -43,7 +39,7 @@
 
     - Memory에 정상 판정 이력 저장
 
-### 시나리오 1-B: 점진적 열화 감지 및 추적 - 의심 전이 구간
+#### 시나리오 1-B: 점진적 열화 감지 및 추적 - 의심 전이 구간
 
 - ID : [SC-002]
 
@@ -68,7 +64,7 @@
 | 1 | - | 센서 데이터 실시간 수집 및 전처리 | Edge 시스템 | 실시간 스트리밍 |
 | 2 | - | 정량 분석 수행 - Feature 산출, 추세 연산 후 이벤트 페이로드 생성 | Edge 시스템 | anomaly_detected = true |
 | 3 | - | Memory에서 해당 설비 이전 판단 이력 조회 | Memory (장기) | 5일차 이력 확인 |
-| 4 | - | ReAct Thought 1: anomaly_detected = true 확인. fault-diagnosis Skill 로드. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + Knowledge Skills (fault-diagnosis) | 결함 유형 식별 |
+| 4 | - | ReAct Thought 1: anomaly_detected = true 확인. fault-diagnosis Skill 로드. 주파수 영역에서 BPFI 진폭 상승 식별, 사이드 밴드 미약. 내륜 결함 초기 징후로 판별 | ReAct + Core Skills (fault-diagnosis) | 결함 유형 식별 |
 | 5 | - | ReAct Thought 2: Kurtosis 상승 시작 + RMS 소폭 상승 확인. Memory의 5일차 정상 대비 변화 확인. | ReAct + 도메인 지식 + Memory | 결함 진행 단계 판정 |
 | 6 | - | ReAct Thought 3: Edge 추세 데이터 (slope, trend_direction) 해석. 열화 속도 정상 범위 내 판단. | ReAct + 도메인 지식 | 비정상 가속 아님 |
 | 7 | - | ReAct Thought 4: RUL 예측값과 에이전트 단계 판정 일관성 확인. | ReAct + Memory | RUL 예측 평가 |
@@ -87,7 +83,7 @@
 
     - Memory에 5일차 정상 대비 10일간 Kurtosis 및 BPFI 진폭 상승 추세 확인
 
-### 시나리오 1-C: 점진적 열화 감지 및 추적 - 결함 진행 구간
+#### 시나리오 1-C: 점진적 열화 감지 및 추적 - 결함 진행 구간
 
 - ID : [SC-003]
 
@@ -150,7 +146,7 @@
         - search_equipment_manual: EM-002 (결함 종합 가이드 — 내륜 결함 메커니즘, 진행 패턴, 급속 열화 조건 포함)
         - search_equipment_manual: EM-003 (정비 절차 및 FMEA — 베어링 교체 절차, 위험 우선순위 포함)
 
-### 시나리오 2: 급속 열화 대응
+#### 시나리오 2: 급속 열화 대응
 
 - ID : [SC-004]
 
@@ -217,7 +213,7 @@
         - search_equipment_manual: EM-002 (결함 종합 가이드 — 외륜 결함 메커니즘 및 급속 열화 조건 포함)
         - search_equipment_manual: EM-001 (베어링 사양서 — 설비 사양 및 운전 조건 참조)
 
-### 시나리오 3: 대화형 상호 작용 - 정비 담당자 질의
+#### 시나리오 3: 대화형 상호 작용 - 정비 담당자 질의
 
 - ID : [SC-005]
 
@@ -240,9 +236,9 @@
 | 1 | "정비를 3일 유예할 수 있는가?" | Memory에서 현재 분석 맥락 로드. 전체 분석 결과가 아닌 구조화된 요약(결함 유형, 단계, 위험도, RUL, 핵심 근거)을 컨텍스트에 주입 | Memory + Prompt Optimization | 전체 추론 체인이 아닌 압축된 맥락 사용 |
 | 2 | - | RUL 예측값과 열화 속도를 기반으로 유예 가능 여부 판단. 유예 시 위험도 변화 및 예상 시나리오 설명 | ReAct + 도메인 지식 | |
 | 3 | (대화 N턴 이상 지속 시) | Prompt Optimization 자동 수행: 전체 대화 이력을 "분석 맥락 요약 + 최근 2~3턴 원문"으로 재구성하여 컨텍스트 윈도우 내 유지 | Prompt Optimization | 슬라이딩 윈도우 + 요약 병행 |
-| 4 | "이 결함의 근본 원인을 더 자세히 분석해줘" | Deep Search Engine (Group Agent) 발동. Leader Agent가 검색 계획 수립 후, Sub-Agent들이 병렬 탐색: Internal (RAG 심층 검색), Web (Tavily 외부 검색), Academic (arXiv 논문 검색) | Deep Search Engine (Group Agent) + Action Skills | 사용자 요청에 의한 Deep Search. Leader-SubAgent Plan & Execute 패턴 |
-| 5 | - | Sub-Agent 병렬 실행 결과를 Leader Agent가 종합. 내부 RAG (유사 사례, 결함 메커니즘), 외부 웹 (기술 문서, 논문), 학술 자료를 교차 검증 | Deep Search Engine (Leader 결과 종합) | 내부 우선, 외부 보완. 교차 검증 |
-| 6 | - | 종합 분석 결과 응답. 외부 자료는 "외부 참고 (검증 필요)" 표기 | ReAct | 소스 구분 명시 |
+| 4 | "이 결함의 근본 원인을 더 자세히 분석해줘" | Deep Search Engine (STORM 스타일 Group Agent) 발동. Leader가 질의를 분해(Decompose)하고, 3개 Research Agent가 병렬 탐색: Maintenance Engineer (정비 이력 검색), Senior Analyst (분석 이력 검색), Equipment Specialist (설비 매뉴얼 + 외부 웹 검색) | Deep Search Engine (STORM) + Action Skills | 사용자 요청에 의한 Deep Search. `asyncio.gather()` 병렬 실행 |
+| 5 | - | Critic이 3개 Research Agent 결과를 각각 검증 (Pass/Revise). Revise 판정 시 해당 perspective만 재검색 (Review-Revise 루프, 최대 3회). confidence score 기반 가중치 투표로 합성 시 기여도 결정 | Deep Search Engine (Critic + Review-Revise) | Critic Pass Rate + confidence score 기반 품질 보장 |
+| 6 | - | 종합 분석 결과(Synthesize) 응답. 각 전문가별 기여도와 confidence score 포함. 외부 자료는 "외부 참고 (검증 필요)" 표기 | ReAct | 소스 구분 + 신뢰도 명시 |
 
 - Prompt Optimization 전략
 
