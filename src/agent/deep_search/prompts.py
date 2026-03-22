@@ -14,13 +14,12 @@ DECOMPOSITION_PROMPT = """\
 사용자의 질문을 여러 전문가 관점(perspective)으로 분해하여,
 각 관점에서 독립적으로 탐색할 수 있는 하위 질문(sub-query)을 생성하세요.
 
-## 관점 가이드
-- **정비 엔지니어 관점**: 정비 이력, 수리 기록, 윤활유 교체 시기, 과거 조치 사항
-- **신뢰성 엔지니어 관점**: 과거 분석 이력, 유사 결함 패턴 비교, 통계적 경향
-- **설비 전문가 관점**: 설비 사양, 결함 메커니즘, FMEA, 외부 기술 문헌
+## 관점 가이드 (반드시 아래 3개 고정 관점을 사용하세요)
+- **Maintenance Engineer**: 정비 이력, 수리 기록, 윤활유 교체 시기, 과거 조치 사항
+- **Senior Analyst**: 과거 분석 이력, 유사 결함 패턴 비교, 통계적 경향
+- **Equipment Specialist**: 설비 사양, 결함 메커니즘, FMEA, 외부 기술 문헌
 
-관점은 2~4개를 생성하되, 질문의 복잡도에 따라 조절하세요.
-단순한 질문이면 2개, 복잡한 교차 분석이 필요하면 4개까지 가능합니다.
+반드시 위 3개 관점 모두를 포함하세요. perspective 이름은 영어 그대로 사용하세요.
 
 ## 사용자 질문
 {original_query}
@@ -33,7 +32,7 @@ DECOMPOSITION_PROMPT = """\
 ```json
 [
   {{
-    "perspective": "정비 엔지니어",
+    "perspective": "Maintenance Engineer",
     "sub_query": "이 베어링의 최근 정비 이력과 윤활유 교체 시기를 확인",
     "agent_role": "maintenance_history",
     "search_tools": ["search_maintenance_history"]

@@ -19,6 +19,37 @@ from agent.deep_search.state import DeepSearchState
 logger = logging.getLogger(__name__)
 
 
+def _fallback_perspectives(original_query: str) -> list[dict]:
+    """고정 3개 관점 fallback을 반환한다.
+
+    Args:
+        original_query: 사용자 원본 질문.
+
+    Returns:
+        3개 관점 dict 리스트.
+    """
+    return [
+        {
+            "perspective": "Maintenance Engineer",
+            "sub_query": original_query,
+            "agent_role": "maintenance_history",
+            "search_tools": ["search_maintenance_history"],
+        },
+        {
+            "perspective": "Senior Analyst",
+            "sub_query": original_query,
+            "agent_role": "analysis_history",
+            "search_tools": ["search_analysis_history"],
+        },
+        {
+            "perspective": "Equipment Specialist",
+            "sub_query": original_query,
+            "agent_role": "equipment_manual",
+            "search_tools": ["search_equipment_manual", "search_web"],
+        },
+    ]
+
+
 def _extract_json(text: str) -> list | dict | None:
     """LLM 응답에서 JSON을 추출.
 
@@ -82,23 +113,8 @@ async def decompose(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
         )
     except Exception as e:
         logger.error("[deep_search:leader] 질문 분해 LLM 호출 실패: %s", e)
-        # 폴백: 기본 2관점 분해
-        return {
-            "perspectives": [
-                {
-                    "perspective": "정비 엔지니어",
-                    "sub_query": original_query,
-                    "agent_role": "maintenance_history",
-                    "search_tools": ["search_maintenance_history"],
-                },
-                {
-                    "perspective": "설비 전문가",
-                    "sub_query": original_query,
-                    "agent_role": "equipment_manual",
-                    "search_tools": ["search_equipment_manual"],
-                },
-            ]
-        }
+        # 폴백: 기본 3관점 분해
+        return {"perspectives": _fallback_perspectives(original_query)}
 
     parsed = _extract_json(response.content or "")
     if not parsed or not isinstance(parsed, list):
@@ -106,22 +122,7 @@ async def decompose(state: DeepSearchState, *, llm: BaseChatModel) -> dict:
             "[deep_search:leader] JSON 파싱 실패, 폴백 분해 사용. " "응답: %s",
             (response.content or "")[:200],
         )
-        return {
-            "perspectives": [
-                {
-                    "perspective": "정비 엔지니어",
-                    "sub_query": original_query,
-                    "agent_role": "maintenance_history",
-                    "search_tools": ["search_maintenance_history"],
-                },
-                {
-                    "perspective": "설비 전문가",
-                    "sub_query": original_query,
-                    "agent_role": "equipment_manual",
-                    "search_tools": ["search_equipment_manual"],
-                },
-            ]
-        }
+        return {"perspectives": _fallback_perspectives(original_query)}
 
     logger.info(
         "[deep_search:leader] %d개 관점 분해 완료: %s",
